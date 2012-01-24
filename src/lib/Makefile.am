@@ -1,4 +1,4 @@
-KYLDRCPP = 
+KYLDRCPP = combined-alignment.cc hyper-graph.cc
 
 
 AM_CPPFLAGS = -I$(srcdir)/../include

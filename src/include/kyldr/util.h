@@ -5,8 +5,17 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <stdexcept>
 #include <algorithm>
 #include <tr1/unordered_map>
+
+#define KYLDR_SAFE
+
+#define THROW_ERROR(msg) do {                   \
+    std::ostringstream oss;                     \
+    oss << msg;                                 \
+    throw std::runtime_error(oss.str()); }       \
+  while (0);
 
 namespace std {
 
@@ -35,16 +44,24 @@ inline std::ostream& operator << ( std::ostream& out,
     return out;
 }
 
-
-// Output function for pairs
+// Input function for pairs
 template <class X, class Y>
 inline std::istream & operator>> (std::istream & in, std::pair<X,Y>& s) {
     string open, close;
     in >> open >> s.first >> s.second >> close;
-    CHECK_EQ("<", open);
-    CHECK_EQ(">", close);
+    if(open != "<")
+        THROW_ERROR("Bad start of pair " << open);
+    if(close != "<")
+        THROW_ERROR("Bad end of pair " << close);
     return in;
 }
+
+// // Less than function for pairs
+// template <class X, class Y>
+// inline bool operator< ( const std::pair< X, Y >& lhs, const std::pair< X, Y >& rhs ) {
+//     return lhs.first < rhs.first || 
+//         (lhs.first == rhs.first && lhs.second < rhs.second);
+// }
 
 }
 
@@ -87,7 +104,10 @@ inline std::vector<std::string> Tokenize(const std::string &str, char c = ' ') {
 inline void GetlineEquals(std::istream & in, const std::string & str) {
     std::string line;
     std::getline(in, line);
-    CHECK_EQ(line, str);
+    if(line != str)
+        THROW_ERROR("Expected and received inputs differ." << std::endl
+                    << "Expect:  " << str << std::endl
+                    << "Receive: " << line << std::endl);
 }
 
 template <class X>
@@ -97,7 +117,10 @@ inline void GetConfigLine(std::istream & in, const std::string & name, X& val) {
     std::istringstream iss(line);
     std::string myName;
     iss >> myName >> val;
-    CHECK_EQ(name, myName);
+    if(name != myName)
+        THROW_ERROR("Expected and received inputs differ." << std::endl
+                    << "Expect:  " << name << std::endl
+                    << "Receive: " << myName << std::endl);
 }
 
 
@@ -129,6 +152,26 @@ inline bool ApproximateDoubleEquals(
     }
     return true;
     
+}
+
+// Perform safe access to a vector
+template < class T >
+inline const T & SafeAccess(const std::vector<T> & vec, int idx) {
+#ifdef KYLDR_SAFE
+    if(idx < 0 || idx >= (int)vec.size())
+        THROW_ERROR("Out of bound access size="<<vec.size()<<", idx="<<idx);
+#endif
+    return vec[idx];
+}
+
+// Perform safe access to a vector
+template < class T >
+inline T & SafeAccess(std::vector<T> & vec, int idx) {
+#ifdef KYLDR_SAFE
+    if(idx < 0 || idx >= (int)vec.size())
+        THROW_ERROR("Out of bound access size="<<vec.size()<<", idx="<<idx);
+#endif
+    return vec[idx];
 }
 
 }  // end namespace
