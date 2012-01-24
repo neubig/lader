@@ -14,7 +14,7 @@ public:
     // Accessors
     int GetNumWords() { return num_words_; }
 
-private:
+protected:
     // The number of words in the sentence
     int num_words_;
 

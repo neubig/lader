@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <kyldr/feature-data-sequence.h>
 #include <kyldr/feature-base.h>
 
 namespace kyldr {
@@ -13,11 +14,29 @@ public:
     FeatureSequence() { }
     virtual ~FeatureSequence() { }
  
-    // Parse the configuration, a comma separated string of feature to calculate
-    virtual void ParseConfiguration(const string & str) = 0;
+    // Parse the configuration
+    // The configuration takes the following format:
+    //  NAME%X%Y where NAME is the overall name and X and Y are template
+    // 
+    // The templates that can be used will all start with:
+    //  S: For features designating an entire span
+    //  N: For features defined over an entire non-terminal span
+    //  T: For features defined over an entire terminal span
+    //  L or R: For features defined over the left or right spans
+    //  C: For features that compare the two spans
+    //
+    // The templates that can be used and combined for binary features are:
+    //  %[SNTLR]S :    entire String of a span
+    //  %[SNTLR][LR] : Left or Right-most word of a span
+    //  %[SNTLR]N :    Number of words in a span
+    //  %CD :          Difference (absolute value) in words in two spans
+    // 
+    // In addition N and D can be used with at the beginning (eg %SN#) to
+    // fire non-binary features. These cannot be combined with other features
+    virtual void ParseConfiguration(const std::string & str) = 0;
 
     // Parses a space-separated input string of data
-    virtual FeatureDataBase * ParseData(const string & str) = 0;
+    virtual FeatureDataBase * ParseData(const std::string & str) = 0;
 
     // Generates the features that can be factored over a node
     virtual FeatureVectorString GenerateNodeFeatures(
@@ -30,7 +49,12 @@ public:
                                 const HyperNode & node,
                                 const HyperEdge & edge) = 0;
 
+    // Check to make sure that the feature template can be interpreted
+    static bool FeatureTemplateIsLegal(const std::string & name);
+
 private:
+
+    std::vector<std::vector<std::string> > feature_names_;
 
 };
 

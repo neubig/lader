@@ -17,14 +17,12 @@ public:
     FeatureDataSequence() : FeatureDataBase() { }
     virtual ~FeatureDataSequence() { }
 
-    static FeatureDataSequence * ParseInput(const string & str) {
-        FeatureDataSequence * ret = new FeatureDataSequence();
+    void ParseInput(const std::string & str) {
         boost::tokenizer<boost::char_separator<char> > 
                                 tokens(str, boost::char_separator<char>(" "));
         sequence_.clear();
-        BOOST_FOREACH(string s, tokens) { sequence_.push_back(s); }
-        ret->SetNumWords(sequence_.size());
-        return ret;
+        BOOST_FOREACH(std::string s, tokens) { sequence_.push_back(s); }
+        num_words_ = sequence_.size();
     }
 
     const std::vector<std::string> & GetSequence() { return sequence_; }

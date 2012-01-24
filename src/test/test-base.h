@@ -23,7 +23,7 @@ protected:
     bool passed_;
 
     template<class T>
-    int checkVector(const std::vector<T> & exp, const std::vector<T> & act) {
+    int CheckVector(const std::vector<T> & exp, const std::vector<T> & act) {
         int ok = 1;
         for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
             if(i >= (int)exp.size() || 

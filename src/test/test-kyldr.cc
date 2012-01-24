@@ -1,3 +1,4 @@
+#include "test-feature-sequence.h"
 #include "test-combined-alignment.h"
 #include "test-hyper-graph.h"
 #include "test-loss-fuzzy.h"
@@ -12,6 +13,7 @@ int main() {
     tests.push_back(new TestCombinedAlignment());
     tests.push_back(new TestHyperGraph());
     tests.push_back(new TestLossFuzzy());
+    tests.push_back(new TestFeatureSequence());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
