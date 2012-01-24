@@ -58,6 +58,8 @@ public:
     // Accessors
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
+    std::vector<HyperNode*> & GetNodes() { return nodes_; }
+    std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const std::vector<HyperNode*> & GetLeftNeighbors(int id) const {
         return SafeAccess(left_neighbors_, id);
     }

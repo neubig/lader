@@ -27,6 +27,25 @@ public:
     void BuildFromAlignment(const Alignment & align, 
                             NullHandler handler = LEAVE_NULL_AS_IS);
 
+    // Measure whether two combined spans are contiguous.
+    // We define two conditions for contiguity
+    //   1) (right.first == left.first && right.second >= left.first)
+    //   2) (right.first > left.first && right.first <= left.second+1)
+    // 
+    // This indicates that the following alignments are contiguous
+    //   x.   xx    x.   x.
+    //   .x   .x    xx   .x
+    //                   x.
+    // But the following alignments are not
+    //   .x   .x
+    //   xx   x.
+    //        .x
+    static bool IsContiguous(std::pair<int,int> left,
+                             std::pair<int,int> right) {
+        return (right.first == left.first && right.second >= left.first) ||
+               (right.first > left.first && right.first <= left.second+1);
+    }
+
     // Accessors
     const std::pair<int,int> & operator[] (size_t src) const {
         return SafeAccess(spans_, src);

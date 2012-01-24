@@ -1,5 +1,6 @@
 #include "test-combined-alignment.h"
 #include "test-hyper-graph.h"
+#include "test-loss-fuzzy.h"
 #include <vector>
 
 using namespace std;
@@ -10,6 +11,7 @@ int main() {
     vector<TestBase*> tests;
     tests.push_back(new TestCombinedAlignment());
     tests.push_back(new TestHyperGraph());
+    tests.push_back(new TestLossFuzzy());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)
