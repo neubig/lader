@@ -146,6 +146,41 @@ public:
         return ret;
     }
 
+    // Test that we can calculate the best cumulative score
+    int TestCumulativeScore() {
+        // Build the graph
+        HyperGraph hyper_graph(2,2);
+        HyperNode * node00 = hyper_graph.GetNodeAtSpan(
+            HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
+        HyperEdge * edge00 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
+        edge00->SetScore(1);
+        node00->AddEdge(edge00);
+        node00->SetScore(2);
+        HyperNode * node11 = hyper_graph.GetNodeAtSpan(
+            HyperSpan(1,1,MakePair(1,1),MakePair(1,1)));
+        HyperEdge * edge11 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
+        edge11->SetScore(4);
+        node11->AddEdge(edge11);
+        HyperEdge * edge11b = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMINV);
+        edge11b->SetScore(8);
+        node11->AddEdge(edge11b);
+        HyperNode * node01 = hyper_graph.GetNodeAtSpan(
+            HyperSpan(0,1,MakePair(0,0),MakePair(1,1)));
+        HyperEdge * edge01 = hyper_graph.AddNewEdge(HyperEdge::EDGE_STR);
+        edge01->SetLeftChild(node00);
+        edge01->SetRightChild(node11);
+        edge01->SetScore(16);
+        node01->AddEdge(edge01);
+        node01->SetScore(32);
+        // The cumulative score should be:
+        // edge00=1 + node00=2 + edge11b=8 + edge01=16 + node01=32 --> 59
+        int ret = 1;
+        if(node01->GetCumulativeScore() != 59) {
+            cout << "node01->GetCumulativeScore() " << node01->GetCumulativeScore() << " != 59" << endl; ret = 0;
+        }
+        return ret;
+    }
+
 private:
 
     HyperSpan span0, span1, span2;
@@ -160,6 +195,7 @@ public:
         done++; cout << "TestAddReverseTerminals()" << endl; if(TestAddReverseTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAddMultipleTerminals()" << endl; if(TestAddMultipleTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAddNonTerminals()" << endl; if(TestAddNonTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestCumulativeScore()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

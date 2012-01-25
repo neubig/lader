@@ -1,4 +1,4 @@
-KYLDRCPP = combined-alignment.cc hyper-graph.cc feature-sequence.cc
+KYLDRCPP = combined-alignment.cc hyper-graph.cc hyper-node.cc feature-sequence.cc
 
 
 AM_CPPFLAGS = -I$(srcdir)/../include

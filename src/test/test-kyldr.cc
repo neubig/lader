@@ -2,6 +2,7 @@
 #include "test-combined-alignment.h"
 #include "test-hyper-graph.h"
 #include "test-loss-fuzzy.h"
+#include "test-reorderer-model.h"
 #include <vector>
 
 using namespace std;
@@ -14,6 +15,7 @@ int main() {
     tests.push_back(new TestHyperGraph());
     tests.push_back(new TestLossFuzzy());
     tests.push_back(new TestFeatureSequence());
+    tests.push_back(new TestReordererModel());
     // Run all the tests
     int number_passed = 0;
     for(int i = 0; i < (int)tests.size(); i++)

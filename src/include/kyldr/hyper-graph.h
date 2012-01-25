@@ -3,6 +3,7 @@
 
 #include <map>
 #include <climits>
+#include <boost/foreach.hpp>
 #include <kyldr/combined-alignment.h>
 #include <kyldr/hyper-edge.h>
 #include <kyldr/hyper-node.h>
@@ -55,6 +56,19 @@ public:
     // Add the non-terminal nodes to the hypergraph
     void AddNonTerminals();
 
+    // Delete the parse by resetting the best edge of all nodes to null
+    void DeleteParse() {
+        BOOST_FOREACH(HyperNode * node, nodes_)
+            node->SetBestEdge(-1);
+    }
+
+    // Add a single new edge and return a pointer to it
+    HyperEdge * AddNewEdge(HyperEdge::Type type) {
+        HyperEdge * edge = new HyperEdge(edges_.size(), type);
+        edges_.push_back(edge);
+        return edge;
+    }
+
     // Accessors
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
@@ -71,14 +85,6 @@ private:
 
     // Add non-terminals for a single pair of nodes
     void AddNonTerminalPair(const HyperNode * left, const HyperNode * right);
-
-    // Add a single new edge and return a pointer to it
-    HyperEdge * AddNewEdge(HyperEdge::Type type) {
-        HyperEdge * edge = new HyperEdge(edges_.size(), type);
-        edges_.push_back(edge);
-        return edge;
-    }
-
 
     // Permanent data structures
     std::vector<HyperNode*> nodes_; // The nodes of the hypergraph
