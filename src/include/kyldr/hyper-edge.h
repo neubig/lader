@@ -11,11 +11,11 @@ class HyperEdge {
 public:
     // The type of edge
     typedef enum {
-        EDGE_STR,     // A straight non-terminal
-        EDGE_INV,     // An inverted non-terminal
-        EDGE_TERMSTR, // A straight terminal (all words in order)
-        EDGE_TERMINV, // An inverted non-terminal (all words in reverse order)
-        EDGE_NO_TYPE  // No edge type, shouldn't be used normally
+        EDGE_STR = 'S',     // A straight non-terminal
+        EDGE_INV = 'I',     // An inverted non-terminal
+        EDGE_TERMSTR = 'F', // A straight terminal (all words in order)
+        EDGE_TERMINV = 'B', // An inverted non-terminal (all words in reverse)
+        EDGE_NO_TYPE = 'N'  // No edge type, shouldn't be used normally
     } Type;
 
     // Constructor

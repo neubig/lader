@@ -3,9 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <kyldr/feature-data-base.h>
+#include <kyldr/util.h>
 
 namespace kyldr {
 
@@ -25,7 +28,19 @@ public:
         num_words_ = sequence_.size();
     }
 
-    const std::vector<std::string> & GetSequence() { return sequence_; }
+    const std::vector<std::string> & GetSequence() const { return sequence_; }
+    const std::string & GetElement(int i) const {
+        return SafeAccess(sequence_, i); 
+    }
+    
+    // Return space-separate string representing a sequence
+    const std::string GetRangeString(int i, int j, 
+                                     std::string sep = " ") const {
+        std::string ret = boost::algorithm::join(
+            MakePair(sequence_.begin() + i, sequence_.begin() + j + 1),
+            sep.c_str());
+        return ret;
+    }
 
 private:
 

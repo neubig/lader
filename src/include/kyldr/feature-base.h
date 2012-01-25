@@ -18,10 +18,12 @@ typedef std::vector<std::pair<int, double> > FeatureVectorInt;
 //   ParseConfiguration, ParseData, GenerateNodeFeatures, GenerateEdgeFeatures
 class FeatureBase {
 public:
-    // Types of features, whether they are factored over nodes or edges
+    // Types of features, whether they are factored over nodes, all edges,
+    // or only nonterminal edges
     typedef enum {
         NODE_FACTORED,
-        EDGE_FACTORED
+        EDGE_FACTORED,
+        NONTERM_FACTORED
     } FeatureType;
 
     // Constructors
