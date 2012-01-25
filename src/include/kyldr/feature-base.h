@@ -3,15 +3,12 @@
 
 #include <vector>
 #include <string>
+#include <kyldr/feature-vector.h>
 #include <kyldr/feature-data-base.h>
 #include <kyldr/hyper-edge.h>
 #include <kyldr/hyper-node.h>
 
 namespace kyldr {
-
-// Real-valued feature vectors that are either indexed with std::strings or ints
-typedef std::vector<std::pair<std::string, double> > FeatureVectorString;
-typedef std::vector<std::pair<int, double> > FeatureVectorInt;
 
 // A virtual class for feature generators
 // Four functions must be implemented to create a feature generator

@@ -1,6 +1,8 @@
 #ifndef HYPER_EDGE__
 #define HYPER_EDGE__
 
+#include <kyldr/feature-vector.h>
+
 namespace kyldr {
 
 class HyperNode;
@@ -31,6 +33,14 @@ public:
     Type GetType() const { return type_; }
     const HyperNode* GetLeftChild() const { return left_child_; }
     const HyperNode* GetRightChild() const { return right_child_; }
+    const FeatureVectorInt & GetFeatureVector() const { 
+        return feature_vector_;
+    }
+
+    void SetFeatureVector(const FeatureVectorInt & feature_vector) {
+        feature_vector_ = feature_vector;
+    }
+
 
 private:
 
@@ -39,6 +49,7 @@ private:
     // Left and right children, only active for non-terminals
     HyperNode *left_child_, *right_child_;
     std::vector<double> losses_; // The losses assigned to this edge
+    FeatureVectorInt feature_vector_; // The vector of features
 
 };
 

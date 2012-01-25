@@ -5,6 +5,7 @@
 #include <kyldr/combined-alignment.h>
 #include <kyldr/feature-sequence.h>
 #include <kyldr/feature-data-sequence.h>
+#include <kyldr/feature-set.h>
 
 namespace kyldr {
 
@@ -25,6 +26,8 @@ public:
         // Create a sentence
         string str = "he ate rice";
         sent.ParseInput(str);
+        string str_pos = "PRP VBD NN";
+        sent_pos.ParseInput(str_pos);
         // Create edges that reproduce the alignment in two ways
         node00 = HyperNode(0, HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
         edge00 = HyperEdge(0, HyperEdge::EDGE_TERMSTR);
@@ -93,12 +96,41 @@ public:
         node12exp.push_back(MakePair(string("N||2"), 1));
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(node00exp, feat.GenerateNodeFeatures(sent, node00));
-        ret *= CheckVector(node12exp, feat.GenerateNodeFeatures(sent, node12));
+        ret *= CheckVector(node00exp, feat.GenerateNodeFeatures(sent,node00));
+        ret *= CheckVector(node12exp, feat.GenerateNodeFeatures(sent,node12));
         ret *= CheckVector(edge00exp, 
                            feat.GenerateEdgeFeatures(sent, node00, edge00));
         ret *= CheckVector(edge12ntexp, 
                            feat.GenerateEdgeFeatures(sent, node12, edge12nt));
+        return ret;
+    }
+
+    int TestSetNodeFeatures() {
+        // Set up the feature generators
+        FeatureSequence *featw = new FeatureSequence,
+                        *featp = new FeatureSequence;
+        featw->ParseConfiguration("SW%SS");
+        featp->ParseConfiguration("SP%SS");
+        // Set up the feature set
+        FeatureSet set;
+        set.AddFeatureGenerator(featw);
+        set.AddFeatureGenerator(featp);
+        // Set up the data
+        vector<FeatureDataBase*> datas;
+        datas.push_back(&sent);
+        datas.push_back(&sent_pos);
+        // These are both node-factored features, so they should exist for all
+        // nodes, but no edges
+        FeatureVectorString node00exp;
+        node00exp.push_back(MakePair(string("SW||he"), 1));
+        node00exp.push_back(MakePair(string("SP||PRP"), 1));
+        // Generate the features
+        set.AddNodeFeatures(datas, node00);
+        FeatureVectorString node00act =
+                set.StringifyFeatureIndices(node00.GetFeatureVector());
+        // Do the parsing and checking
+        int ret = 1;
+        ret *= CheckVector(node00exp, node00act);
         return ret;
     }
 
@@ -108,38 +140,38 @@ public:
         featr.ParseConfiguration("L%RL,R%RR,S%RS,N%RN");
         feata.ParseConfiguration("A%SS%LS%RS");
         // These features apply to only non-terminals
-        FeatureVectorString node00expl, node02expl, edge00expl, edge02expl;
-        edge02expl.push_back(MakePair(string("L||he"), 1));
-        edge02expl.push_back(MakePair(string("R||he"), 1));
-        edge02expl.push_back(MakePair(string("S||he"), 1));
-        edge02expl.push_back(MakePair(string("N||1"), 1));
-        FeatureVectorString node00expr, node02expr, edge00expr, edge02expr;
-        edge02expr.push_back(MakePair(string("L||ate"), 1));
-        edge02expr.push_back(MakePair(string("R||rice"), 1));
-        edge02expr.push_back(MakePair(string("S||ate rice"), 1));
-        edge02expr.push_back(MakePair(string("N||2"), 1));
-        FeatureVectorString node00expa, node02expa, edge00expa, edge02expa;
-        edge02expa.push_back(
+        FeatureVectorString node00l, node02l, edge00l, edge02l;
+        edge02l.push_back(MakePair(string("L||he"), 1));
+        edge02l.push_back(MakePair(string("R||he"), 1));
+        edge02l.push_back(MakePair(string("S||he"), 1));
+        edge02l.push_back(MakePair(string("N||1"), 1));
+        FeatureVectorString node00r, node02r, edge00r, edge02r;
+        edge02r.push_back(MakePair(string("L||ate"), 1));
+        edge02r.push_back(MakePair(string("R||rice"), 1));
+        edge02r.push_back(MakePair(string("S||ate rice"), 1));
+        edge02r.push_back(MakePair(string("N||2"), 1));
+        FeatureVectorString node00a, node02a, edge00a, edge02a;
+        edge02a.push_back(
             MakePair(string("A||he ate rice||he||ate rice"), 1));
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(node00expl,featl.GenerateNodeFeatures(sent, node00));
-        ret *= CheckVector(node02expl,featl.GenerateNodeFeatures(sent, node02));
-        ret *= CheckVector(edge00expl,
+        ret *= CheckVector(node00l,featl.GenerateNodeFeatures(sent,node00));
+        ret *= CheckVector(node02l,featl.GenerateNodeFeatures(sent,node02));
+        ret *= CheckVector(edge00l,
                            featl.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02expl,
+        ret *= CheckVector(edge02l,
                            featl.GenerateEdgeFeatures(sent, node02, edge02));
-        ret *= CheckVector(node00expr,featr.GenerateNodeFeatures(sent, node00));
-        ret *= CheckVector(node02expr,featr.GenerateNodeFeatures(sent, node02));
-        ret *= CheckVector(edge00expr,
+        ret *= CheckVector(node00r,featr.GenerateNodeFeatures(sent,node00));
+        ret *= CheckVector(node02r,featr.GenerateNodeFeatures(sent,node02));
+        ret *= CheckVector(edge00r,
                            featr.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02expr,
+        ret *= CheckVector(edge02r,
                            featr.GenerateEdgeFeatures(sent, node02, edge02));
-        ret *= CheckVector(node00expa,feata.GenerateNodeFeatures(sent, node00));
-        ret *= CheckVector(node02expa,feata.GenerateNodeFeatures(sent, node02));
-        ret *= CheckVector(edge00expa,
+        ret *= CheckVector(node00a,feata.GenerateNodeFeatures(sent,node00));
+        ret *= CheckVector(node02a,feata.GenerateNodeFeatures(sent,node02));
+        ret *= CheckVector(edge00a,
                            feata.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02expa,
+        ret *= CheckVector(edge02a,
                            feata.GenerateEdgeFeatures(sent, node02, edge02));
         return ret;
     }
@@ -166,6 +198,35 @@ public:
         return ret;
     }
 
+    int TestSetEdgeFeatures() {
+        // Set up the feature generators
+        FeatureSequence *featw = new FeatureSequence,
+                        *featp = new FeatureSequence;
+        featw->ParseConfiguration("SW%LS%RS");
+        featp->ParseConfiguration("SP%LS%RS");
+        // Set up the feature set
+        FeatureSet set;
+        set.AddFeatureGenerator(featw);
+        set.AddFeatureGenerator(featp);
+        // Set up the data
+        vector<FeatureDataBase*> datas;
+        datas.push_back(&sent);
+        datas.push_back(&sent_pos);
+        // These are both node-factored features, so they should exist for all
+        // nodes, but no edges
+        FeatureVectorString edge02exp;
+        edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
+        edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
+        // Generate the features
+        set.AddEdgeFeatures(datas, node02, edge02);
+        FeatureVectorString edge02act =
+                set.StringifyFeatureIndices(edge02.GetFeatureVector());
+        // Do the parsing and checking
+        int ret = 1;
+        ret *= CheckVector(edge02exp, edge02act);
+        return ret;
+    }
+
 
     bool RunTest() {
         int done = 0, succeeded = 0;
@@ -174,6 +235,8 @@ public:
         done++; cout << "TestNodeFeatures()" << endl; if(TestNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLeftRightFeatures()" << endl; if(TestLeftRightFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestEdgeFeatures()" << endl; if(TestEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestSetNodeFeatures()" << endl; if(TestSetNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestSetEdgeFeatures()" << endl; if(TestSetEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSequence Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
@@ -182,7 +245,7 @@ private:
     HyperEdge edge00, edge11, edge22, edge02, edge12t, edge12nt;
     HyperNode node00, node11, node22, node12, node02;
     CombinedAlignment cal;
-    FeatureDataSequence sent;
+    FeatureDataSequence sent, sent_pos;
 
 };
 
