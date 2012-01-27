@@ -14,9 +14,13 @@ namespace kyldr {
 class HyperGraph {
 public:
 
-    // Constructor
-    HyperGraph() { }
-    HyperGraph(int src_len, int trg_len) {
+    // Constructor. Initialize the root node, which by default travels from -1
+    // to the length of the source or target
+    HyperGraph(int src_len, int trg_len) :
+            nodes_(1, new HyperNode(0,HyperSpan(-1,
+                                                src_len,
+                                                MakePair(-1,-1),
+                                                MakePair(trg_len,trg_len)))) {
         InitializeStructures(src_len, trg_len);
     }
 
@@ -56,10 +60,13 @@ public:
     // Add the non-terminal nodes to the hypergraph
     void AddNonTerminals();
 
-    // Delete the parse by resetting the best edge of all nodes to null
-    void DeleteParse() {
+    double Parse() {
+        // Delete the parse by resetting the best edge of all nodes to null
         BOOST_FOREACH(HyperNode * node, nodes_)
             node->SetBestEdge(-1);
+        // Getting the cumulative score for the root will find the best
+        // edge for all of the nodes, which allows us to find a parse
+        return nodes_[0]->GetCumulativeScore();
     }
 
     // Add a single new edge and return a pointer to it
@@ -70,10 +77,17 @@ public:
     }
 
     // Accessors
+    const int GetSrcLength() const { 
+        return nodes_[0]->GetSpan().GetRight();
+    }
+    const int GetTrgLength() const {
+        return nodes_[0]->GetSpan().GetTrgRight().first;
+    }
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperNode*> & GetNodes() { return nodes_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
+    HyperNode* GetRoot() { return nodes_[0]; }
     const std::vector<HyperNode*> & GetLeftNeighbors(int id) const {
         return SafeAccess(left_neighbors_, id);
     }

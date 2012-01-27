@@ -4,6 +4,7 @@
 #include <kyldr/feature-vector.h>
 #include <kyldr/hyper-span.h>
 #include <kyldr/hyper-edge.h>
+#include <map>
 
 namespace kyldr {
 
@@ -19,6 +20,12 @@ public:
     // If we don't already have the best edge, find it using memoed recursion
     double GetCumulativeScore();
 
+    // Accumulate features for the parsed subtree rooted at this node
+    FeatureVectorInt AccumulateFeatures() const;
+
+    // Accumulate loss for the parsed subtree rooted at this node
+    double AccumulateLoss() const;
+
     // Add an edge to the array
     void AddEdge(HyperEdge * edge) { edges_.push_back(edge); }
 
@@ -26,9 +33,12 @@ public:
     int GetIdx() const { return idx_; }
     double GetScore() const { return score_; }
     const HyperSpan & GetSpan() const { return span_; }
+    const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
+    std::vector<HyperEdge*> & GetEdges() { return edges_; }
     const FeatureVectorInt & GetFeatureVector() const { 
         return feature_vector_;
     }
+    bool IsRoot() const { return span_.GetLeft() == -1; }
 
     void SetScore(double score) { score_ = score; }
     void SetCumulativeScore(double score) { cumulative_score_ = score; }
@@ -38,6 +48,10 @@ public:
     void SetBestEdge(int best_edge) { best_edge_ = best_edge; }
 
 private:
+
+    // Accumulate features over a map
+    void AccumulateFeatures(std::map<int,double> & feat_map) const;
+
     int idx_; // The index of this node in the hypergraph
     double score_; // The score of this node
     double cumulative_score_; // The viterbi score of this node in a derivation

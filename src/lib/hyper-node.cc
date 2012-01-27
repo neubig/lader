@@ -1,5 +1,7 @@
 #include <cfloat>
 #include <kyldr/hyper-node.h>
+#include <kyldr/feature-vector.h>
+#include <boost/foreach.hpp>
 
 using namespace kyldr;
 using namespace std;
@@ -21,4 +23,39 @@ double HyperNode::GetCumulativeScore() {
         }
     }
     return cumulative_score_;
+}
+
+void HyperNode::AccumulateFeatures(map<int,double> & feature_map) const {
+    // Add node features
+    BOOST_FOREACH(FeaturePairInt feat_pair, feature_vector_)
+        feature_map[feat_pair.first] += feat_pair.second;
+    // Add edge features
+    const HyperEdge * edge = SafeAccess(edges_, best_edge_);
+    BOOST_FOREACH(FeaturePairInt feat_pair, edge->GetFeatureVector())
+        feature_map[feat_pair.first] += feat_pair.second;
+    // Recurse if necessary
+    if(edge->GetLeftChild() != NULL)
+        edge->GetLeftChild()->AccumulateFeatures(feature_map);
+    if(edge->GetRightChild() != NULL)
+        edge->GetRightChild()->AccumulateFeatures(feature_map);
+}
+
+double HyperNode::AccumulateLoss() const {
+    HyperEdge * edge = SafeAccess(edges_, best_edge_);
+    double loss = edge->GetLoss();
+    if(edge->GetLeftChild() != NULL)
+        loss += edge->GetLeftChild()->AccumulateLoss();
+    if(edge->GetRightChild() != NULL)
+        loss += edge->GetRightChild()->AccumulateLoss();
+    return loss;
+}
+
+FeatureVectorInt HyperNode::AccumulateFeatures() const {
+    map<int,double> feature_map;
+    AccumulateFeatures(feature_map);
+    FeatureVectorInt ret;
+    BOOST_FOREACH(FeaturePairInt feat_pair, feature_map)
+        if(feat_pair.second != 0)
+            ret.push_back(feat_pair);
+    return ret;
 }

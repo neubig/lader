@@ -7,6 +7,8 @@ using namespace std;
 void CombinedAlignment::BuildFromAlignment(
         const Alignment & align,
         CombinedAlignment::NullHandler handler) {
+    // Save the lengths
+    trg_len_ = align.GetTrgLen();
     // Create the new alignment vector
     const std::vector<pair<int,int> > & vec = align.GetAlignmentVector();
     spans_ = std::vector<std::pair<int,int> >(align.GetSrcLen(),

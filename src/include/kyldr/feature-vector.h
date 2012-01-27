@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <climits>
+#include <kyldr/util.h>
 
 namespace kyldr {
 
@@ -10,6 +12,10 @@ namespace kyldr {
 typedef std::vector<std::pair<std::string, double> > FeatureVectorString;
 typedef std::pair<int, double> FeaturePairInt;
 typedef std::vector<std::pair<int, double> > FeatureVectorInt;
+
+// Vector subtract
+FeatureVectorInt VectorSubtract(const FeatureVectorInt & a, 
+                                const FeatureVectorInt & b);
 
 }
 

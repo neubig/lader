@@ -15,7 +15,6 @@ public:
         weights.push_back(1);
         weights.push_back(2);
         model.SetWeights(weights);
-        model.SetLossWeights(weights);
         // Create a feature vector
         feats.push_back(MakePair(0,1));
         feats.push_back(MakePair(1,2));
@@ -40,7 +39,7 @@ public:
         int ret = 1;
         HyperEdge edge;
         edge.SetFeatureVector(feats);
-        edge.SetLossVector(weights);
+        edge.SetLoss(5);
         // Weight should be 1*1 + 2*2 (no loss)
         model.ScoreEdge(edge);
         if(edge.GetScore() != 5) {
@@ -56,10 +55,33 @@ public:
         return ret;
     }
 
+    int TestAdjustWeights() {
+        // Make the input feature vector
+        FeatureVectorInt fvi;
+        fvi.push_back(MakePair(1,1));
+        fvi.push_back(MakePair(2,2));
+        fvi.push_back(MakePair(4,-4));
+        // Make the reordering model
+        ReordererModel mod;
+        mod.AdjustWeights(fvi, 1);
+        // Make the expected model
+        vector<double> exp(5,0);
+        exp[1] = 1; exp[2] = 2; exp[4] = -4;
+        // Check to make sure it's ok
+        int ret = 1;
+        ret *= CheckVector(exp, mod.GetWeights());
+        // Adjust again
+        mod.AdjustWeights(fvi, -2);
+        exp[1] = -1; exp[2] = -2; exp[4] = 4;
+        ret *= CheckVector(exp, mod.GetWeights());
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestScoreNode()" << endl; if(TestScoreNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestScoreEdge()" << endl; if(TestScoreEdge()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAdjustWeights()" << endl; if(TestAdjustWeights()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestReordererModel Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

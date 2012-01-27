@@ -3,6 +3,7 @@
 
 #include <kyldr/feature-base.h>
 #include <kyldr/symbol-set.h>
+#include <kyldr/hyper-graph.h>
 
 namespace kyldr {
 
@@ -26,6 +27,9 @@ public:
     // Generates the features that can be factored over a node
     void AddNodeFeatures(const std::vector<FeatureDataBase*> & sent,
                          HyperNode & node) {
+        // No features are generated over root nodes
+        if(node.IsRoot()) return;
+        // Otherwise generate features
         FeatureVectorInt feats;
         for(int i = 0; i < (int)sent.size(); i++) {
             FeatureVectorString str_feats = 
@@ -43,6 +47,9 @@ public:
     void AddEdgeFeatures(const std::vector<FeatureDataBase*> & sent,
                          const HyperNode & node,
                          HyperEdge & edge) {
+        // No features are generated over root nodes
+        if(node.IsRoot()) return;
+        // Otherwise generate the features
         FeatureVectorInt feats;
         for(int i = 0; i < (int)sent.size(); i++) {
             FeatureVectorString str_feats = 
@@ -54,6 +61,16 @@ public:
         }
         sort(feats.begin(), feats.end());
         edge.SetFeatureVector(feats);
+    }
+
+    // Add features to the entire hypergraph
+    void AddHyperGraphFeatures(const std::vector<FeatureDataBase*> & sent,
+                               HyperGraph & graph) {
+        BOOST_FOREACH(HyperNode * node, graph.GetNodes()) {
+            AddNodeFeatures(sent, *node);
+            BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
+                AddEdgeFeatures(sent, *node, *edge);
+        }
     }
     
     // Change an integer-indexed feature vector into a string-indexed vector
@@ -68,7 +85,7 @@ public:
 private:
 
     std::vector<FeatureBase*> feature_gens_; // Feature generators
-    SymbolSet<string, int> feature_ids_; // The index of feature names and IDs
+    SymbolSet<std::string,int> feature_ids_; // Feature names and IDs
     bool add_; // Whether to allow the adding of new features
 
 };

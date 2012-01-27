@@ -5,13 +5,14 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
+#include <iostream>
 #include <tr1/unordered_map>
 #include <kyldr/util.h>
 
 namespace kyldr {
 
 #define DIE_HELP(msg) do {                      \
-    std::std::ostringstream oss;                     \
+    std::ostringstream oss;                     \
     oss << msg;                                 \
     DieOnHelp(oss.str()); }                     \
   while (0);
@@ -21,7 +22,8 @@ class ConfigBase {
 protected:
 
     // name -> value, description
-    typedef unordered_map<std::string, pair<std::string,std::string> > ConfigMap;
+    typedef std::tr1::unordered_map<
+                std::string, std::pair<std::string,std::string> > ConfigMap;
 
     // argument functions
     int minArgs_, maxArgs_;   // min and max number of main arguments
@@ -38,28 +40,28 @@ public:
 
     void DieOnHelp(const std::string & str) const {
         // print arguments
-        cerr << usage_ << endl;
-        cerr << "Arguments: "<<endl;
+        std::cerr << usage_ << std::endl;
+        std::cerr << "Arguments: "<<std::endl;
         for(std::vector<std::string>::const_iterator it = argOrder_.begin(); 
                         it != argOrder_.end(); it++) {
             ConfigMap::const_iterator oit = optArgs_.find(*it);
             if(oit->second.second.length() != 0)
-                cerr << " -"<<oit->first<<" \t"<<oit->second.second<<endl;
+                std::cerr << " -"<<oit->first<<" \t"<<oit->second.second<<std::endl;
         }
-        cerr << endl << str << endl;
+        std::cerr << std::endl << str << std::endl;
         exit(1);
     }
     
     void PrintConf() const {
         // print arguments
-        cout << "Main arguments:" << endl;
+        std::cout << "Main arguments:" << std::endl;
         for(int i = 0; i < (int)mainArgs_.size(); i++)
-            cout << " "<<i<<": "<<mainArgs_[i]<<endl;
-        cout << "Optional arguments:"<<endl;
+            std::cout << " "<<i<<": "<<mainArgs_[i]<<std::endl;
+        std::cout << "Optional arguments:"<<std::endl;
         for(std::vector<std::string>::const_iterator it = argOrder_.begin(); it != argOrder_.end(); it++) {
             ConfigMap::const_iterator oit = optArgs_.find(*it);
             if(oit->second.second.length() != 0)
-                cout << " -"<<oit->first<<" \t"<<oit->second.first<<endl;
+                std::cout << " -"<<oit->first<<" \t"<<oit->second.first<<std::endl;
         }
     }
 
@@ -84,84 +86,65 @@ public:
             DIE_HELP("Wrong number of arguments");
         }
 
-        // method specific settings
-        std::string sampMeth = getString("sampmeth");
-        if(sampMeth == "sequence") {
-            if(getInt("blocksize") > 1)
-                THROW_ERROR("Blocksize > 1 ("<<getInt("blocksize")<<") for sequence sampling");
-            if(getInt("threads") > 1)
-                THROW_ERROR("Threads > 1 ("<<getInt("blocksize")<<") for sequence sampling");
-        } else if(sampMeth == "parallel") {
-            if(getInt("blocksize") > 1)
-                THROW_ERROR("Blocksize > 1 ("<<getInt("blocksize")<<") for parallel sampling");
-        } else if(sampMeth == "block") {
-            // nothing to check for now
-        } else if(sampMeth == "single") {
-            // nothing to check for now
-        } else {
-            THROW_ERROR("Unknown sampling method "<<sampMeth);
-        }
-        
-
         PrintConf();
         return mainArgs_;
     }
 
-    void addConfigEntry(const std::string & name, const std::string & val, const std::string & desc) {
+    void AddConfigEntry(const std::string & name, const std::string & val, const std::string & desc) {
         argOrder_.push_back(name);
-        pair<std::string,pair<std::string,std::string> > entry(name,pair<std::string,std::string>(val,desc));
+        std::pair<std::string,std::pair<std::string,std::string> > entry(name,std::pair<std::string,std::string>(val,desc));
         optArgs_.insert(entry);
     }
 
-    // getter functions
-    std::string getString(const std::string & name) const {
+    // Getter functions
+    std::string GetString(const std::string & name) const {
         ConfigMap::const_iterator it = optArgs_.find(name);
         if(it == optArgs_.end())
             THROW_ERROR("Requesting bad argument "<<name<<" from configuration");
         return it->second.first;
     }
-    int getInt(const std::string & name) const {
-        std::string str = getString(name);
+    int GetInt(const std::string & name) const {
+        std::string str = GetString(name);
         int ret = atoi(str.c_str());
         if(ret == 0 && str != "0" && str != "00" && str != "000" && str != "0000")
             DIE_HELP("Value '"<<str<<"' for argument "<<name<<" was not an integer");
         return ret;
     }
-    double getDouble(const std::string & name) const {
-        std::string str = getString(name);
+    double GetDouble(const std::string & name) const {
+        std::string str = GetString(name);
         double ret = atof(str.c_str());
         if(ret == 0 && str != "0" && str != "0.0")
             DIE_HELP("Value '"<<str<<"' for argument "<<name<<" was not float");
         return ret;
     }
-    bool getBool(const std::string & name) const {
-        std::string str = getString(name);
+    bool GetBool(const std::string & name) const {
+        std::string str = GetString(name);
         if(str == "true") return true;
         else if(str == "false") return false;
         DIE_HELP("Value '"<<str<<"' for argument "<<name<<" was not boolean");
         return false;
     }
 
-    // setter functions
-    void setString(const std::string & name, const std::string & val) {
+    // Setter functions
+    void SetString(const std::string & name, const std::string & val) {
         ConfigMap::iterator it = optArgs_.find(name);
         if(it == optArgs_.end())
             THROW_ERROR("Setting bad argument "<<name<<" in configuration");
         it->second.first = val;
     }
-    void setInt(const std::string & name, int val) {
-        std::ostringstream oss; oss << val; setString(name,oss.str());
+    void SetInt(const std::string & name, int val) {
+        std::ostringstream oss; oss << val; SetString(name,oss.str());
     }
-    void setDouble(const std::string & name, double val) {
-        std::ostringstream oss; oss << val; setString(name,oss.str());
+    void SetDouble(const std::string & name, double val) {
+        std::ostringstream oss; oss << val; SetString(name,oss.str());
     }
-    void setBool(const std::string & name, bool val) {
-        std::ostringstream oss; oss << val; setString(name,oss.str());
+    void SetBool(const std::string & name, bool val) {
+        std::ostringstream oss; oss << val; SetString(name,oss.str());
     }
 
-    void setUsage(const std::string & str) { usage_ = str; }
+    void SetUsage(const std::string & str) { usage_ = str; }
 
-    std::vector<std::string> getMainArgs() { return mainArgs_; }
+    std::vector<std::string> GetMainArgs() { return mainArgs_; }
 	
 };
 

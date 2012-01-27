@@ -16,13 +16,19 @@ HyperNode * HyperGraph::GetNodeAtSpan(const HyperSpan & span,
     HyperNode * ret = *nodes_.rbegin();
     // Add to the map
     span_node_map_.insert(MakePair(span, ret));
+    // If the node spans the entire source side, we need to add it to
+    // the root as well
+    if(span.GetLeft() == 0 && span.GetRight() == GetSrcLength() - 1) {
+        HyperEdge * edge = AddNewEdge(HyperEdge::EDGE_ROOT);
+        nodes_[0]->AddEdge(edge);
+    }
     return ret;
 }
 
 void HyperGraph::AddTerminals(const CombinedAlignment & combined,
                               int max_len,
                               bool use_inverse) {
-    int len = combined.size();
+    int len = combined.GetSrcLen();
     for(int i = 0; i < len; i++) {
         int end = min(len, i+max_len);
         for(int j = i; j < end; j++) {
@@ -57,7 +63,7 @@ void HyperGraph::AddNonTerminalPair(const HyperNode * left,
 
 void HyperGraph::AddNonTerminals() {
     // Go through all the nodes
-    for(int i = 0; i < (int)nodes_.size(); i++) {
+    for(int i = 1; i < (int)nodes_.size(); i++) {
         // Save the current values
         HyperNode * node = nodes_[i];
         // Travel through and combine all left neighbors

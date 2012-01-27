@@ -20,21 +20,27 @@ public:
     // 0-0 0-1 -> 0-[0-1]
     // 1-1 1-3 -> 1-[1-3]
     int TestSimpleCombination() {
-        Alignment al(2,4);
-        al.AddAlignment(0,0);        
-        al.AddAlignment(0,1);
-        al.AddAlignment(1,1);
-        al.AddAlignment(1,3);
+        Alignment al(MakePair(2,4));
+        al.AddAlignment(MakePair(0,0));
+        al.AddAlignment(MakePair(0,1));
+        al.AddAlignment(MakePair(1,1));
+        al.AddAlignment(MakePair(1,3));
         CombinedAlignment cal;
         cal.BuildFromAlignment(al);
         int ret = 1;
         if(cal[0] != MakePair(0,1)) {
-            cout << " @ 0 != 0-1 (" <<cal[0] << ")" << endl;
-            ret = 0;
+            cout << " @ 0 != 0-1 (" <<cal[0] << ")" << endl; ret = 0;
         }
         if(cal[1] != MakePair(1,3)) {
-            cout << " @ 1 != 1-3 (" <<cal[1] << ")" << endl;
-            ret = 0;
+            cout << " @ 1 != 1-3 (" <<cal[1] << ")" << endl; ret = 0;
+        }
+        if(al.GetSrcLen() != cal.GetSrcLen()) {
+            cout << " al.GetSrcLen() " << al.GetSrcLen()
+                 << " != cal.GetSrcLen() " << cal.GetSrcLen() << endl; ret = 0;
+        }
+        if(al.GetTrgLen() != cal.GetTrgLen()) {
+            cout << " al.GetTrgLen() " << al.GetTrgLen()
+                 << " != cal.GetTrgLen() " << cal.GetTrgLen() << endl; ret = 0;
         }
         return ret;
     }
@@ -45,9 +51,9 @@ public:
     //   ATTACH_NULL_LEFT  1 / 0
     //   ATTACH_NULL_RIGHT 1 / 2
     int TestAttachNull() {
-        Alignment al(5,5);
-        al.AddAlignment(1,1);
-        al.AddAlignment(3,3);
+        Alignment al(MakePair(5,5));
+        al.AddAlignment(MakePair(1,1));
+        al.AddAlignment(MakePair(3,3));
         CombinedAlignment ca_asis, ca_left, ca_right;
         int ret = 1;
         // Test asis
@@ -80,10 +86,29 @@ public:
         return ret;
     }
 
+    int TestAlignmentReadWrite() {
+        Alignment exp(MakePair(2,4));
+        exp.AddAlignment(MakePair(0,0));
+        exp.AddAlignment(MakePair(0,1));
+        exp.AddAlignment(MakePair(1,1));
+        exp.AddAlignment(MakePair(1,3));
+        string str = exp.ToString();
+        Alignment * act = Alignment::FromString(str);
+        int ret = 1;
+        if(exp != *act) {
+            cerr << "exp '" << exp.ToString() << 
+                    "' != act '"<<act->ToString()<<"'" <<endl;
+            ret = 0;
+        }
+        delete act;
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestSimpleCombination()" << endl; if(TestSimpleCombination()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAttachNull()" << endl; if(TestAttachNull()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAlignmentReadWrite()" << endl; if(TestAlignmentReadWrite()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestCombinedAlignment Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

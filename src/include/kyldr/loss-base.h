@@ -14,7 +14,7 @@ class LossBase {
 public:
 
     // Constructor and destructor
-    LossBase() { }
+    LossBase() : weight_(1.0) { }
     virtual ~LossBase() { }
     
     // Add a loss value to "edge" that is a child of "node"
@@ -26,7 +26,7 @@ public:
     virtual void Initialize(const CombinedAlignment & combined) { }
 
     // Add a loss value to each edge in a hypergraph
-    void AddLossToHypergraph(const CombinedAlignment & combined, 
+    void AddLossToHyperGraph(const CombinedAlignment & combined, 
                              HyperGraph & graph) {
         int added_edges = 0;
         Initialize(combined);
@@ -43,7 +43,8 @@ public:
                         <<added_edges<<" != "<<graph.GetEdges().size());
     }
 
-private:
+protected:
+    double weight_;
 
 };
 

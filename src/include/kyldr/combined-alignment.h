@@ -18,7 +18,7 @@ public:
     } NullHandler;
 
     // Constructor, do nothing
-    CombinedAlignment() { }
+    CombinedAlignment() : trg_len_(-1) { }
     CombinedAlignment(const Alignment & al) { BuildFromAlignment(al); }
 
     // Build a combined alignment from an uncombined alignment, using
@@ -50,11 +50,13 @@ public:
     const std::pair<int,int> & operator[] (size_t src) const {
         return SafeAccess(spans_, src);
     }
-    int size() const { return spans_.size(); }
+    int GetSrcLen() const { return spans_.size(); }
+    int GetTrgLen() const { return trg_len_; }
 
 private:
 
     std::vector<std::pair<int,int> > spans_;
+    int trg_len_;
 
 };
 

@@ -18,10 +18,10 @@ public:
         //  x..
         //  ..x
         //  .x.
-        Alignment al(3,3);
-        al.AddAlignment(0,0);
-        al.AddAlignment(1,2);
-        al.AddAlignment(2,1);
+        Alignment al(MakePair(3,3));
+        al.AddAlignment(MakePair(0,0));
+        al.AddAlignment(MakePair(1,2));
+        al.AddAlignment(MakePair(2,1));
         cal = CombinedAlignment(al);
         // Create a sentence
         string str = "he ate rice";

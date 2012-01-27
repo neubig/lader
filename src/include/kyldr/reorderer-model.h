@@ -23,14 +23,7 @@ public:
 
     // Calculate the score of one edge
     void ScoreEdge(HyperEdge & edge, double loss_factor = 0) {
-        double score = 0;
-        // Add the losses
-        if(loss_factor) {
-            const std::vector<double> & loss = edge.GetLossVector();
-            for(int i = 0; i < (int)min(loss.size(),loss_weights_.size()); i++)
-                score += loss[i] * loss_weights_[i];
-            score *= loss_factor;
-        }
+        double score = loss_factor * edge.GetLoss();
         // Add the weights
         BOOST_FOREACH(FeaturePairInt val, edge.GetFeatureVector()) {
             if(val.first < (int)weights_.size())
@@ -50,17 +43,22 @@ public:
         node.SetScore(score);
     }
 
-    // Accessors
-    void SetWeights(const std::vector<double> & weights) { weights_ = weights; }
-    void SetLossWeights(const std::vector<double> & weights) { 
-        loss_weights_ = weights;
+    // Adjust the weights
+    void AdjustWeights(const FeatureVectorInt & feats, double weight) {
+        BOOST_FOREACH(FeaturePairInt feat, feats) {
+            if((int)weights_.size() <= feat.first)
+                weights_.resize(feat.first+1, 0);
+            weights_[feat.first] += feat.second * weight;
+        }
     }
 
+    // Accessors
+    const std::vector<double> & GetWeights() { return weights_; }
+    void SetWeights(const std::vector<double> & weights) { weights_ = weights; }
+
 private:
-    // The set of feature functions
-    FeatureSet feature_set_;
     // Weights over features and weights over losses
-    std::vector<double> weights_, loss_weights_;
+    std::vector<double> weights_;
 
 };
 

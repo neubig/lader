@@ -4,34 +4,60 @@
 #include <vector>
 #include <kyldr/util.h>
 
+
 namespace kyldr {
 
 // A string of alignments for a particular sentence
 class Alignment {
 public:
+    // Pair of words in an alignment
+    typedef std::pair<int,int> AlignmentPair;
+
     // Constructor with lengths of the source and target sentence
-    Alignment(int src_len, int trg_len) : src_len_(src_len), trg_len_(trg_len) { }
+    Alignment(const AlignmentPair & lens)
+        : len_(lens) { }
 
     // Add a single alignment
-    void AddAlignment(int src, int trg) {
+    void AddAlignment(const AlignmentPair & al) {
 #ifdef KYLDR_SAFE
-        if(src >= src_len_ || trg >= trg_len_)
-            THROW_ERROR("Out of bounds in AddAlignment");
+        if(al.first >= len_.first || al.second >= len_.second)
+            THROW_ERROR("Out of bounds in AddAlignment: "<< al << ", " << len_);
 #endif
-        vec_.push_back(MakePair(src,trg));
+        vec_.push_back(al);
+    }
+
+    // Convert to and from strings
+    std::string ToString() const;
+    static Alignment * FromString(const std::string & str);
+
+    // Comparators
+    bool operator== (const Alignment & rhs) {
+        if(len_ != rhs.len_ ||
+           vec_.size() != rhs.vec_.size())
+            return false;
+        for(int i = 0; i < (int)vec_.size(); i++)
+            if(vec_[i] != rhs.vec_[i])
+                return false;
+        return true;
+    }
+    bool operator!= (const Alignment & rhs) {
+        return !(*this == rhs);
     }
 
     // ------------- Accessors --------------
-    const std::vector<std::pair<int,int> > & GetAlignmentVector() const {
+    const std::vector<AlignmentPair> & GetAlignmentVector() const {
         return vec_;
     }
-    int GetSrcLen() const { return src_len_; }
-    int GetTrgLen() const { return trg_len_; }
+    int GetSrcLen() const { return len_.first; }
+    int GetTrgLen() const { return len_.second; }
 
 private:
 
-    std::vector<std::pair<int,int> > vec_;
-    int src_len_, trg_len_;
+    // Split a string in the form X-Y into an alignment pair
+    static AlignmentPair SplitAlignment(const std::string & str);
+
+    AlignmentPair len_;
+    std::vector<AlignmentPair > vec_;
 
 };
 

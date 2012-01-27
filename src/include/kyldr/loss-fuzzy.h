@@ -19,27 +19,46 @@ public:
                          HyperEdge * edge) {
         int loss = 0;
         const HyperSpan & span = node->GetSpan();
-        // For straight non-terms, check if the inside values are contiguous
-        if(edge->GetType() == HyperEdge::EDGE_STR)
-            loss = CombinedAlignment::IsContiguous(
-                                edge->GetLeftChild()->GetSpan().GetTrgRight(),
-                                edge->GetRightChild()->GetSpan().GetTrgLeft()) ? 0 : 1;
-        // For inverted non-terms, check if the outside values are contiguous
-        else if(edge->GetType() == HyperEdge::EDGE_INV)
-            loss = CombinedAlignment::IsContiguous(
-                                edge->GetRightChild()->GetSpan().GetTrgRight(),
-                                edge->GetLeftChild()->GetSpan().GetTrgLeft()) ? 0 : 1;
-        // For straight terminals, check in order
-        else if(edge->GetType() == HyperEdge::EDGE_TERMSTR) {
-            for(int i = span.GetLeft(); i < span.GetRight(); i++)
-                loss += CombinedAlignment::IsContiguous(combined[i],
-                                                        combined[i+1]) ? 0 : 1;
-        }
-        // For inverted terminals, check in reverse order
-        else if(edge->GetType() == HyperEdge::EDGE_TERMINV) {
-            for(int i = span.GetRight(); i > span.GetLeft(); i--)
-                loss += CombinedAlignment::IsContiguous(combined[i],
-                                                        combined[i-1]) ? 0 : 1;
+        switch (edge->GetType()) {
+            // For roots, check that both edges are contiguous
+            case HyperEdge::EDGE_ROOT:
+                if(!CombinedAlignment::IsContiguous(
+                        span.GetTrgLeft(),
+                        edge->GetLeftChild()->GetSpan().GetTrgLeft()))
+                    loss = weight_;
+                if(!CombinedAlignment::IsContiguous(
+                         edge->GetLeftChild()->GetSpan().GetTrgRight(),
+                         span.GetTrgRight()))
+                    loss += weight_;
+                break;
+            // For straight non-terms, check inside values are contiguous
+            case HyperEdge::EDGE_STR:
+                if(!CombinedAlignment::IsContiguous(
+                        edge->GetLeftChild()->GetSpan().GetTrgRight(),
+                        edge->GetRightChild()->GetSpan().GetTrgLeft()))
+                    loss = weight_;
+                break;
+            // For inverted non-terms, check outside values are contiguous
+            case HyperEdge::EDGE_INV:
+                if(!CombinedAlignment::IsContiguous(
+                        edge->GetRightChild()->GetSpan().GetTrgRight(),
+                        edge->GetLeftChild()->GetSpan().GetTrgLeft()))
+                    loss = weight_;
+                break;
+            case HyperEdge::EDGE_TERMSTR:
+                for(int i = span.GetLeft(); i < span.GetRight(); i++)
+                    if(!CombinedAlignment::IsContiguous(combined[i],
+                                                        combined[i+1]))
+                        loss += weight_;
+                break;
+            case HyperEdge::EDGE_TERMINV:
+                for(int i = span.GetRight(); i > span.GetLeft(); i--)
+                    if(!CombinedAlignment::IsContiguous(combined[i],
+                                                        combined[i-1]))
+                        loss += weight_;
+                break;
+            default:
+                THROW_ERROR("Bad edge type in LossFuzzy");
         }
         // Add the loss to the edge
         edge->AddLoss(loss);
