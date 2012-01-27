@@ -53,6 +53,22 @@ public:
                                 const HyperNode & node,
                                 const HyperEdge & edge);
 
+    // Get the type of this feature generator
+    virtual std::string GetType() const { return "seq"; }
+
+    // Check whether this is equal
+    virtual bool CheckEqual(const FeatureBase & rhs) const {
+        if(rhs.GetType() != this->GetType())
+            return false;
+        const FeatureSequence & rhs_seq = (const FeatureSequence &)rhs;
+        if(feature_templates_.size() != rhs_seq.feature_templates_.size())
+            return false;
+        for(int i = 0; i < (int)feature_templates_.size(); i++)
+            if(feature_templates_[i] != rhs_seq.feature_templates_[i])
+                return false;
+        return true;
+    }
+
     // Check to make sure that the feature template can be interpreted
     static bool FeatureTemplateIsLegal(const std::string & name);
 

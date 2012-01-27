@@ -54,6 +54,7 @@ void HyperGraph::AddNonTerminalPair(const HyperNode * left,
     // Combine the straight non-terminal
     HyperNode * str_node = GetNodeAtSpan(
         HyperSpan(l.GetLeft(), r.GetRight(), l.GetTrgLeft(), r.GetTrgRight()));
+    // cerr << "adding new node " << str_node->GetIdx() << ": " << str_node->GetSpan() << endl;
     str_node->AddEdge(AddNewEdge(HyperEdge::EDGE_STR));
     // Combine the inverted non-terminal (note l and r are switched)
     HyperNode * inv_node = GetNodeAtSpan(

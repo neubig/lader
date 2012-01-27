@@ -28,7 +28,7 @@ public:
 
     // Convert to and from strings
     std::string ToString() const;
-    static Alignment * FromString(const std::string & str);
+    static Alignment FromString(const std::string & str);
 
     // Comparators
     bool operator== (const Alignment & rhs) {

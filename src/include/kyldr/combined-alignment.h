@@ -19,7 +19,10 @@ public:
 
     // Constructor, do nothing
     CombinedAlignment() : trg_len_(-1) { }
-    CombinedAlignment(const Alignment & al) { BuildFromAlignment(al); }
+    CombinedAlignment(const Alignment & al,
+                      NullHandler handler = LEAVE_NULL_AS_IS) {
+        BuildFromAlignment(al, handler);
+    }
 
     // Build a combined alignment from an uncombined alignment, using
     // the designated null handler to either leave nulls as is, or attach

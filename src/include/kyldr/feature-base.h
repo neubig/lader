@@ -46,6 +46,16 @@ public:
                                 const HyperNode & node,
                                 const HyperEdge & edge) = 0;
 
+    // Get the type string of this particular value
+    virtual std::string GetType() const = 0;
+
+    // Check to make sure this is equal to the right side
+    virtual bool CheckEqual(const FeatureBase & rhs) const = 0;
+
+    // Create a new sub-class of a particular type
+    //  type=seq --> FeatureSequence
+    static FeatureBase* CreateNew(const std::string & type);
+
 private:
 
 };

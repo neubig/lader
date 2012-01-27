@@ -30,15 +30,15 @@ Alignment::AlignmentPair Alignment::SplitAlignment(const string & str) {
     istringstream right(left_right[1]); right >> ret.second;
     return ret;
 }
-Alignment * Alignment::FromString(const string & str) {
+Alignment Alignment::FromString(const string & str) {
     vector<string> length_and_align;
     algorithm::split_regex(length_and_align, str, regex(" \\|\\|\\| "));
     if(length_and_align.size() != 2)
         THROW_ERROR("Bad alignment sting " << str);
-    Alignment * ret = new Alignment(SplitAlignment(length_and_align[0]));
+    Alignment ret(SplitAlignment(length_and_align[0]));
     tokenizer<char_separator<char> > 
                     aligns(length_and_align[1], char_separator<char>(" "));
     BOOST_FOREACH(string str, aligns)
-        ret->AddAlignment(SplitAlignment(str));
+        ret.AddAlignment(SplitAlignment(str));
     return ret;
 }

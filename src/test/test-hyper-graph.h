@@ -239,6 +239,11 @@ public:
         return ret;
     }
 
+    int TestLossIsZero() {
+        HyperEdge edge;
+        return (edge.GetLoss() == 0) ? 1 : 0;
+    }
+
 private:
 
     HyperSpan span0, span1, span2;
@@ -255,6 +260,7 @@ public:
         done++; cout << "TestAddNonTerminals()" << endl; if(TestAddNonTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestCumulativeScore()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateFeatures()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLossIsZero()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

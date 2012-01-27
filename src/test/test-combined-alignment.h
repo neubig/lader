@@ -93,14 +93,13 @@ public:
         exp.AddAlignment(MakePair(1,1));
         exp.AddAlignment(MakePair(1,3));
         string str = exp.ToString();
-        Alignment * act = Alignment::FromString(str);
+        Alignment act = Alignment::FromString(str);
         int ret = 1;
-        if(exp != *act) {
+        if(exp != act) {
             cerr << "exp '" << exp.ToString() << 
-                    "' != act '"<<act->ToString()<<"'" <<endl;
+                    "' != act '"<<act.ToString()<<"'" <<endl;
             ret = 0;
         }
-        delete act;
         return ret;
     }
 

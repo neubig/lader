@@ -24,7 +24,7 @@ public:
     // Constructor
     HyperEdge(int id = -1, Type type = EDGE_NO_TYPE, 
               HyperNode * left_child = NULL, HyperNode * right_child = NULL)
-        : id_(id), type_(type), score_(0.0),
+        : id_(id), type_(type), score_(0.0), loss_(0.0),
           left_child_(left_child), right_child_(right_child) { }
 
     // Add a single value to the loss vector

@@ -26,61 +26,28 @@ public:
 
     // Generates the features that can be factored over a node
     void AddNodeFeatures(const std::vector<FeatureDataBase*> & sent,
-                         HyperNode & node) {
-        // No features are generated over root nodes
-        if(node.IsRoot()) return;
-        // Otherwise generate features
-        FeatureVectorInt feats;
-        for(int i = 0; i < (int)sent.size(); i++) {
-            FeatureVectorString str_feats = 
-                feature_gens_[i]->GenerateNodeFeatures(*sent[i], node);
-            for(int j = 0; j < (int)str_feats.size(); j++)
-                feats.push_back(
-                    MakePair(feature_ids_.GetId(str_feats[j].first, add_),
-                             str_feats[j].second));
-        }
-        sort(feats.begin(), feats.end());
-        node.SetFeatureVector(feats);
-    }
+                         HyperNode & node);
 
     // Generates the features that can be factored over a node
     void AddEdgeFeatures(const std::vector<FeatureDataBase*> & sent,
                          const HyperNode & node,
-                         HyperEdge & edge) {
-        // No features are generated over root nodes
-        if(node.IsRoot()) return;
-        // Otherwise generate the features
-        FeatureVectorInt feats;
-        for(int i = 0; i < (int)sent.size(); i++) {
-            FeatureVectorString str_feats = 
-                feature_gens_[i]->GenerateEdgeFeatures(*sent[i], node, edge);
-            for(int j = 0; j < (int)str_feats.size(); j++)
-                feats.push_back(
-                    MakePair(feature_ids_.GetId(str_feats[j].first, add_),
-                             str_feats[j].second));
-        }
-        sort(feats.begin(), feats.end());
-        edge.SetFeatureVector(feats);
-    }
+                         HyperEdge & edge);
 
     // Add features to the entire hypergraph
     void AddHyperGraphFeatures(const std::vector<FeatureDataBase*> & sent,
-                               HyperGraph & graph) {
-        BOOST_FOREACH(HyperNode * node, graph.GetNodes()) {
-            AddNodeFeatures(sent, *node);
-            BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
-                AddEdgeFeatures(sent, *node, *edge);
-        }
-    }
+                               HyperGraph & graph);
     
     // Change an integer-indexed feature vector into a string-indexed vector
-    FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec) {
-        FeatureVectorString ret(vec.size());
-        for(int i = 0; i < (int)vec.size(); i++)
-            ret[i] = MakePair(feature_ids_.GetSymbol(vec[i].first),
-                              vec[i].second);
-        return ret;
-    }
+    FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec);
+
+    // Parse a multi-factor input separated by tabs
+    std::vector<FeatureDataBase*> ParseInput(const std::string & line) const;
+
+    // Parse the configuration
+    void ParseConfiguration(const std::string & str);
+
+    // Accessors
+    const FeatureBase* GetGenerator(int id) const { return feature_gens_[id]; }
 
 private:
 

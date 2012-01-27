@@ -227,6 +227,16 @@ public:
         return ret;
     }
 
+    int TestFeatureSetFromConfiguration() {
+        FeatureSequence seq0, seq1;
+        seq0.ParseConfiguration("S%ET%SS,T%ET");
+        seq1.ParseConfiguration("B%LL%RR");
+        FeatureSet set;
+        set.ParseConfiguration("seq=S%ET%SS,T%ET|seq=B%LL%RR");
+        return ((seq0.CheckEqual(*set.GetGenerator(0))) && 
+                (seq1.CheckEqual(*set.GetGenerator(1)))) ? 1 : 0;
+    }
+
 
     bool RunTest() {
         int done = 0, succeeded = 0;
@@ -237,6 +247,7 @@ public:
         done++; cout << "TestEdgeFeatures()" << endl; if(TestEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestSetNodeFeatures()" << endl; if(TestSetNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestSetEdgeFeatures()" << endl; if(TestSetEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestFeatureSetFromConfiguration()" << endl; if(TestFeatureSetFromConfiguration()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSequence Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

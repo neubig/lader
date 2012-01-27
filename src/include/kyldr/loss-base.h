@@ -2,6 +2,7 @@
 #define LOSS_BASE_H__
 
 #include <kyldr/combined-alignment.h>
+#include <kyldr/hyper-graph.h>
 #include <kyldr/hyper-node.h>
 #include <kyldr/hyper-edge.h>
 
