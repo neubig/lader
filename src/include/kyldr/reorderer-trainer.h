@@ -18,6 +18,8 @@ public:
         BOOST_FOREACH(std::vector<FeatureDataBase*> vec, data_)
             BOOST_FOREACH(FeatureDataBase* ptr, vec)
                 delete ptr;
+        BOOST_FOREACH(LossBase * loss, losses_)
+            delete loss;
     }
 
     // Initialize the model
