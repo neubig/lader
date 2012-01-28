@@ -9,9 +9,10 @@
 namespace kyldr {
 
 // Real-valued feature vectors that are either indexed with std::strings or ints
-typedef std::vector<std::pair<std::string, double> > FeatureVectorString;
+typedef std::pair<std::string, double> FeaturePairString;
+typedef std::vector<FeaturePairString> FeatureVectorString;
 typedef std::pair<int, double> FeaturePairInt;
-typedef std::vector<std::pair<int, double> > FeatureVectorInt;
+typedef std::vector<FeaturePairInt> FeatureVectorInt;
 
 // Vector subtract
 FeatureVectorInt VectorSubtract(const FeatureVectorInt & a, 

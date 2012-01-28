@@ -11,6 +11,10 @@ double LossFuzzy::AddLossToEdge(const CombinedAlignment & combined,
     switch (edge->GetType()) {
         // For roots, check that both edges are contiguous
         case HyperEdge::EDGE_ROOT:
+#ifdef KYLDR_SAFE
+            if(!edge->GetLeftChild())
+                THROW_ERROR("Root edge without left child");
+#endif
             if(!CombinedAlignment::IsContiguous(
                     span.GetTrgLeft(),
                     edge->GetLeftChild()->GetSpan().GetTrgLeft()))
@@ -22,6 +26,10 @@ double LossFuzzy::AddLossToEdge(const CombinedAlignment & combined,
             break;
         // For straight non-terms, check inside values are contiguous
         case HyperEdge::EDGE_STR:
+#ifdef KYLDR_SAFE
+            if(!edge->GetLeftChild() || !edge->GetLeftChild())
+                THROW_ERROR("Straight edge without two children");
+#endif
             if(!CombinedAlignment::IsContiguous(
                     edge->GetLeftChild()->GetSpan().GetTrgRight(),
                     edge->GetRightChild()->GetSpan().GetTrgLeft()))
@@ -29,6 +37,10 @@ double LossFuzzy::AddLossToEdge(const CombinedAlignment & combined,
             break;
         // For inverted non-terms, check outside values are contiguous
         case HyperEdge::EDGE_INV:
+#ifdef KYLDR_SAFE
+            if(!edge->GetLeftChild() || !edge->GetLeftChild())
+                THROW_ERROR("Inverted edge without two children");
+#endif
             if(!CombinedAlignment::IsContiguous(
                     edge->GetRightChild()->GetSpan().GetTrgRight(),
                     edge->GetLeftChild()->GetSpan().GetTrgLeft()))

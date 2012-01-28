@@ -1,4 +1,5 @@
 #include <kyldr/reorderer-trainer.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace kyldr;
 using namespace boost;
@@ -13,7 +14,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     FeatureVectorInt model_features, oracle_features;
     // Perform an iterations
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
-        double iter_loss = 0;
+        double iter_model_loss = 0, iter_oracle_loss = 0;
         // Over all values in the corpus
         for(int sent = 0; sent < (int)data_.size(); sent++) {
             // Make the hypergraph
@@ -44,9 +45,30 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                 VectorSubtract(oracle_features, model_features),
                 learning_rate_);
             // Add the statistics for this iteration
-            iter_loss += model_loss;
-            cout << "oracle_score=" << oracle_score << " model_score="<<model_score<< " oracle_loss="<<oracle_loss<<" model_loss="<<model_loss << endl;
+            iter_model_loss += model_loss;
+            iter_oracle_loss += oracle_loss;
+            // cout << "oracle_score=" << oracle_score << " model_score="<<model_score<< " oracle_loss="<<oracle_loss<<" model_loss="<<model_loss << endl;
         }
-        cout << endl << "Finished iteration " << iter << " with loss " << iter_loss << endl;
+        cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;
+        if(iter_model_loss == iter_oracle_loss) 
+            break;
     }
+}
+
+void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
+    features_.ParseConfiguration(config.GetString("feature_profile"));
+    learning_rate_ = config.GetDouble("learning_rate");
+    std::vector<std::string> losses, first_last;
+    algorithm::split(
+        losses, config.GetString("loss_profile"), is_any_of("|"));
+    BOOST_FOREACH(string s, losses) {
+        algorithm::split(first_last, s, is_any_of("="));
+        if(first_last.size() != 2) THROW_ERROR("Bad loss: " << s);
+        LossBase * loss = LossBase::CreateNew(first_last[0]);
+        double dub;
+        istringstream iss(first_last[1]);
+        iss >> dub;
+        loss->SetWeight(dub);
+        losses_.push_back(loss);
+    } 
 }

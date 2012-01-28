@@ -48,6 +48,9 @@ public:
 
     // Accessors
     const FeatureBase* GetGenerator(int id) const { return feature_gens_[id]; }
+    const std::string & GetFeatureName(int id) const {
+        return feature_ids_.GetSymbol(id);
+    }
 
 private:
 

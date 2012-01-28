@@ -70,8 +70,10 @@ public:
     }
 
     // Add a single new edge and return a pointer to it
-    HyperEdge * AddNewEdge(HyperEdge::Type type) {
-        HyperEdge * edge = new HyperEdge(edges_.size(), type);
+    HyperEdge * AddNewEdge(HyperEdge::Type type,
+                           HyperNode* left = NULL,
+                           HyperNode* right = NULL) {
+        HyperEdge * edge = new HyperEdge(edges_.size(), type, left, right);
         edges_.push_back(edge);
         return edge;
     }
@@ -98,7 +100,7 @@ public:
 private:
 
     // Add non-terminals for a single pair of nodes
-    void AddNonTerminalPair(const HyperNode * left, const HyperNode * right);
+    void AddNonTerminalPair(HyperNode * left, HyperNode * right);
 
     // Permanent data structures
     std::vector<HyperNode*> nodes_; // The nodes of the hypergraph

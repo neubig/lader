@@ -1,3 +1,4 @@
+#include "test-feature-vector.h"
 #include "test-feature-sequence.h"
 #include "test-combined-alignment.h"
 #include "test-hyper-graph.h"
@@ -15,6 +16,7 @@ int main() {
     tests.push_back(new TestHyperGraph());
     tests.push_back(new TestLossFuzzy());
     tests.push_back(new TestFeatureSequence());
+    tests.push_back(new TestFeatureVector());
     tests.push_back(new TestReordererModel());
     // Run all the tests
     int number_passed = 0;

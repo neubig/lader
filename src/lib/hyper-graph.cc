@@ -19,7 +19,7 @@ HyperNode * HyperGraph::GetNodeAtSpan(const HyperSpan & span,
     // If the node spans the entire source side, we need to add it to
     // the root as well
     if(span.GetLeft() == 0 && span.GetRight() == GetSrcLength() - 1) {
-        HyperEdge * edge = AddNewEdge(HyperEdge::EDGE_ROOT);
+        HyperEdge * edge = AddNewEdge(HyperEdge::EDGE_ROOT, ret);
         nodes_[0]->AddEdge(edge);
     }
     return ret;
@@ -48,18 +48,17 @@ void HyperGraph::AddTerminals(const CombinedAlignment & combined,
     }
 }
 
-void HyperGraph::AddNonTerminalPair(const HyperNode * left, 
-                                    const HyperNode * right) {
+void HyperGraph::AddNonTerminalPair(HyperNode * left, HyperNode * right) {
     const HyperSpan & l = left->GetSpan(), & r = right->GetSpan();
     // Combine the straight non-terminal
     HyperNode * str_node = GetNodeAtSpan(
         HyperSpan(l.GetLeft(), r.GetRight(), l.GetTrgLeft(), r.GetTrgRight()));
     // cerr << "adding new node " << str_node->GetIdx() << ": " << str_node->GetSpan() << endl;
-    str_node->AddEdge(AddNewEdge(HyperEdge::EDGE_STR));
+    str_node->AddEdge(AddNewEdge(HyperEdge::EDGE_STR,left,right));
     // Combine the inverted non-terminal (note l and r are switched)
     HyperNode * inv_node = GetNodeAtSpan(
         HyperSpan(l.GetLeft(), r.GetRight(), r.GetTrgLeft(), l.GetTrgRight()));
-    inv_node->AddEdge(AddNewEdge(HyperEdge::EDGE_INV));
+    inv_node->AddEdge(AddNewEdge(HyperEdge::EDGE_INV,left,right));
 }
 
 void HyperGraph::AddNonTerminals() {

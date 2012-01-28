@@ -97,7 +97,7 @@ public:
     }
 
     // Getter functions
-    std::string GetString(const std::string & name) const {
+    const std::string & GetString(const std::string & name) const {
         ConfigMap::const_iterator it = optArgs_.find(name);
         if(it == optArgs_.end())
             THROW_ERROR("Requesting bad argument "<<name<<" from configuration");

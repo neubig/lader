@@ -33,9 +33,10 @@ public:
         Initialize(combined);
         std::vector<HyperNode*> & nodes = graph.GetNodes();
         for(int i = 0; i < (int)nodes.size(); i++) {
-            std::vector<HyperEdge*> & edges = graph.GetEdges();
+            std::vector<HyperEdge*> & edges = nodes[i]->GetEdges();
             for(int j = 0; j < (int)edges.size(); j++) {
-                AddLossToEdge(combined, nodes[i], edges[j]);
+                AddLossToEdge(
+                    combined, SafeAccess(nodes,i), SafeAccess(edges, j));
                 added_edges++;
             }
         }
@@ -43,6 +44,13 @@ public:
             THROW_ERROR("Didn't add loss for all edges ("
                         <<added_edges<<" != "<<graph.GetEdges().size());
     }
+
+    // Create a new sub-class of a particular type
+    //  type=fuzzy --> LossFuzzy
+    static LossBase* CreateNew(const std::string & type);
+
+    // Accessors
+    void SetWeight(double weight) { weight_ = weight; }
 
 protected:
     double weight_;

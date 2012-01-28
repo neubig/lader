@@ -13,14 +13,14 @@ FeatureVectorInt kyldr::VectorSubtract(const FeatureVectorInt & a,
         if(x == y) {
             if(a[i].second != b[j].second)
                 ret.push_back(MakePair(x, a[i].second - b[j].second));
-            x = (++i == (int)a.size()?a[i].first:INT_MAX);
-            y = (++j == (int)b.size()?b[j].first:INT_MAX);
+            x = (++i == (int)a.size()?INT_MAX:a[i].first);
+            y = (++j == (int)b.size()?INT_MAX:b[j].first);
         } else if(x < y) {
             ret.push_back(MakePair(x, a[i].second));
-            x = (++i == (int)a.size()?a[i].first:INT_MAX);
+            x = (++i == (int)a.size()?INT_MAX:a[i].first);
         } else {
             ret.push_back(MakePair(y, -b[j].second));
-            y = (++j == (int)b.size()?b[j].first:INT_MAX);
+            y = (++j == (int)b.size()?INT_MAX:b[j].first);
         }
     }
     return ret;
