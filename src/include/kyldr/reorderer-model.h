@@ -11,6 +11,9 @@ namespace kyldr {
 class ReordererModel {
 public:
     
+    typedef std::pair<std::string,double> WeightPair;
+    typedef std::tr1::unordered_map<std::string,double> WeightMap;
+    
     // Calculate the scores of each single edge and node in a hypergraph
     //  The loss_factor indicates the multiplier of the loss term compared
     //  to the weight term (0 by default = don't consider loss in scoring)
@@ -23,7 +26,7 @@ public:
     void ScoreNode(HyperNode & node);
 
     // Adjust the weights
-    void AdjustWeights(const FeatureVectorInt & feats, double weight);
+    void AdjustWeights(const FeatureVector & feats, double weight);
 
     // IO Functions
     void ToStream(std::ostream & out);
@@ -35,15 +38,16 @@ public:
     }
 
     // Accessors
-    double GetWeight(int id) const {
-        return id < (int)weights_.size() ? weights_[id] : 0;
+    double GetWeight(std::string id) const {
+        WeightMap::const_iterator wit = weights_.find(id);        
+        return wit != weights_.end() ? wit->second : 0;
     }
-    const std::vector<double> & GetWeights() const { return weights_; }
-    void SetWeights(const std::vector<double> & weights) { weights_ = weights; }
+    const WeightMap & GetWeights() const { return weights_; }
+    void SetWeights(const WeightMap & weights) { weights_ = weights; }
 
 private:
     // Weights over features and weights over losses
-    std::vector<double> weights_;
+    WeightMap weights_;
 
 };
 

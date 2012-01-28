@@ -12,13 +12,11 @@ namespace kyldr {
 class FeatureSet {
 public:
 
-    FeatureSet() : feature_ids_(new SymbolSet<std::string,int>), add_(true) { }
+    FeatureSet() : add_(true) { }
     ~FeatureSet() {
         BOOST_FOREACH(FeatureBase * gen, feature_gens_)
             if(gen)
                 delete gen;
-        if(feature_ids_)
-            delete feature_ids_;
     }
 
     // Add a feature generator, and take control of it
@@ -28,19 +26,18 @@ public:
 
     // Generates the features that can be factored over a node
     void AddNodeFeatures(const std::vector<FeatureDataBase*> & sent,
-                         HyperNode & node);
+                         HyperNode & node,
+                         bool add = false);
 
     // Generates the features that can be factored over a node
     void AddEdgeFeatures(const std::vector<FeatureDataBase*> & sent,
                          const HyperNode & node,
-                         HyperEdge & edge);
+                         HyperEdge & edge,
+                         bool add = false);
 
     // Add features to the entire hypergraph
     void AddHyperGraphFeatures(const std::vector<FeatureDataBase*> & sent,
                                HyperGraph & graph);
-    
-    // Change an integer-indexed feature vector into a string-indexed vector
-    FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec);
 
     // Parse a multi-factor input separated by tabs
     std::vector<FeatureDataBase*> ParseInput(const std::string & line) const;
@@ -55,26 +52,16 @@ public:
     // Comparators
     bool operator== (const FeatureSet & rhs) {
         return (config_str_ == rhs.config_str_ &&
-                feature_gens_.size() == rhs.feature_gens_.size() &&
-                feature_ids_->size() == rhs.feature_ids_->size());
+                feature_gens_.size() == rhs.feature_gens_.size());
     }
 
     // Accessors
     const FeatureBase* GetGenerator(int id) const { return feature_gens_[id]; }
-    const std::string & GetFeatureName(int id) const {
-        return feature_ids_->GetSymbol(id);
-    }
-
-    void SetFeatureIds(SymbolSet<std::string,int>* feature_ids) {
-        if(feature_ids_) delete feature_ids_;
-        feature_ids_ = feature_ids;
-    }
 
 private:
 
     std::string config_str_; // The configuration string
     std::vector<FeatureBase*> feature_gens_; // Feature generators
-    SymbolSet<std::string,int>* feature_ids_; // Feature names and IDs
     bool add_; // Whether to allow the adding of new features
 
 };

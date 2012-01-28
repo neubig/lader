@@ -85,23 +85,26 @@ public:
         feat.ParseConfiguration("L%SL,R%SR,S%SS,N%SN");
         // These are both node-factored features, so they should exist for all
         // nodes, but no edges
-        FeatureVectorString node00exp, node12exp, edge00exp, edge12ntexp;
-        node00exp.push_back(MakePair(string("L||he"), 1));
-        node00exp.push_back(MakePair(string("R||he"), 1));
-        node00exp.push_back(MakePair(string("S||he"), 1));
-        node00exp.push_back(MakePair(string("N||1"), 1));
-        node12exp.push_back(MakePair(string("L||ate"), 1));
-        node12exp.push_back(MakePair(string("R||rice"), 1));
-        node12exp.push_back(MakePair(string("S||ate rice"), 1));
-        node12exp.push_back(MakePair(string("N||2"), 1));
+        FeatureVector node00exp, node12exp, edge00exp, edge12ntexp;
+        node00exp.push_back(FeatureTuple(string("L||he"), -1, 1));
+        node00exp.push_back(FeatureTuple(string("R||he"), -1, 1));
+        node00exp.push_back(FeatureTuple(string("S||he"), -1, 1));
+        node00exp.push_back(FeatureTuple(string("N||1"), -1, 1));
+        node12exp.push_back(FeatureTuple(string("L||ate"), -1, 1));
+        node12exp.push_back(FeatureTuple(string("R||rice"), -1, 1));
+        node12exp.push_back(FeatureTuple(string("S||ate rice"), -1, 1));
+        node12exp.push_back(FeatureTuple(string("N||2"), -1, 1));
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(node00exp, feat.GenerateNodeFeatures(sent,node00));
-        ret *= CheckVector(node12exp, feat.GenerateNodeFeatures(sent,node12));
-        ret *= CheckVector(edge00exp, 
-                           feat.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge12ntexp, 
-                           feat.GenerateEdgeFeatures(sent, node12, edge12nt));
+        FeatureVector node00act, node12act, edge00act, edge12ntact;
+        feat.GenerateNodeFeatures(sent,node00,node00act);
+        feat.GenerateNodeFeatures(sent,node12,node12act);
+        feat.GenerateEdgeFeatures(sent, node00, edge00, edge00act);
+        feat.GenerateEdgeFeatures(sent, node12, edge12nt, edge12ntact);
+        ret *= CheckVector(node00exp, node00act);
+        ret *= CheckVector(node12exp, node12act);
+        ret *= CheckVector(edge00exp, edge00act);
+        ret *= CheckVector(edge12ntexp, edge12ntact);
         return ret;
     }
 
@@ -111,39 +114,48 @@ public:
         featr.ParseConfiguration("L%RL,R%RR,S%RS,N%RN");
         feata.ParseConfiguration("A%SS%LS%RS");
         // These features apply to only non-terminals
-        FeatureVectorString node00l, node02l, edge00l, edge02l;
-        edge02l.push_back(MakePair(string("L||he"), 1));
-        edge02l.push_back(MakePair(string("R||he"), 1));
-        edge02l.push_back(MakePair(string("S||he"), 1));
-        edge02l.push_back(MakePair(string("N||1"), 1));
-        FeatureVectorString node00r, node02r, edge00r, edge02r;
-        edge02r.push_back(MakePair(string("L||ate"), 1));
-        edge02r.push_back(MakePair(string("R||rice"), 1));
-        edge02r.push_back(MakePair(string("S||ate rice"), 1));
-        edge02r.push_back(MakePair(string("N||2"), 1));
-        FeatureVectorString node00a, node02a, edge00a, edge02a;
+        FeatureVector node00l, node02l, edge00l, edge02l;
+        edge02l.push_back(FeatureTuple(string("L||he"), -1, 1));
+        edge02l.push_back(FeatureTuple(string("R||he"), -1, 1));
+        edge02l.push_back(FeatureTuple(string("S||he"), -1, 1));
+        edge02l.push_back(FeatureTuple(string("N||1"), -1, 1));
+        FeatureVector node00r, node02r, edge00r, edge02r;
+        edge02r.push_back(FeatureTuple(string("L||ate"), -1, 1));
+        edge02r.push_back(FeatureTuple(string("R||rice"), -1, 1));
+        edge02r.push_back(FeatureTuple(string("S||ate rice"), -1, 1));
+        edge02r.push_back(FeatureTuple(string("N||2"), -1, 1));
+        FeatureVector node00a, node02a, edge00a, edge02a;
         edge02a.push_back(
-            MakePair(string("A||he ate rice||he||ate rice"), 1));
+            FeatureTuple(string("A||he ate rice||he||ate rice"), -1, 1));
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(node00l,featl.GenerateNodeFeatures(sent,node00));
-        ret *= CheckVector(node02l,featl.GenerateNodeFeatures(sent,node02));
-        ret *= CheckVector(edge00l,
-                           featl.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02l,
-                           featl.GenerateEdgeFeatures(sent, node02, edge02));
-        ret *= CheckVector(node00r,featr.GenerateNodeFeatures(sent,node00));
-        ret *= CheckVector(node02r,featr.GenerateNodeFeatures(sent,node02));
-        ret *= CheckVector(edge00r,
-                           featr.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02r,
-                           featr.GenerateEdgeFeatures(sent, node02, edge02));
-        ret *= CheckVector(node00a,feata.GenerateNodeFeatures(sent,node00));
-        ret *= CheckVector(node02a,feata.GenerateNodeFeatures(sent,node02));
-        ret *= CheckVector(edge00a,
-                           feata.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge02a,
-                           feata.GenerateEdgeFeatures(sent, node02, edge02));
+        FeatureVector node00actl, node02actl, edge00actl, edge02actl;
+        featl.GenerateNodeFeatures(sent,node00,node00actl);
+        featl.GenerateNodeFeatures(sent,node02,node02actl);
+        featl.GenerateEdgeFeatures(sent, node00, edge00, edge00actl);
+        featl.GenerateEdgeFeatures(sent, node02, edge02, edge02actl);
+        ret *= CheckVector(node00l, node00actl);
+        ret *= CheckVector(node02l, node02actl);
+        ret *= CheckVector(edge00l, edge00actl);
+        ret *= CheckVector(edge02l, edge02actl);
+        FeatureVector node00actr, node02actr, edge00actr, edge02actr;
+        featr.GenerateNodeFeatures(sent,node00,node00actr);
+        featr.GenerateNodeFeatures(sent,node02,node02actr);
+        featr.GenerateEdgeFeatures(sent, node00, edge00, edge00actr);
+        featr.GenerateEdgeFeatures(sent, node02, edge02, edge02actr);
+        ret *= CheckVector(node00r, node00actr);
+        ret *= CheckVector(node02r, node02actr);
+        ret *= CheckVector(edge00r, edge00actr);
+        ret *= CheckVector(edge02r, edge02actr);
+        FeatureVector node00acta, node02acta, edge00acta, edge02acta;
+        feata.GenerateNodeFeatures(sent,node00,node00acta);
+        feata.GenerateNodeFeatures(sent,node02,node02acta);
+        feata.GenerateEdgeFeatures(sent, node00, edge00, edge00acta);
+        feata.GenerateEdgeFeatures(sent, node02, edge02, edge02acta);
+        ret *= CheckVector(node00a, node00acta);
+        ret *= CheckVector(node02a, node02acta);
+        ret *= CheckVector(edge00a, edge00acta);
+        ret *= CheckVector(edge02a, edge02acta);
         return ret;
     }
 
@@ -151,21 +163,23 @@ public:
         FeatureSequence feat;
         feat.ParseConfiguration("D%CD,T%ET");
         // These features apply to non-terminals
-        FeatureVectorString node00exp, edge00exp, edge12exp, edge02exp;
-        edge00exp.push_back(MakePair(string("T||F"), 1));
-        edge12exp.push_back(MakePair(string("D||0"), 1));
-        edge12exp.push_back(MakePair(string("T||I"), 1));
-        edge02exp.push_back(MakePair(string("D||1"), 1));
-        edge02exp.push_back(MakePair(string("T||S"), 1));
+        FeatureVector node00exp, edge00exp, edge12exp, edge02exp;
+        edge00exp.push_back(FeatureTuple(string("T||F"), -1, 1));
+        edge12exp.push_back(FeatureTuple(string("D||0"), -1, 1));
+        edge12exp.push_back(FeatureTuple(string("T||I"), -1, 1));
+        edge02exp.push_back(FeatureTuple(string("D||1"), -1, 1));
+        edge02exp.push_back(FeatureTuple(string("T||S"), -1, 1));
         // Test the features
         int ret = 1;
-        ret *= CheckVector(node00exp,feat.GenerateNodeFeatures(sent, node00));
-        ret *= CheckVector(edge00exp,
-                           feat.GenerateEdgeFeatures(sent, node00, edge00));
-        ret *= CheckVector(edge12exp,
-                           feat.GenerateEdgeFeatures(sent, node12, edge12nt));
-        ret *= CheckVector(edge02exp,
-                           feat.GenerateEdgeFeatures(sent, node02, edge02));
+        FeatureVector node00act, edge12act, edge00act, edge02act;
+        feat.GenerateNodeFeatures(sent,node00,node00act);
+        feat.GenerateEdgeFeatures(sent, node00, edge00, edge00act);
+        feat.GenerateEdgeFeatures(sent, node12, edge12nt, edge12act);
+        feat.GenerateEdgeFeatures(sent, node02, edge02, edge02act);
+        ret *= CheckVector(node00exp, node00act);
+        ret *= CheckVector(edge12exp, edge12act);
+        ret *= CheckVector(edge00exp, edge00act);
+        ret *= CheckVector(edge02exp, edge02act);
         return ret;
     }
 

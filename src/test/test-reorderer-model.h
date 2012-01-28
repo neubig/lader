@@ -12,13 +12,13 @@ public:
 
     TestReordererModel() {
         // Create a model with weights
-        weights.push_back(1);
-        weights.push_back(2);
+        weights.insert(MakePair(string("0"),1));
+        weights.insert(MakePair(string("1"),2));
         model.SetWeights(weights);
         // Create a feature vector
-        feats.push_back(MakePair(0,1));
-        feats.push_back(MakePair(1,2));
-        feats.push_back(MakePair(2,3));
+        feats.push_back(FeatureTuple("0", 0, 1));
+        feats.push_back(FeatureTuple("1", 1, 2));
+        feats.push_back(FeatureTuple("2", 2, 3));
     }
 
     // Score a single node
@@ -57,31 +57,37 @@ public:
 
     int TestAdjustWeights() {
         // Make the input feature vector
-        FeatureVectorInt fvi;
-        fvi.push_back(MakePair(1,1));
-        fvi.push_back(MakePair(2,2));
-        fvi.push_back(MakePair(4,-4));
+        FeatureVector fvi;
+        fvi.push_back(FeatureTuple("1", 1, 1));
+        fvi.push_back(FeatureTuple("2", 2, 2));
+        fvi.push_back(FeatureTuple("4", 4, -4));
         // Make the reordering model
         ReordererModel mod;
         mod.AdjustWeights(fvi, 1);
         // Make the expected model
-        vector<double> exp(5,0);
-        exp[1] = 1; exp[2] = 2; exp[4] = -4;
+        ReordererModel::WeightMap exp;
+        exp.insert(MakePair(string("1"), 1));
+        exp.insert(MakePair(string("2"), 2));
+        exp.insert(MakePair(string("4"), -4));
         // Check to make sure it's ok
         int ret = 1;
-        ret *= CheckVector(exp, mod.GetWeights());
+        ret *= CheckMap(exp, mod.GetWeights());
         // Adjust again
         mod.AdjustWeights(fvi, -2);
-        exp[1] = -1; exp[2] = -2; exp[4] = 4;
-        ret *= CheckVector(exp, mod.GetWeights());
+        exp.clear();
+        exp.insert(MakePair(string("1"), -1));
+        exp.insert(MakePair(string("2"), -2));
+        exp.insert(MakePair(string("4"), 4));
+        ret *= CheckMap(exp, mod.GetWeights());
         return ret;
     }
 
     int TestModelIO() {
         ReordererModel exp;
-        vector<double> weights(6,0);
-        weights[1] = 1; weights[4] = 5;
-        exp.SetWeights(weights);
+        ReordererModel::WeightMap exp_weight;
+        exp_weight.insert(MakePair(string("1"), 1));
+        exp_weight.insert(MakePair(string("4"), 5));
+        exp.SetWeights(exp_weight);
         ostringstream oss;
         exp.ToStream(oss);
         istringstream iss(oss.str());
@@ -103,8 +109,8 @@ public:
 
 private:
     ReordererModel model;
-    std::vector<double> weights;
-    FeatureVectorInt feats;
+    ReordererModel::WeightMap weights;
+    FeatureVector feats;
 
 };
 

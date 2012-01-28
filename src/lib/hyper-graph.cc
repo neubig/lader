@@ -18,7 +18,7 @@ HyperNode * HyperGraph::GetNodeAtSpan(const HyperSpan & span,
     span_node_map_.insert(MakePair(span, ret));
     // If the node spans the entire source side, we need to add it to
     // the root as well
-    if(span.GetLeft() == 0 && span.GetRight() == GetSrcLength() - 1) {
+    if(span.GetLeft() == 0 && span.GetRight() == GetSrcLen() - 1) {
         HyperEdge * edge = AddNewEdge(HyperEdge::EDGE_ROOT, ret);
         nodes_[0]->AddEdge(edge);
     }
@@ -67,12 +67,12 @@ void HyperGraph::AddNonTerminals() {
         // Save the current values
         HyperNode * node = nodes_[i];
         // Travel through and combine all left neighbors
-        const std::vector<HyperNode*> & left_neighbors
+        const vector<HyperNode*> & left_neighbors
             = GetLeftNeighbors(node->GetSpan().GetLeft());
         for(int j = 0; j < (int)left_neighbors.size(); j++)
             AddNonTerminalPair(left_neighbors[j], node);
         // Travel through and combine all right neighbors
-        const std::vector<HyperNode*> & right_neighbors
+        const vector<HyperNode*> & right_neighbors
             = GetRightNeighbors(node->GetSpan().GetRight());
         for(int j = 0; j < (int)right_neighbors.size(); j++)
             AddNonTerminalPair(node, right_neighbors[j]);
@@ -84,4 +84,21 @@ void HyperGraph::AddNonTerminals() {
         if(l != -1)
             SafeAccess(right_neighbors_, l).push_back(node);
     }
+}
+
+void HyperGraph::AccumulateFeatures(const HyperNode * node,
+                        map<string,double> & feature_map) const{
+    // Add node features
+    BOOST_FOREACH(FeatureTuple feat_pair, SafeReference(GetNodeFeatures(*node)))
+        feature_map[feat_pair.name] += feat_pair.value;
+    // Add edge features
+    const HyperEdge * edge = node->GetBestEdge();
+    BOOST_FOREACH(FeatureTuple feat_pair, 
+                SafeReference(GetEdgeFeatures(*edge)))
+        feature_map[feat_pair.name] += feat_pair.value;
+    // Recurse if necessary
+    if(edge->GetLeftChild() != NULL)
+        AccumulateFeatures(edge->GetLeftChild(), feature_map);
+    if(edge->GetRightChild() != NULL)
+        AccumulateFeatures(edge->GetRightChild(), feature_map);
 }

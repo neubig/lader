@@ -39,14 +39,8 @@ public:
     HyperNode* GetLeftChild() { return left_child_; }
     HyperNode* GetRightChild() { return right_child_; }
     const double GetLoss() const { return loss_; }
-    const FeatureVectorInt & GetFeatureVector() const { 
-        return feature_vector_;
-    }
 
     void SetScore(double score) { score_ = score; }
-    void SetFeatureVector(const FeatureVectorInt & feature_vector) {
-        feature_vector_ = feature_vector;
-    }
     void SetLoss(double loss) { loss_ = loss; }
     void SetLeftChild (HyperNode* child) { left_child_ = child; }
     void SetRightChild(HyperNode* child) { right_child_ = child; }
@@ -60,8 +54,6 @@ private:
     double loss_;  // The loss of this graph
     // Left and right children, only active for non-terminals
     HyperNode *left_child_, *right_child_;
-    FeatureVectorInt feature_vector_; // The vector of features
-
 };
 
 }

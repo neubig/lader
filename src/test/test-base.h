@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <tr1/unordered_map>
 
 using namespace std;
 
@@ -41,6 +42,28 @@ protected:
             }
         }
         return ok;
+    }
+
+    // Map equality checking function
+    template <class Key, class Val>
+    bool CheckMap(const std::tr1::unordered_map<Key, Val> & a, 
+                  const std::tr1::unordered_map<Key, Val> & b) {
+        if(a.size() != b.size()) {
+            std::cerr << "CheckMap: a.size() != b.size() ("
+                      << a.size() <<", " <<b.size() << std::endl;
+            return false;
+        }
+        for(typename std::tr1::unordered_map<Key, Val>::const_iterator ait = a.begin();
+            ait != a.end();
+            ait++) {
+            typename std::tr1::unordered_map<Key, Val>::const_iterator bit = b.find(ait->first);
+            if(bit == b.end() || ait->second != bit->second) {
+                std::cerr << "CheckMap: values don't match at " 
+                          << ait->first << endl;
+                return false;
+            }
+        }
+        return true;
     }
 
 };
