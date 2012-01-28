@@ -62,12 +62,13 @@ public:
         datas.push_back(&sent_pos);
         // These are both node-factored features, so they should exist for all
         // nodes, but no edges
-        FeatureVector edge02exp;
-        edge02exp.push_back(FeatureTuple(string("SW||he||ate rice"), -1, 1));
-        edge02exp.push_back(FeatureTuple(string("SP||PRP||VBD NN"), -1, 1));
+        FeatureVectorString edge02exp;
+        edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
+        edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
         // Generate the features
         set.AddEdgeFeatures(datas, node02, edge02);
-        FeatureVector edge02act = edge02.GetFeatureVector();
+        FeatureVectorString edge02act =
+                set.StringifyFeatureIndices(edge02.GetFeatureVector());
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge02exp, edge02act);
@@ -100,12 +101,13 @@ public:
         datas.push_back(&sent_pos);
         // These are both node-factored features, so they should exist for all
         // nodes, but no edges
-        FeatureVector node00exp;
-        node00exp.push_back(FeatureTuple(string("SW||he"), -1, 1));
-        node00exp.push_back(FeatureTuple(string("SP||PRP"), -1, 1));
+        FeatureVectorString node00exp;
+        node00exp.push_back(MakePair(string("SW||he"), 1));
+        node00exp.push_back(MakePair(string("SP||PRP"), 1));
         // Generate the features
         set.AddNodeFeatures(datas, node00);
-        FeatureVector node00act = node00.GetFeatureVector();
+        FeatureVectorString node00act =
+                set.StringifyFeatureIndices(node00.GetFeatureVector());
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(node00exp, node00act);

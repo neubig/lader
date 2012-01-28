@@ -21,7 +21,7 @@ public:
     double GetCumulativeScore();
 
     // Accumulate features for the parsed subtree rooted at this node
-    FeatureVector AccumulateFeatures() const;
+    FeatureVectorInt AccumulateFeatures() const;
 
     // Accumulate loss for the parsed subtree rooted at this node
     double AccumulateLoss() const;
@@ -31,26 +31,26 @@ public:
 
     // Accessors
     int GetIdx() const { return idx_; }
-    int GetLeft() const { return span_.GetLeft(); }
-    int GetRight() const { return span_.GetRight(); }
     double GetScore() const { return score_; }
     const HyperSpan & GetSpan() const { return span_; }
     const std::vector<HyperEdge*> & GetEdges() const { return edges_; }
     std::vector<HyperEdge*> & GetEdges() { return edges_; }
-    bool IsRoot() const { return span_.GetLeft() == -1; }
-    const HyperEdge * GetBestEdge() const {
-        if(best_edge_ < 0) return 0;
-        return SafeAccess(edges_, best_edge_);
+    const FeatureVectorInt & GetFeatureVector() const { 
+        return feature_vector_;
     }
+    bool IsRoot() const { return span_.GetLeft() == -1; }
 
     void SetScore(double score) { score_ = score; }
     void SetCumulativeScore(double score) { cumulative_score_ = score; }
+    void SetFeatureVector(const FeatureVectorInt & feature_vector) {
+        feature_vector_ = feature_vector;
+    }
     void SetBestEdge(int best_edge) { best_edge_ = best_edge; }
 
 private:
 
     // Accumulate features over a map
-    void AccumulateFeatures(std::map<std::string,double> & feat_map) const;
+    void AccumulateFeatures(std::map<int,double> & feat_map) const;
 
     int idx_; // The index of this node in the hypergraph
     double score_; // The score of this node
@@ -58,6 +58,7 @@ private:
     HyperSpan span_; // The span that this node covers
     std::vector<HyperEdge*> edges_; // The edges that created this node
     int best_edge_; // The edge that is used in the viterbi parse rooted here
+    FeatureVectorInt feature_vector_; // The vector of features
 };
 
 }

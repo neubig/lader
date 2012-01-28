@@ -8,32 +8,15 @@
 
 namespace kyldr {
 
+// Real-valued feature vectors that are either indexed with std::strings or ints
+typedef std::pair<std::string, double> FeaturePairString;
+typedef std::vector<FeaturePairString> FeatureVectorString;
+typedef std::pair<int, double> FeaturePairInt;
+typedef std::vector<FeaturePairInt> FeatureVectorInt;
 
-class FeatureTuple {
-public:
-    FeatureTuple(std::string n, int i, double v) :
-        name(n), value(v) { }
-
-    bool operator==(const FeatureTuple & rhs) const {
-        return name == rhs.name && value == rhs.value;
-    }
-    bool operator!=(const FeatureTuple & rhs) const { return !(*this == rhs); }
-
-    std::string name;
-    double value;
-};
-typedef std::vector<FeatureTuple> FeatureVector;
-
-}
-
-namespace std {
-
-// Output for FeatureTumples
-inline std::ostream& operator << ( std::ostream& out,
-                                   const kyldr::FeatureTuple & rhs ) {
-    out << "<"<<rhs.name<<","<<rhs.value<<">";
-    return out;
-}
+// Vector subtract
+FeatureVectorInt VectorSubtract(const FeatureVectorInt & a, 
+                                const FeatureVectorInt & b);
 
 }
 

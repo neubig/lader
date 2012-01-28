@@ -193,29 +193,29 @@ public:
         HyperGraph hyper_graph(2,2);
         HyperNode * node00 = hyper_graph.GetNodeAtSpan(
             HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
-        node00->SetFeatureVector(FeatureVector(1,FeatureTuple("10",-1,1)));
+        node00->SetFeatureVector(FeatureVectorInt(1,MakePair(10,1)));
         HyperEdge * edge00 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge00->SetFeatureVector(FeatureVector(1,FeatureTuple("1",-1,1)));
+        edge00->SetFeatureVector(FeatureVectorInt(1,MakePair(1,1)));
         edge00->SetLoss(1);
         node00->AddEdge(edge00);
         node00->SetBestEdge(0);
         HyperNode * node11 = hyper_graph.GetNodeAtSpan(
             HyperSpan(1,1,MakePair(1,1),MakePair(1,1)));
-        node11->SetFeatureVector(FeatureVector(1,FeatureTuple("20",-1,1)));
+        node11->SetFeatureVector(FeatureVectorInt(1,MakePair(20,1)));
         HyperEdge * edge11 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge11->SetFeatureVector(FeatureVector(1,FeatureTuple("2",-1,1)));
+        edge11->SetFeatureVector(FeatureVectorInt(1,MakePair(2,1)));
         node11->AddEdge(edge11);
         edge11->SetLoss(2);
         HyperEdge * edge11b = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMINV);
-        edge11b->SetFeatureVector(FeatureVector(1,FeatureTuple("3",-1,1)));
+        edge11b->SetFeatureVector(FeatureVectorInt(1,MakePair(3,1)));
         edge11b->SetLoss(4);
         node11->AddEdge(edge11b);
         node11->SetBestEdge(1);
         HyperNode * node01 = hyper_graph.GetNodeAtSpan(
             HyperSpan(0,1,MakePair(0,0),MakePair(1,1)));
-        node01->SetFeatureVector(FeatureVector(1,FeatureTuple("20",-1,1)));
+        node01->SetFeatureVector(FeatureVectorInt(1,MakePair(20,1)));
         HyperEdge * edge01 = hyper_graph.AddNewEdge(HyperEdge::EDGE_STR);
-        edge01->SetFeatureVector(FeatureVector(1,FeatureTuple("4",-1,1)));
+        edge01->SetFeatureVector(FeatureVectorInt(1,MakePair(4,1)));
         edge01->SetLeftChild(node00);
         edge01->SetRightChild(node11);
         edge01->SetLoss(8);
@@ -223,14 +223,14 @@ public:
         node01->SetBestEdge(0);
         // Feature vector should be
         // {1:1, 3:1, 4:1, 10:1, 20:2}
-        FeatureVector exp;
-        exp.push_back(FeatureTuple("1",-1,1));
-        exp.push_back(FeatureTuple("10",-1,1));
-        exp.push_back(FeatureTuple("20",-1,2));
-        exp.push_back(FeatureTuple("3",-1,1));
-        exp.push_back(FeatureTuple("4",-1,1));
+        FeatureVectorInt exp;
+        exp.push_back(MakePair(1,1));
+        exp.push_back(MakePair(3,1));
+        exp.push_back(MakePair(4,1));
+        exp.push_back(MakePair(10,1));
+        exp.push_back(MakePair(20,2));
         // Get the actual feature vector and loss
-        FeatureVector act = node01->AccumulateFeatures();
+        FeatureVectorInt act = node01->AccumulateFeatures();
         int ret = CheckVector(exp,act);
         double loss = node01->AccumulateLoss();
         if(loss != 13) {

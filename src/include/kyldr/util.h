@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <tr1/unordered_map>
 
-#define KYLDR_SAFE
+// #define KYLDR_SAFE
 
 #define THROW_ERROR(msg) do {                   \
     std::ostringstream oss;                     \
@@ -164,16 +164,6 @@ inline const T & SafeAccess(const std::vector<T> & vec, int idx) {
     return vec[idx];
 }
 
-// Perform safe reference of a pointer
-template < class T >
-inline const T & SafeReference(const T* ptr) {
-#ifdef KYLDR_SAFE
-    if(ptr == NULL)
-        THROW_ERROR("Null pointer reference");
-#endif
-    return *ptr;
-}
-
 // Perform safe access to a vector
 template < class T >
 inline T & SafeAccess(std::vector<T> & vec, int idx) {
@@ -183,33 +173,6 @@ inline T & SafeAccess(std::vector<T> & vec, int idx) {
 #endif
     return vec[idx];
 }
-
-template <class A, class B, class C, class D>
-class quadruple { 
-public:
-    quadruple(A a_in, B b_in, C c_in, D d_in)
-        : a(a_in), b(b_in), c(c_in), d(d_in) { }
-
-    bool operator<(const quadruple & rhs) {
-        return 
-            a < rhs.a || (a == rhs.a && (
-            b < rhs.b || (b == rhs.b && (
-            c < rhs.c || (c == rhs.c && (
-            d < rhs.d || (d == rhs.d)))))));
-    }
-    bool operator==(const quadruple & rhs) {
-        return 
-            a == rhs.a && 
-            b == rhs.b && 
-            c == rhs.c && 
-            d == rhs.d;
-    }
-
-    A a;
-    B b;
-    C c;
-    D d;
-};
 
 }  // end namespace
 

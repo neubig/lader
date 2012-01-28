@@ -36,7 +36,6 @@ public:
     void InitializeStructures(int src_len, int trg_len) {
         left_neighbors_ = std::vector<std::vector<HyperNode*> >(src_len);
         right_neighbors_ = std::vector<std::vector<HyperNode*> >(src_len);
-        node_features_ = std::vector<FeatureVector*>(src_len*src_len, 0);
         span_node_map_ = SpanNodeMap();
     }
     // Clear intermediate data structures when done building the graph
@@ -79,25 +78,11 @@ public:
         return edge;
     }
 
-    // Accumulate features
-    FeatureVector AccumulateFeatures() {
-        std::map<std::string,double> feature_map;
-        AccumulateFeatures(nodes_[0], feature_map);
-        FeatureVector ret;
-        typedef std::pair<std::string,double> ValPair;
-        BOOST_FOREACH(ValPair feat_pair, feature_map)
-            if(feat_pair.second != 0)
-                ret.push_back(FeatureTuple(feat_pair.first,-1,feat_pair.second));
-        return ret;
-    }
-    void AccumulateFeatures(const HyperNode * node,
-                            std::map<std::string,double> & feature_map) const;
-
     // Accessors
-    const int GetSrcLen() const { 
+    const int GetSrcLength() const { 
         return nodes_[0]->GetSpan().GetRight();
     }
-    const int GetTrgLen() const {
+    const int GetTrgLength() const {
         return nodes_[0]->GetSpan().GetTrgRight().first;
     }
     const std::vector<HyperNode*> & GetNodes() const { return nodes_; }
@@ -112,23 +97,6 @@ public:
         return SafeAccess(right_neighbors_, id);
     }
 
-    const FeatureVector * GetNodeFeatures(const HyperNode & node) const {
-        return SafeAccess(node_features_, 
-                          node.GetLeft()*GetSrcLen()+node.GetRight());
-    }
-
-    const FeatureVector * GetEdgeFeatures(
-                                    const HyperNode & node,
-                                    const HyperEdge & edge) const {
-        int l = node.GetLeft(), r = node.GetRight(),
-            c = edge.GetLeftChild()==NULL?-1:edge.GetLeftChild()->GetRight();
-        EdgeFeatureMap::const_iterator eit =
-            edge_features_.find(EdgeLocation(l, c, r, edge.GetType()));
-        if(eit == edge_features_.end())
-            return NULL;
-        return eit->second;
-    }
-
 private:
 
     // Add non-terminals for a single pair of nodes
@@ -137,13 +105,6 @@ private:
     // Permanent data structures
     std::vector<HyperNode*> nodes_; // The nodes of the hypergraph
     std::vector<HyperEdge*> edges_; // The edges of the hypergraph
-
-    // Structures to hold features for nodes and edges, this is necessary
-    // because many nodes will share the same features
-    std::vector<FeatureVector*> node_features_;
-    typedef quadruple<int,int,int,HyperEdge::Type> EdgeLocation;
-    typedef std::map<EdgeLocation, FeatureVector> EdgeFeatureMap;
-    EdgeFeatureMap edge_features_;
 
     // Intermediate data structures used in the building of the graph
     std::vector<std::vector<HyperNode*> > left_neighbors_, right_neighbors_;

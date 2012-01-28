@@ -43,15 +43,15 @@ public:
     virtual FeatureDataBase * ParseData(const std::string & str);
 
     // Generates the features that can be factored over a node
-    virtual void GenerateNodeFeatures(const FeatureDataBase & sentence,
-                                      const HyperNode & node,
-                                      FeatureVector & vec);
+    virtual FeatureVectorString GenerateNodeFeatures(
+                                const FeatureDataBase & sentence,
+                                const HyperNode & node);
 
     // Generates the features that can be factored over an edge
-    virtual void GenerateEdgeFeatures(const FeatureDataBase & sentence,
-                                      const HyperNode & node,
-                                      const HyperEdge & edge,
-                                      FeatureVector & vec);
+    virtual FeatureVectorString GenerateEdgeFeatures(
+                                const FeatureDataBase & sentence,
+                                const HyperNode & node,
+                                const HyperEdge & edge);
 
     // Get the type of this feature generator
     virtual std::string GetType() const { return "seq"; }

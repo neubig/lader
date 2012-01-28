@@ -11,7 +11,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     ReadAlignments(config.GetString("align_in"));
     // Temporary values
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
-    FeatureVector model_features, oracle_features;
+    FeatureVectorInt model_features, oracle_features;
     // Perform an iterations
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
@@ -54,8 +54,9 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                 if(model_loss == oracle_loss) break;
                 model_features = hyper_graph.GetRoot()->AccumulateFeatures();
                 // Add the difference between the vectors
-                model_.AdjustWeights(oracle_features, learning_rate_);
-                model_.AdjustWeights(model_features, -learning_rate_);
+                model_.AdjustWeights(
+                    VectorSubtract(oracle_features, model_features),
+                    learning_rate_);
             }
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;

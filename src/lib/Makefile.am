@@ -1,5 +1,5 @@
 KYLDRCPP = combined-alignment.cc hyper-graph.cc hyper-node.cc \
-           feature-sequence.cc alignment.cc \
+           feature-sequence.cc feature-vector.cc alignment.cc \
            reorderer-trainer.cc feature-set.cc feature-base.cc \
            loss-fuzzy.cc loss-base.cc reorderer-model.cc
 

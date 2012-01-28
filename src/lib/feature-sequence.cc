@@ -115,11 +115,11 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
 }
 
 // Generates the features that can be factored over a node
-void FeatureSequence::GenerateNodeFeatures(
+FeatureVectorString FeatureSequence::GenerateNodeFeatures(
                             const FeatureDataBase & sent,
-                            const HyperNode & node,
-                            FeatureVector & ret) {
+                            const HyperNode & node) {
     const FeatureDataSequence & sent_seq = (const FeatureDataSequence &)sent;
+    FeatureVectorString ret;
     BOOST_FOREACH(FeatureTemplate templ, feature_templates_) {
         // Skip all but node-factored features
         if(templ.first == NODE_FACTORED) {
@@ -128,18 +128,19 @@ void FeatureSequence::GenerateNodeFeatures(
                 values[i] = GetSpanFeatureString(sent_seq,
                                                  node.GetSpan(), 
                                                  values[i][1]);
-            ret.push_back(FeatureTuple(algorithm::join(values, "||"), -1, 1));
+            ret.push_back(MakePair(algorithm::join(values, "||"), 1));
         }
     }
+    return ret;
 }
 
 // Generates the features that can be factored over an edge
-void FeatureSequence::GenerateEdgeFeatures(
+FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
                             const FeatureDataBase & sent,
                             const HyperNode & node,
-                            const HyperEdge & edge,
-                            FeatureVector & ret) {
+                            const HyperEdge & edge) {
     const FeatureDataSequence & sent_seq = (const FeatureDataSequence &)sent;
+    FeatureVectorString ret;
     bool is_nonterm = (edge.GetType() == HyperEdge::EDGE_INV || 
                        edge.GetType() == HyperEdge::EDGE_STR);
     // Iterate over each feature
@@ -178,7 +179,8 @@ void FeatureSequence::GenerateEdgeFeatures(
                         THROW_ERROR("Bad feature template " << values[i]); 
                 }
             }
-            ret.push_back(FeatureTuple(algorithm::join(values, "||"), -1, 1));
+            ret.push_back(MakePair(algorithm::join(values, "||"), 1));
         }
     }
+    return ret;
 }
