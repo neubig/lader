@@ -77,11 +77,26 @@ public:
         return ret;
     }
 
+    int TestModelIO() {
+        ReordererModel exp;
+        vector<double> weights(6,0);
+        weights[1] = 1; weights[4] = 5;
+        exp.SetWeights(weights);
+        ostringstream oss;
+        exp.ToStream(oss);
+        istringstream iss(oss.str());
+        ReordererModel * act = ReordererModel::FromStream(iss);
+        int ret = (exp == *act) ? 1 : 0;
+        delete act;
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestScoreNode()" << endl; if(TestScoreNode()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestScoreEdge()" << endl; if(TestScoreEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAdjustWeights()" << endl; if(TestAdjustWeights()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestModelIO()" << endl; if(TestModelIO()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestReordererModel Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

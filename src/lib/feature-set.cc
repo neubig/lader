@@ -18,7 +18,7 @@ void FeatureSet::AddNodeFeatures(const vector<FeatureDataBase*> & sent,
             feature_gens_[i]->GenerateNodeFeatures(*sent[i], node);
         for(int j = 0; j < (int)str_feats.size(); j++)
             feats.push_back(
-                MakePair(feature_ids_.GetId(str_feats[j].first, add_),
+                MakePair(feature_ids_->GetId(str_feats[j].first, add_),
                          str_feats[j].second));
     }
     sort(feats.begin(), feats.end());
@@ -38,7 +38,7 @@ void FeatureSet::AddEdgeFeatures(const vector<FeatureDataBase*> & sent,
             feature_gens_[i]->GenerateEdgeFeatures(*sent[i], node, edge);
         for(int j = 0; j < (int)str_feats.size(); j++)
             feats.push_back(
-                MakePair(feature_ids_.GetId(str_feats[j].first, add_),
+                MakePair(feature_ids_->GetId(str_feats[j].first, add_),
                          str_feats[j].second));
     }
     sort(feats.begin(), feats.end());
@@ -59,7 +59,7 @@ void FeatureSet::AddHyperGraphFeatures(const vector<FeatureDataBase*> & sent,
 FeatureVectorString FeatureSet::StringifyFeatureIndices(const FeatureVectorInt & vec) {
     FeatureVectorString ret(vec.size());
     for(int i = 0; i < (int)vec.size(); i++)
-        ret[i] = MakePair(feature_ids_.GetSymbol(vec[i].first),
+        ret[i] = MakePair(feature_ids_->GetSymbol(vec[i].first),
                           vec[i].second);
     return ret;
 }
@@ -81,6 +81,7 @@ vector<FeatureDataBase*> FeatureSet::ParseInput(const string & line) const {
 }
 
 void FeatureSet::ParseConfiguration(const string & str) {
+    config_str_ = str;
     // Split configurations into sizes
     vector<string> configs;
     algorithm::split(configs, str, is_any_of("|"));
@@ -95,4 +96,22 @@ void FeatureSet::ParseConfiguration(const string & str) {
         string sub_config = configs[i].substr(pos+1);
         feature_gens_[i]->ParseConfiguration(sub_config);
     }
+}
+
+// IO Functions
+void FeatureSet::ToStream(ostream & out) {
+    out << "feature_set" << endl;
+    out << "config_str " << config_str_ << endl;
+    feature_ids_->ToStream(out);
+    out << endl;
+}
+FeatureSet * FeatureSet::FromStream(istream & in) {
+    string line;
+    GetlineEquals(in, "feature_set");
+    string config;
+    GetConfigLine(in, "config_str", config);
+    FeatureSet * ret = new FeatureSet;
+    ret->ParseConfiguration(config);
+    ret->SetFeatureIds(SymbolSet<string,int>::FromStream(in));
+    return ret;
 }

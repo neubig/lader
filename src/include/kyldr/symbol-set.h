@@ -72,6 +72,23 @@ public:
         vocab_[id] = 0;
         reuse_.push_back(id);
     }
+    
+    void ToStream(std::ostream & out) {
+        out << vocab_.size() << std::endl;
+        for(int i = 0; i < (int)vocab_.size(); i++)
+            out << *vocab_[i] << std::endl;
+        out << std::endl;
+    }
+    static SymbolSet<Key,T,Hash>* FromStream(std::istream & in) {
+        std::string line;
+        int size;
+        SymbolSet<Key,T,Hash> * ret = new SymbolSet<Key,T,Hash>;
+        getline(in, line); std::istringstream iss(line);
+        for(iss >> size; size > 0 && getline(in, line); size--)
+            ret->GetId(line, true);
+        GetlineEquals(in, "");
+        return ret;
+    }
 
     Map & GetMap() { return map_; }
 

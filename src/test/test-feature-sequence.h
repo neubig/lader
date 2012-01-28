@@ -105,35 +105,6 @@ public:
         return ret;
     }
 
-    int TestSetNodeFeatures() {
-        // Set up the feature generators
-        FeatureSequence *featw = new FeatureSequence,
-                        *featp = new FeatureSequence;
-        featw->ParseConfiguration("SW%SS");
-        featp->ParseConfiguration("SP%SS");
-        // Set up the feature set
-        FeatureSet set;
-        set.AddFeatureGenerator(featw);
-        set.AddFeatureGenerator(featp);
-        // Set up the data
-        vector<FeatureDataBase*> datas;
-        datas.push_back(&sent);
-        datas.push_back(&sent_pos);
-        // These are both node-factored features, so they should exist for all
-        // nodes, but no edges
-        FeatureVectorString node00exp;
-        node00exp.push_back(MakePair(string("SW||he"), 1));
-        node00exp.push_back(MakePair(string("SP||PRP"), 1));
-        // Generate the features
-        set.AddNodeFeatures(datas, node00);
-        FeatureVectorString node00act =
-                set.StringifyFeatureIndices(node00.GetFeatureVector());
-        // Do the parsing and checking
-        int ret = 1;
-        ret *= CheckVector(node00exp, node00act);
-        return ret;
-    }
-
     int TestLeftRightFeatures() {
         FeatureSequence featl, featr, feata;
         featl.ParseConfiguration("L%LL,R%LR,S%LS,N%LN");
@@ -198,46 +169,6 @@ public:
         return ret;
     }
 
-    int TestSetEdgeFeatures() {
-        // Set up the feature generators
-        FeatureSequence *featw = new FeatureSequence,
-                        *featp = new FeatureSequence;
-        featw->ParseConfiguration("SW%LS%RS");
-        featp->ParseConfiguration("SP%LS%RS");
-        // Set up the feature set
-        FeatureSet set;
-        set.AddFeatureGenerator(featw);
-        set.AddFeatureGenerator(featp);
-        // Set up the data
-        vector<FeatureDataBase*> datas;
-        datas.push_back(&sent);
-        datas.push_back(&sent_pos);
-        // These are both node-factored features, so they should exist for all
-        // nodes, but no edges
-        FeatureVectorString edge02exp;
-        edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
-        edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
-        // Generate the features
-        set.AddEdgeFeatures(datas, node02, edge02);
-        FeatureVectorString edge02act =
-                set.StringifyFeatureIndices(edge02.GetFeatureVector());
-        // Do the parsing and checking
-        int ret = 1;
-        ret *= CheckVector(edge02exp, edge02act);
-        return ret;
-    }
-
-    int TestFeatureSetFromConfiguration() {
-        FeatureSequence seq0, seq1;
-        seq0.ParseConfiguration("S%ET%SS,T%ET");
-        seq1.ParseConfiguration("B%LL%RR");
-        FeatureSet set;
-        set.ParseConfiguration("seq=S%ET%SS,T%ET|seq=B%LL%RR");
-        return ((seq0.CheckEqual(*set.GetGenerator(0))) && 
-                (seq1.CheckEqual(*set.GetGenerator(1)))) ? 1 : 0;
-    }
-
-
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestFeatureDataSequenceParse()" << endl; if(TestFeatureDataSequenceParse()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -245,9 +176,6 @@ public:
         done++; cout << "TestNodeFeatures()" << endl; if(TestNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLeftRightFeatures()" << endl; if(TestLeftRightFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestEdgeFeatures()" << endl; if(TestEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestSetNodeFeatures()" << endl; if(TestSetNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestSetEdgeFeatures()" << endl; if(TestSetEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestFeatureSetFromConfiguration()" << endl; if(TestFeatureSetFromConfiguration()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSequence Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

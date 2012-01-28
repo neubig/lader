@@ -1,6 +1,7 @@
-#include "test-feature-vector.h"
-#include "test-feature-sequence.h"
 #include "test-combined-alignment.h"
+#include "test-feature-set.h"
+#include "test-feature-sequence.h"
+#include "test-feature-vector.h"
 #include "test-hyper-graph.h"
 #include "test-loss-fuzzy.h"
 #include "test-reorderer-model.h"
@@ -13,10 +14,11 @@ int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
     tests.push_back(new TestCombinedAlignment());
-    tests.push_back(new TestHyperGraph());
-    tests.push_back(new TestLossFuzzy());
+    tests.push_back(new TestFeatureSet());
     tests.push_back(new TestFeatureSequence());
     tests.push_back(new TestFeatureVector());
+    tests.push_back(new TestHyperGraph());
+    tests.push_back(new TestLossFuzzy());
     tests.push_back(new TestReordererModel());
     // Run all the tests
     int number_passed = 0;

@@ -10,7 +10,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     ReadData(config.GetString("source_in"));
     ReadAlignments(config.GetString("align_in"));
     // Temporary values
-    double model_score, model_loss, oracle_score, oracle_loss;
+    double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
     FeatureVectorInt model_features, oracle_features;
     // Perform an iterations
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
@@ -28,34 +28,49 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             BOOST_FOREACH(LossBase * loss, losses_)
                 loss->AddLossToHyperGraph(alignments_[sent], hyper_graph);
             features_.AddHyperGraphFeatures(data_[sent], hyper_graph);
-            // Parse the hypergraph, slightly boosting loss by 1.0
-            model_.ScoreGraph(hyper_graph, 1.0);
-            model_score = hyper_graph.Parse();
-            model_loss = hyper_graph.GetRoot()->AccumulateLoss();
-            model_score -= model_loss * 1;
-            model_features = hyper_graph.GetRoot()->AccumulateFeatures();
             // Parse the hypergraph, penalizing loss heavily (oracle)
             model_.ScoreGraph(hyper_graph, -1e6);
             oracle_score = hyper_graph.Parse();
             oracle_loss = hyper_graph.GetRoot()->AccumulateLoss();
             oracle_score -= oracle_loss * -1e6;
             oracle_features = hyper_graph.GetRoot()->AccumulateFeatures();
-            // Add the difference between the vectors
-            model_.AdjustWeights(
-                VectorSubtract(oracle_features, model_features),
-                learning_rate_);
-            // Add the statistics for this iteration
-            iter_model_loss += model_loss;
-            iter_oracle_loss += oracle_loss;
-            // cout << "oracle_score=" << oracle_score << " model_score="<<model_score<< " oracle_loss="<<oracle_loss<<" model_loss="<<model_loss << endl;
+            // Inner iterations
+            for(int i = 0; i < inner_iters_; i++) {
+                // Parse the hypergraph, slightly boosting loss by 1.0
+                model_.ScoreGraph(hyper_graph, 1.0);
+                model_score = hyper_graph.Parse();
+                model_loss = hyper_graph.GetRoot()->AccumulateLoss();
+                model_score -= model_loss * 1;
+                if(i == 0) {
+                    // Add the statistics for this iteration
+                    iter_model_loss += model_loss;
+                    iter_oracle_loss += oracle_loss;
+                    cout << "sent=" <<sent <<
+                            " oracle_score=" << oracle_score << 
+                            " model_score=" << model_score << 
+                            " oracle_loss=" << oracle_loss <<
+                            " model_loss=" << model_loss << endl;
+                }
+                if(model_loss == oracle_loss) break;
+                model_features = hyper_graph.GetRoot()->AccumulateFeatures();
+                // Add the difference between the vectors
+                model_.AdjustWeights(
+                    VectorSubtract(oracle_features, model_features),
+                    learning_rate_);
+            }
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;
+        WriteModel(config.GetString("model_out"));
         if(iter_model_loss == iter_oracle_loss) 
             break;
     }
 }
 
 void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
+    ofstream model_out(config.GetString("model_out").c_str());
+    if(!model_out)
+        THROW_ERROR("Must specify a valid model output with -model_out ('"
+                        <<config.GetString("model_out")<<"')");
     features_.ParseConfiguration(config.GetString("feature_profile"));
     learning_rate_ = config.GetDouble("learning_rate");
     std::vector<std::string> losses, first_last;

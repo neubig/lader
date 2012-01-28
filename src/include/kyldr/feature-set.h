@@ -12,11 +12,13 @@ namespace kyldr {
 class FeatureSet {
 public:
 
-    FeatureSet() : add_(true) { }
+    FeatureSet() : feature_ids_(new SymbolSet<std::string,int>), add_(true) { }
     ~FeatureSet() {
         BOOST_FOREACH(FeatureBase * gen, feature_gens_)
             if(gen)
                 delete gen;
+        if(feature_ids_)
+            delete feature_ids_;
     }
 
     // Add a feature generator, and take control of it
@@ -46,16 +48,33 @@ public:
     // Parse the configuration
     void ParseConfiguration(const std::string & str);
 
+    // IO Functions
+    void ToStream(std::ostream & out);
+    static FeatureSet * FromStream(std::istream & in);
+
+    // Comparators
+    bool operator== (const FeatureSet & rhs) {
+        return (config_str_ == rhs.config_str_ &&
+                feature_gens_.size() == rhs.feature_gens_.size() &&
+                feature_ids_->size() == rhs.feature_ids_->size());
+    }
+
     // Accessors
     const FeatureBase* GetGenerator(int id) const { return feature_gens_[id]; }
     const std::string & GetFeatureName(int id) const {
-        return feature_ids_.GetSymbol(id);
+        return feature_ids_->GetSymbol(id);
+    }
+
+    void SetFeatureIds(SymbolSet<std::string,int>* feature_ids) {
+        if(feature_ids_) delete feature_ids_;
+        feature_ids_ = feature_ids;
     }
 
 private:
 
+    std::string config_str_; // The configuration string
     std::vector<FeatureBase*> feature_gens_; // Feature generators
-    SymbolSet<std::string,int> feature_ids_; // Feature names and IDs
+    SymbolSet<std::string,int>* feature_ids_; // Feature names and IDs
     bool add_; // Whether to allow the adding of new features
 
 };
