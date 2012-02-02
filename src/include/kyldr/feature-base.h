@@ -6,7 +6,6 @@
 #include <kyldr/feature-vector.h>
 #include <kyldr/feature-data-base.h>
 #include <kyldr/hyper-edge.h>
-#include <kyldr/hyper-node.h>
 
 namespace kyldr {
 
@@ -18,8 +17,7 @@ public:
     // Types of features, whether they are factored over nodes, all edges,
     // or only nonterminal edges
     typedef enum {
-        NODE_FACTORED,
-        EDGE_FACTORED,
+        ALL_FACTORED,
         NONTERM_FACTORED
     } FeatureType;
 
@@ -35,15 +33,9 @@ public:
     // the feature generator) into the generator's internal representation
     virtual FeatureDataBase * ParseData(const std::string & str) = 0;
 
-    // Generates the features that can be factored over a node
-    virtual FeatureVectorString GenerateNodeFeatures(
-                                const FeatureDataBase & sentence,
-                                const HyperNode & node) = 0;
-
     // Generates the features that can be factored over an edge
     virtual FeatureVectorString GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
-                                const HyperNode & node,
                                 const HyperEdge & edge) = 0;
 
     // Get the type string of this particular value

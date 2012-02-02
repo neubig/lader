@@ -1,6 +1,8 @@
 #ifndef FEATURE_DATA_BASE_H__ 
 #define FEATURE_DATA_BASE_H__
 
+#include <vector>
+
 namespace kyldr {
 
 // A virtual class for the data from a single sentence that is used to calculate
@@ -21,6 +23,8 @@ protected:
 private:
 
 };
+
+typedef std::vector<FeatureDataBase*> Sentence;
 
 }
 

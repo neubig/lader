@@ -39,7 +39,7 @@ void FeatureSequence::ParseConfiguration(const string & str) {
     BOOST_FOREACH(string feat, feats) {
         // First assume this is node-factored until we find something that
         // indicates that it shouldn't be
-        FeatureType my_type = NODE_FACTORED;
+        FeatureType my_type = ALL_FACTORED;
         vector<string> my_name;
         // Iterate through all the percent-separated features (first is name)
         tokenizer<char_separator<char> > 
@@ -53,10 +53,6 @@ void FeatureSequence::ParseConfiguration(const string & str) {
                 // this feature is only applicable to non-terminals
                 if(item[0] == 'L' || item[0] == 'R' || item[0] == 'C')
                     my_type = NONTERM_FACTORED;
-                // Otherwise, if edge type is necessary, this is applicable
-                // to all edges, but not nodes
-                else if (my_type != NONTERM_FACTORED && item[0] == 'E')
-                    my_type = EDGE_FACTORED;
             }
             my_name.push_back(item);
         }
@@ -73,24 +69,25 @@ FeatureDataBase * FeatureSequence::ParseData(const string & str) {
 }
 
 string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
-                                             const HyperSpan & span,
+                                             int l, int r,
                                              char type) {
     ostringstream oss;
     switch (type) {
         case 'L':
-            return sent.GetElement(span.GetLeft());
+            return sent.GetElement(l);
         case 'R':
-            return sent.GetElement(span.GetRight());
+            return sent.GetElement(r);
         case 'S':
-            return sent.GetRangeString(span.GetLeft(), span.GetRight());
+            return sent.GetRangeString(l, r);
         case 'N':
-            oss << span.GetRight() - span.GetLeft() + 1;
+            oss << r - l + 1;
             return oss.str();
         default:
             THROW_ERROR("Bad feature type " << type);
     }
     return "";
 }
+
 
 string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
                                              const HyperEdge & edge,
@@ -99,11 +96,9 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
     switch (type) {
         // Get the difference between values
         case 'D':
+            // Distance is (r-c+1)-(c-l)
             oss << 
-                abs(edge.GetLeftChild()->GetSpan().GetRight() -
-                    edge.GetLeftChild()->GetSpan().GetLeft() -
-                    edge.GetRightChild()->GetSpan().GetRight() +
-                    edge.GetRightChild()->GetSpan().GetLeft());
+                abs(edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1);
             return oss.str();
         case 'T':
             oss << (char)edge.GetType();
@@ -114,30 +109,9 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
     return "";
 }
 
-// Generates the features that can be factored over a node
-FeatureVectorString FeatureSequence::GenerateNodeFeatures(
-                            const FeatureDataBase & sent,
-                            const HyperNode & node) {
-    const FeatureDataSequence & sent_seq = (const FeatureDataSequence &)sent;
-    FeatureVectorString ret;
-    BOOST_FOREACH(FeatureTemplate templ, feature_templates_) {
-        // Skip all but node-factored features
-        if(templ.first == NODE_FACTORED) {
-            vector<string> values = templ.second;
-            for(int i = 1; i < (int)values.size(); i++)
-                values[i] = GetSpanFeatureString(sent_seq,
-                                                 node.GetSpan(), 
-                                                 values[i][1]);
-            ret.push_back(MakePair(algorithm::join(values, "||"), 1));
-        }
-    }
-    return ret;
-}
-
 // Generates the features that can be factored over an edge
 FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
                             const FeatureDataBase & sent,
-                            const HyperNode & node,
                             const HyperEdge & edge) {
     const FeatureDataSequence & sent_seq = (const FeatureDataSequence &)sent;
     FeatureVectorString ret;
@@ -146,34 +120,27 @@ FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
     // Iterate over each feature
     BOOST_FOREACH(FeatureTemplate templ, feature_templates_) {
         // Make sure that this feature is compatible with the edge
-        if((templ.first == EDGE_FACTORED) || 
-           (templ.first == NONTERM_FACTORED && is_nonterm)) {
+        if (templ.first == ALL_FACTORED || is_nonterm) {
             vector<string> values = templ.second;
             for(int i = 1; i < (int)values.size(); i++) {
                 // Choose which span to use
                 switch (values[i][0]) {
                     case 'S':
-                        values[i] = GetSpanFeatureString(
-                                sent_seq, node.GetSpan(), values[i][1]);
+                        values[i] = GetSpanFeatureString(sent_seq,
+                            edge.GetLeft(), edge.GetRight(), values[i][1]);
                         break;
                     case 'L':
-                        values[i] = GetSpanFeatureString(
-                                sent_seq, 
-                                edge.GetLeftChild()->GetSpan(), 
-                                values[i][1]);
+                        values[i] = GetSpanFeatureString(sent_seq,
+                            edge.GetLeft(), edge.GetCenter()-1, values[i][1]);
                         break;
                     case 'R':
-                        values[i] = GetSpanFeatureString(
-                                sent_seq, 
-                                edge.GetRightChild()->GetSpan(), 
-                                values[i][1]);
+                        values[i] = GetSpanFeatureString(sent_seq,
+                            edge.GetCenter(), edge.GetRight(), values[i][1]);
                         break;
                     case 'E':
                     case 'C':
                         values[i] = GetEdgeFeatureString(
-                                sent_seq, 
-                                edge,
-                                values[i][1]);
+                                sent_seq, edge, values[i][1]);
                         break;
                     default:
                         THROW_ERROR("Bad feature template " << values[i]); 

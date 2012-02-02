@@ -6,53 +6,22 @@ using namespace kyldr;
 using namespace std;
 using namespace boost;
 
-// Generates the features that can be factored over a node
-void FeatureSet::AddNodeFeatures(const vector<FeatureDataBase*> & sent,
-                     HyperNode & node) {
-    // No features are generated over root nodes
-    if(node.IsRoot()) return;
-    // Otherwise generate features
-    FeatureVectorInt feats;
-    for(int i = 0; i < (int)sent.size(); i++) {
-        FeatureVectorString str_feats = 
-            feature_gens_[i]->GenerateNodeFeatures(*sent[i], node);
-        for(int j = 0; j < (int)str_feats.size(); j++)
-            feats.push_back(
-                MakePair(feature_ids_->GetId(str_feats[j].first, add_),
-                         str_feats[j].second));
-    }
-    sort(feats.begin(), feats.end());
-    node.SetFeatureVector(feats);
-}
 
 // Generates the features that can be factored over a node
-void FeatureSet::AddEdgeFeatures(const vector<FeatureDataBase*> & sent,
-                     const HyperNode & node,
-                     HyperEdge & edge) {
-    // No features are generated over root nodes
-    if(node.IsRoot()) return;
+FeatureVectorInt * FeatureSet::MakeEdgeFeatures(
+        const vector<FeatureDataBase*> & sent, const HyperEdge & edge) {
     // Otherwise generate the features
-    FeatureVectorInt feats;
+    FeatureVectorInt * feats = new FeatureVectorInt;
     for(int i = 0; i < (int)sent.size(); i++) {
         FeatureVectorString str_feats = 
-            feature_gens_[i]->GenerateEdgeFeatures(*sent[i], node, edge);
+            feature_gens_[i]->GenerateEdgeFeatures(*sent[i], edge);
         for(int j = 0; j < (int)str_feats.size(); j++)
-            feats.push_back(
+            feats->push_back(
                 MakePair(feature_ids_->GetId(str_feats[j].first, add_),
                          str_feats[j].second));
     }
-    sort(feats.begin(), feats.end());
-    edge.SetFeatureVector(feats);
-}
-
-// Add features to the entire hypergraph
-void FeatureSet::AddHyperGraphFeatures(const vector<FeatureDataBase*> & sent,
-                           HyperGraph & graph) {
-    BOOST_FOREACH(HyperNode * node, graph.GetNodes()) {
-        AddNodeFeatures(sent, *node);
-        BOOST_FOREACH(HyperEdge * edge, node->GetEdges())
-            AddEdgeFeatures(sent, *node, *edge);
-    }
+    sort(feats->begin(), feats->end());
+    return feats;
 }
 
 // Change an integer-indexed feature vector into a string-indexed vector

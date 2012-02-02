@@ -11,7 +11,13 @@ class TestFeatureSet : public TestBase {
 
 public:
 
-    TestFeatureSet() {
+    TestFeatureSet() : 
+            edge00(0, -1, 0, HyperEdge::EDGE_FOR), 
+            edge11(1, -1, 1, HyperEdge::EDGE_FOR), 
+            edge22(2, -1, 2, HyperEdge::EDGE_FOR),
+            edge12t(1, -1, 2, HyperEdge::EDGE_BAC),
+            edge12nt(1, 2, 2, HyperEdge::EDGE_INV),
+            edge02(0, 1, 2, HyperEdge::EDGE_STR) {
         // Create a combined alignment
         //  x..
         //  ..x
@@ -26,27 +32,9 @@ public:
         sent.ParseInput(str);
         string str_pos = "PRP VBD NN";
         sent_pos.ParseInput(str_pos);
-        // Create edges that reproduce the alignment in two ways
-        node00 = HyperNode(0, HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
-        edge00 = HyperEdge(0, HyperEdge::EDGE_TERMSTR);
-        node00.AddEdge(&edge00);
-        node11 = HyperNode(1, HyperSpan(1,1,MakePair(2,2),MakePair(2,2)));
-        edge11 = HyperEdge(1, HyperEdge::EDGE_TERMSTR);
-        node11.AddEdge(&edge11);
-        node22 = HyperNode(2, HyperSpan(2,2,MakePair(1,1),MakePair(1,1)));
-        edge22 = HyperEdge(2, HyperEdge::EDGE_TERMSTR);
-        node22.AddEdge(&edge22);
-        node12 = HyperNode(3, HyperSpan(1,2,MakePair(1,1),MakePair(2,2)));
-        edge12nt = HyperEdge(3, HyperEdge::EDGE_INV, &node11, &node22);
-        node12.AddEdge(&edge12nt);
-        edge12t = HyperEdge(4, HyperEdge::EDGE_TERMINV);
-        node12.AddEdge(&edge12t);
-        node02 = HyperNode(4, HyperSpan(0,2,MakePair(0,0),MakePair(2,2)));
-        edge02 = HyperEdge(5, HyperEdge::EDGE_STR, &node00, &node12);
-        node02.AddEdge(&edge02);
     }
 
-    int TestSetEdgeFeatures() {
+    int TestMakeEdgeFeatures() {
         // Set up the feature generators
         FeatureSequence *featw = new FeatureSequence,
                         *featp = new FeatureSequence;
@@ -66,12 +54,13 @@ public:
         edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
         edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
         // Generate the features
-        set.AddEdgeFeatures(datas, node02, edge02);
+        FeatureVectorInt * edge02int = set.MakeEdgeFeatures(datas, edge02);
         FeatureVectorString edge02act =
-                set.StringifyFeatureIndices(edge02.GetFeatureVector());
+                                    set.StringifyFeatureIndices(*edge02int);
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge02exp, edge02act);
+        delete edge02int;
         return ret;
     }
 
@@ -85,35 +74,6 @@ public:
                 (seq1.CheckEqual(*set.GetGenerator(1)))) ? 1 : 0;
     }
 
-    int TestSetNodeFeatures() {
-        // Set up the feature generators
-        FeatureSequence *featw = new FeatureSequence,
-                        *featp = new FeatureSequence;
-        featw->ParseConfiguration("SW%SS");
-        featp->ParseConfiguration("SP%SS");
-        // Set up the feature set
-        FeatureSet set;
-        set.AddFeatureGenerator(featw);
-        set.AddFeatureGenerator(featp);
-        // Set up the data
-        vector<FeatureDataBase*> datas;
-        datas.push_back(&sent);
-        datas.push_back(&sent_pos);
-        // These are both node-factored features, so they should exist for all
-        // nodes, but no edges
-        FeatureVectorString node00exp;
-        node00exp.push_back(MakePair(string("SW||he"), 1));
-        node00exp.push_back(MakePair(string("SP||PRP"), 1));
-        // Generate the features
-        set.AddNodeFeatures(datas, node00);
-        FeatureVectorString node00act =
-                set.StringifyFeatureIndices(node00.GetFeatureVector());
-        // Do the parsing and checking
-        int ret = 1;
-        ret *= CheckVector(node00exp, node00act);
-        return ret;
-    }
-
     int TestFeatureSetIO() {
         // Set up the data
         vector<FeatureDataBase*> datas;
@@ -122,22 +82,21 @@ public:
         // Create and generate some features
         FeatureSet exp;
         exp.ParseConfiguration("seq=S%SS|seq=T%ET,L%ET%LL");
-        exp.AddNodeFeatures(datas, node00);
-        exp.AddEdgeFeatures(datas, node02, edge02);
+        FeatureVectorInt * feat = exp.MakeEdgeFeatures(datas, edge02);
         // Read and write toa  stream
         ostringstream oss;
         exp.ToStream(oss);
         istringstream iss(oss.str());
         FeatureSet * act = FeatureSet::FromStream(iss);
         int ret = (exp == *act) ? 1 : 0;
+        delete feat;
         delete act;
         return ret;
     }
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestSetNodeFeatures()" << endl; if(TestSetNodeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestSetEdgeFeatures()" << endl; if(TestSetEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestMakeEdgeFeatures()" << endl; if(TestMakeEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestFeatureSetFromConfiguration()" << endl; if(TestFeatureSetFromConfiguration()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestFeatureSetIO()" << endl; if(TestFeatureSetIO()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSet Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
@@ -145,8 +104,7 @@ public:
     }
 
 private:
-    HyperEdge edge00, edge11, edge22, edge02, edge12t, edge12nt;
-    HyperNode node00, node11, node22, node12, node02;
+    HyperEdge edge00, edge11, edge22, edge12t, edge12nt, edge02;
     CombinedAlignment cal;
     FeatureDataSequence sent, sent_pos;
 

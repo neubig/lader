@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <tr1/unordered_map>
 
-// #define KYLDR_SAFE
+#define KYLDR_SAFE
 
 #define THROW_ERROR(msg) do {                   \
     std::ostringstream oss;                     \
@@ -173,6 +173,16 @@ inline T & SafeAccess(std::vector<T> & vec, int idx) {
 #endif
     return vec[idx];
 }
+
+template < class T >
+inline const T & SafeReference(const T * ptr) {
+#ifdef KYLDR_SAFE
+    if(!ptr)
+        THROW_ERROR("Null pointer access");
+#endif
+    return *ptr;
+}
+
 
 }  // end namespace
 

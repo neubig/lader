@@ -1,7 +1,7 @@
-KYLDRCPP = combined-alignment.cc hyper-graph.cc hyper-node.cc \
-           feature-sequence.cc feature-vector.cc alignment.cc \
-           reorderer-trainer.cc feature-set.cc feature-base.cc \
-           loss-fuzzy.cc loss-base.cc reorderer-model.cc
+KYLDRCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
+           feature-sequence.cc feature-set.cc feature-base.cc \
+           feature-vector.cc reorderer-model.cc loss-fuzzy.cc \
+           reorderer-trainer.cc loss-base.cc
 
 
 AM_CPPFLAGS = -I$(srcdir)/../include

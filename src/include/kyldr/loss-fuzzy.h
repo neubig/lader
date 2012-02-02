@@ -14,9 +14,9 @@ namespace kyldr {
 class LossFuzzy : public LossBase {
 public:
 
-    double AddLossToEdge(const CombinedAlignment & combined,
-                         const HyperNode * node,
-                         HyperEdge * edge);
+    virtual double AddLossToProduction(
+        int left, int mid_left, int mid_right, int right,
+        HyperEdge::Type type, const CombinedAlignment & combined);
 
 private:
 

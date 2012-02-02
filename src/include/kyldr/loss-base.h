@@ -3,7 +3,6 @@
 
 #include <kyldr/combined-alignment.h>
 #include <kyldr/hyper-graph.h>
-#include <kyldr/hyper-node.h>
 #include <kyldr/hyper-edge.h>
 
 namespace kyldr {
@@ -18,32 +17,19 @@ public:
     LossBase() : weight_(1.0) { }
     virtual ~LossBase() { }
     
-    // Add a loss value to "edge" that is a child of "node"
-    virtual double AddLossToEdge(const CombinedAlignment & combined,
-                                 const HyperNode * node, 
-                                 HyperEdge * edge) = 0;
+    // Add a loss value to a production. left and right are the left and right
+    // sides of the span on the target side. mid_left and mid_right are active
+    // for non-terminals, and represent the right side of the left span and the
+    // left side of the right span respectively
+    virtual double AddLossToProduction(
+        int left, int mid_left, int mid_right, int right,
+        HyperEdge::Type type, const CombinedAlignment & combined) = 0;
 
     // Initializes the loss calculator with a combined 
     virtual void Initialize(const CombinedAlignment & combined) { }
 
-    // Add a loss value to each edge in a hypergraph
-    void AddLossToHyperGraph(const CombinedAlignment & combined, 
-                             HyperGraph & graph) {
-        int added_edges = 0;
-        Initialize(combined);
-        std::vector<HyperNode*> & nodes = graph.GetNodes();
-        for(int i = 0; i < (int)nodes.size(); i++) {
-            std::vector<HyperEdge*> & edges = nodes[i]->GetEdges();
-            for(int j = 0; j < (int)edges.size(); j++) {
-                AddLossToEdge(
-                    combined, SafeAccess(nodes,i), SafeAccess(edges, j));
-                added_edges++;
-            }
-        }
-        if(added_edges != (int)graph.GetEdges().size())
-            THROW_ERROR("Didn't add loss for all edges ("
-                        <<added_edges<<" != "<<graph.GetEdges().size());
-    }
+    void AddLossToHyperGraph(const CombinedAlignment & combined,
+                             HyperGraph & hyper_graph);
 
     // Create a new sub-class of a particular type
     //  type=fuzzy --> LossFuzzy

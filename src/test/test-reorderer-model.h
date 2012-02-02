@@ -21,39 +21,25 @@ public:
         feats.push_back(MakePair(2,3));
     }
 
-    // Score a single node
-    int TestScoreNode() {
-        int ret = 1;
-        HyperNode node;
-        node.SetFeatureVector(feats);
-        model.ScoreNode(node);
-        // Weight should be 1*1 + 2*2
-        if(node.GetScore() != 5) {
-            cout << "node.GetScore() " << node.GetScore() << " != 5" << endl;
-            ret = 0;
-        }
-        return ret;
-    }
-
-    int TestScoreEdge() {
-        int ret = 1;
-        HyperEdge edge;
-        edge.SetFeatureVector(feats);
-        edge.SetLoss(5);
-        // Weight should be 1*1 + 2*2 (no loss)
-        model.ScoreEdge(edge);
-        if(edge.GetScore() != 5) {
-            cout << "edge.GetScore() " << edge.GetScore() << " != 5" << endl;
-            ret = 0;
-        }
-        // Weight should be 1*1 + 2*2 + (1*1 + 2*2) * 10
-        model.ScoreEdge(edge, 10);
-        if(edge.GetScore() != 55) {
-            cout << "edge.GetScore() " << edge.GetScore() << " != 5" << endl;
-            ret = 0;
-        }
-        return ret;
-    }
+    // int TestScoreEdge() {
+    //     int ret = 1;
+    //     HyperEdge edge;
+    //     edge.SetFeatureVector(feats);
+    //     edge.SetLoss(5);
+    //     // Weight should be 1*1 + 2*2 (no loss)
+    //     model.ScoreEdge(edge);
+    //     if(edge.GetScore() != 5) {
+    //         cout << "edge.GetScore() " << edge.GetScore() << " != 5" << endl;
+    //         ret = 0;
+    //     }
+    //     // Weight should be 1*1 + 2*2 + (1*1 + 2*2) * 10
+    //     model.ScoreEdge(edge, 10);
+    //     if(edge.GetScore() != 55) {
+    //         cout << "edge.GetScore() " << edge.GetScore() << " != 5" << endl;
+    //         ret = 0;
+    //     }
+    //     return ret;
+    // }
 
     int TestAdjustWeights() {
         // Make the input feature vector
@@ -93,8 +79,7 @@ public:
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestScoreNode()" << endl; if(TestScoreNode()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestScoreEdge()" << endl; if(TestScoreEdge()) succeeded++; else cout << "FAILED!!!" << endl;
+        // done++; cout << "TestScoreEdge()" << endl; if(TestScoreEdge()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAdjustWeights()" << endl; if(TestAdjustWeights()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestModelIO()" << endl; if(TestModelIO()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestReordererModel Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;

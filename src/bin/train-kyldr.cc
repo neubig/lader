@@ -1,6 +1,6 @@
 
-#include <kyldr/reorderer-trainer.h>
 #include <kyldr/config-trainer.h>
+#include <kyldr/reorderer-trainer.h>
 
 using namespace kyldr;
 using namespace std;

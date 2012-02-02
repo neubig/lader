@@ -1,9 +1,11 @@
 #ifndef FEATURE_SET_H__ 
 #define FEATURE_SET_H__
 
+#include <kyldr/feature-data-base.h>
 #include <kyldr/feature-base.h>
 #include <kyldr/symbol-set.h>
 #include <kyldr/hyper-graph.h>
+#include <boost/foreach.hpp>
 
 namespace kyldr {
 
@@ -26,18 +28,10 @@ public:
         feature_gens_.push_back(gen);
     }
 
-    // Generates the features that can be factored over a node
-    void AddNodeFeatures(const std::vector<FeatureDataBase*> & sent,
-                         HyperNode & node);
 
     // Generates the features that can be factored over a node
-    void AddEdgeFeatures(const std::vector<FeatureDataBase*> & sent,
-                         const HyperNode & node,
-                         HyperEdge & edge);
-
-    // Add features to the entire hypergraph
-    void AddHyperGraphFeatures(const std::vector<FeatureDataBase*> & sent,
-                               HyperGraph & graph);
+    FeatureVectorInt * MakeEdgeFeatures(
+        const Sentence & sent, const HyperEdge & edge);
     
     // Change an integer-indexed feature vector into a string-indexed vector
     FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec);

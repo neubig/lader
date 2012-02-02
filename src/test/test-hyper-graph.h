@@ -4,6 +4,10 @@
 #include "test-base.h"
 #include <kyldr/hyper-graph.h>
 #include <kyldr/alignment.h>
+#include <kyldr/reorderer-model.h>
+#include <kyldr/feature-data-sequence.h>
+#include <kyldr/feature-sequence.h>
+#include <kyldr/feature-set.h>
 
 namespace kyldr {
 
@@ -11,10 +15,13 @@ class TestHyperGraph : public TestBase {
 
 public:
 
-    TestHyperGraph() {
-        span0 = HyperSpan(0,0,MakePair(0,0),MakePair(0,0));
-        span1 = HyperSpan(1,1,MakePair(0,0),MakePair(0,0));
-        span2 = HyperSpan(2,2,MakePair(1,1),MakePair(1,1));
+    TestHyperGraph() : 
+            edge00(0, -1, 0, HyperEdge::EDGE_FOR), 
+            edge11(1, -1, 1, HyperEdge::EDGE_FOR), 
+            edge22(2, -1, 2, HyperEdge::EDGE_FOR),
+            edge12t(1, -1, 2, HyperEdge::EDGE_BAC),
+            edge12nt(1, 2, 2, HyperEdge::EDGE_INV),
+            edge02(0, 1, 2, HyperEdge::EDGE_STR) {
         // Create a combined alignment
         //  x..
         //  ..x
@@ -23,247 +30,275 @@ public:
         al.AddAlignment(MakePair(0,0));
         al.AddAlignment(MakePair(1,2));
         al.AddAlignment(MakePair(2,1));
-        cal1 = CombinedAlignment(al);
+        cal = CombinedAlignment(al);
+        // Create a sentence
+        string str = "he ate rice";
+        sent.ParseInput(str);
+        string str_pos = "PRP VBD NN";
+        sent_pos.ParseInput(str_pos);
+        // Create a reorderer model with two weights
+        weights.push_back(1);
+        weights.push_back(2);
+        model.SetWeights(weights);
+        // Set up the feature generators
+        featw = new FeatureSequence;
+        featp = new FeatureSequence;
+        featw->ParseConfiguration("SW%LS%RS");
+        featp->ParseConfiguration("SP%LS%RS");
+        // Set up the feature set
+        set.AddFeatureGenerator(featw);
+        set.AddFeatureGenerator(featp);
+        // Set up the data
+        datas.push_back(&sent);
+        datas.push_back(&sent_pos);
+
+        // ------ Make a hypergraph for testing various things ------
+        // Make the target side spans
+        ts00 = new TargetSpan(0,0,0,0);
+        ts01f = new TargetSpan(0,1,0,1);
+        ts01b = new TargetSpan(0,1,1,0);
+        ts11 = new TargetSpan(1,1,1,1);
+        tsr = new TargetSpan(0,1,0,1);
+        // Add the hypotheses
+        ts00->AddHypothesis(Hypothesis(1,0,0,0,0,HyperEdge::EDGE_FOR));
+        ts11->AddHypothesis(Hypothesis(2,1,1,1,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(Hypothesis(4,0,1,0,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(Hypothesis(3,0,1,0,1,HyperEdge::EDGE_STR,1,0,0,ts00,ts11));
+        ts01b->AddHypothesis(Hypothesis(5,0,1,1,0,HyperEdge::EDGE_INV,1,0,0,ts00,ts11));
+        tsr->AddHypothesis(Hypothesis(6,1,0,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01b));
+        tsr->AddHypothesis(Hypothesis(6,0,1,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01f));
+        // Add the features
+        FeatureVectorInt 
+            *fv00 = new FeatureVectorInt(1, MakePair(1,1)),
+            *fv11 = new FeatureVectorInt(1, MakePair(2,1)),
+            *fv01f = new FeatureVectorInt(1,MakePair(4,1)),
+            *fv01s = new FeatureVectorInt(1,MakePair(3,1)),
+            *fv01b = new FeatureVectorInt(1,MakePair(5,1));
+        fv00->push_back(MakePair(10,1));
+        fv11->push_back(MakePair(10,1));
+        fv01f->push_back(MakePair(10,1));
+        fv01s->push_back(MakePair(10,1));
+        fv01b->push_back(MakePair(10,1));
+        my_hg.SetEdgeFeatures(HyperEdge(0,-1,0,HyperEdge::EDGE_FOR), fv00);
+        my_hg.SetEdgeFeatures(HyperEdge(1,-1,1,HyperEdge::EDGE_FOR), fv11);
+        my_hg.SetEdgeFeatures(HyperEdge(0,-1,1,HyperEdge::EDGE_FOR), fv01f);
+        my_hg.SetEdgeFeatures(HyperEdge(0,1,1,HyperEdge::EDGE_STR), fv01s);
+        my_hg.SetEdgeFeatures(HyperEdge(0,1,1,HyperEdge::EDGE_INV), fv01b);
+        // Make the stacks
+        SpanStack *stack00 = new SpanStack, *stack01 = new SpanStack, 
+                  *stack11 = new SpanStack, *stackr = new SpanStack;
+        stack00->AddSpan(ts00); stack01->AddSpan(ts01f); stack01->AddSpan(ts01b);
+        stack11->AddSpan(ts11); stackr->AddSpan(tsr);
+        my_hg.SetStack(0,0,stack00);
+        my_hg.SetStack(0,1,stack01);
+        my_hg.SetStack(1,1,stack11);
+        my_hg.SetStack(0,2,stackr); // Abusing SetStack to set the root
+        // Add the loss
+        ts00->GetHypothesis(0)->SetLoss(1);
+        ts11->GetHypothesis(0)->SetLoss(2);
+        ts01f->GetHypothesis(0)->SetLoss(4);
+        ts01f->GetHypothesis(1)->SetLoss(3);
+        ts01b->GetHypothesis(0)->SetLoss(5);
+        tsr->GetHypothesis(0)->SetLoss(6);
+        // // Sort the stacks so we get the best value first
+        // BOOST_FOREACH(SpanStack & stack, my_hg.GetStacks())
+        //     stack.SortSpans(true);
     }
 
-    ~TestHyperGraph() {
-    }
-
-    // Test whether getting a node at a particular span works
-    int TestGetNodeAtSpan() {
-        HyperGraph hyper_graph(3,2);
+    int TestGetTrgSpanID() {
+        vector<pair<int,int> > in;
+        in.push_back(MakePair(0,0));
+        in.push_back(MakePair(0,1));
+        in.push_back(MakePair(1,1));
+        in.push_back(MakePair(0,2));
+        in.push_back(MakePair(1,2));
+        in.push_back(MakePair(2,2));
         int ret = 1;
-        // Get the first node
-        HyperNode * node0 = hyper_graph.GetNodeAtSpan(span0);
-        // Check to make sure the span is equal
-        if(node0->GetSpan() != span0) {
-            cout << "node0->GetSpan() != span0: " << node0->GetSpan() << " != " << span0 << endl; ret = 0;
-        }
-        if(node0->GetIdx() != 1) {
-            cout << "node0->GetIdx() " << node0->GetIdx() << " != 1" << endl; ret = 0;
-        }
-        // Get the second node
-        HyperNode * node1 = hyper_graph.GetNodeAtSpan(span1);
-        // Check to make sure the span is equal
-        if(node1->GetSpan() != span1) {
-            cout << "node1->GetSpan() != span1: " << node1->GetSpan() << " != " << span1 << endl; ret = 0;
-        }
-        if(node1->GetIdx() != 2) {
-            cout << "node1->GetIdx() " << node1->GetIdx() << " != 2" << endl; ret = 1;
-        }
-        // Check to make sure that we can retrieve the old span
-        HyperNode * node0copy = hyper_graph.GetNodeAtSpan(span0);
-        if(node0copy->GetIdx() != 1) {
-            cout << "node0copy->GetIdx() " << node0copy->GetIdx() << " != 1" << endl; ret = 0;
+        HyperGraph hg;
+        for(int i = 0; i < (int)in.size(); i++) {
+            if(hg.GetTrgSpanID(in[i].first, in[i].second) != i) {
+                cerr << "hg.GetTrgSpanID("<<in[i].first<<", "<<in[i].second<<") == " << hg.GetTrgSpanID(in[i].first, in[i].second) << endl; ret = 0;
+            }
         }
         return ret;
     }
 
-    // Test whether we can add single terminals with no reversal
-    int TestAddSingleTerminals() {
-        HyperGraph hyper_graph(3,3);
-        hyper_graph.AddTerminals(cal1, 1, false);
+    int TestGetEdgeFeaturesAndWeights() {
+        // Test that these features are made properly
+        FeatureVectorString edge02exp;
+        edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
+        edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
+        FeatureVectorInt edge02intexp;
+        edge02intexp.push_back(MakePair(0, 1));
+        edge02intexp.push_back(MakePair(1, 1));
+        // Make the hypergraph and get the features
+        HyperGraph hyper_graph;
+        // Generate the features
+        const FeatureVectorInt * edge02int = 
+                            hyper_graph.GetEdgeFeatures(set, datas, edge02);
+        FeatureVectorString edge02act =
+                                    set.StringifyFeatureIndices(*edge02int);
+        // Do the parsing and checking
         int ret = 1;
-        // Check that the number of nodes is 3
-        const vector<HyperNode*> & nodes = hyper_graph.GetNodes();
-        if(nodes.size() != 4) {
-            cout << "nodes.size() "<<nodes.size()<<" != 4"<<endl; ret = 0;
+        ret *= CheckVector(edge02exp, edge02act);
+        ret *= CheckVector(edge02intexp, *edge02int);
+        // Generate the features again
+        const FeatureVectorInt * edge02int2 = 
+                            hyper_graph.GetEdgeFeatures(set, datas, edge02);
+        // Make sure that the pointers are equal
+        if(edge02int != edge02int2) {
+            cerr << "Edge pointers are not equal." << endl;
+            ret = 0;
         }
-        const vector<HyperEdge*> & edges = hyper_graph.GetEdges();
-        if(edges.size() != 3) {
-            cout << "edges.size() "<<edges.size()<<" != 3"<<endl; ret = 0;
+        // Check to make sure that the weights are Ok
+        double weight_act = hyper_graph.GetEdgeScore(model, set, 
+                                                     datas, edge02);
+        if(weight_act != 3) {
+            cerr << "Weight is not the expected 3: "<<weight_act<<endl;
+            ret = 0;
         }
         return ret;
     }
 
-    // Test whether we can add single terminals with reversal
-    int TestAddReverseTerminals() {
-        HyperGraph hyper_graph(3,3);
-        hyper_graph.AddTerminals(cal1, 1, true);
+    // Test the processing of a single span
+    int TestProcessOneSpan() {
+        HyperGraph graph;
+        // Create two spans for 00 and 11, so we can process 01
+        SpanStack *stack00 = new SpanStack, *stack11 = new SpanStack;
+        stack00->push_back(new TargetSpan(0,0,0,0));
+        (*stack00)[0]->AddHypothesis(Hypothesis(1.0,0,0,0,0,HyperEdge::EDGE_FOR));
+        graph.SetStack(0, 0, stack00);
+        stack11->push_back(new TargetSpan(1,1,1,1));
+        (*stack11)[0]->AddHypothesis(Hypothesis(2.0,1,1,1,1,HyperEdge::EDGE_FOR));
+        graph.SetStack(1, 1, stack11);
+        // Try processing 01
+        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, 0);
+        // The stack should contain two target spans (1,0) and (0,1),
+        // each with two hypotheses
         int ret = 1;
-        // Check that the number of nodes is 3
-        const vector<HyperNode*> & nodes = hyper_graph.GetNodes();
-        if(nodes.size() != 4) {
-            cout << "nodes.size() "<<nodes.size()<<" != 4"<<endl; ret = 0;
+        if(stack01->size() != 2) {
+            cerr << "stack01->size() != 2: " << stack01->size() << endl; ret = 0;
+        } else if((*stack01)[0]->GetHypotheses().size() != 2) {
+            cerr << "(*stack01)[0].size() != 2: " << (*stack01)[0]->GetHypotheses().size() << endl; ret = 0;
+        } else if((*stack01)[1]->GetHypotheses().size() != 2) {
+            cerr << "(*stack01)[1].size() != 2: " << (*stack01)[1]->GetHypotheses().size() << endl; ret = 0;
         }
-        const vector<HyperEdge*> & edges = hyper_graph.GetEdges();
-        if(edges.size() != 6) {
-            cout << "edges.size() "<<edges.size()<<" != 6"<<endl; ret = 0;
+        if(!ret) return 0;
+        // Check to make sure that the scores are in order
+        vector<double> score_exp(4,0), score_act(4);
+        score_exp[0] = 3; score_exp[2] = 3;
+        score_act[0] = (*stack01)[0]->GetHypothesis(0)->GetScore();
+        score_act[1] = (*stack01)[0]->GetHypothesis(1)->GetScore();
+        score_act[2] = (*stack01)[1]->GetHypothesis(0)->GetScore();
+        score_act[3] = (*stack01)[1]->GetHypothesis(1)->GetScore();
+        ret = CheckVector(score_exp, score_act);
+        // Check to make sure that pruning works
+        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, 3);
+        if(stack01pruned->size() != 2) {
+            cerr << "stack01pruned->size() != 2: " << stack01pruned->size() << endl; ret = 0;
+        } else if((*stack01pruned)[0]->GetHypotheses().size() != 1) {
+            cerr << "(*stack01pruned)[0].size() != 1: " << (*stack01pruned)[0]->GetHypotheses().size() << endl; ret = 0;
+        } else if((*stack01pruned)[1]->GetHypotheses().size() != 2) {
+            cerr << "(*stack01pruned)[1].size() != 2: " << (*stack01pruned)[1]->GetHypotheses().size() << endl; ret = 0;
+        }
+        delete stack00; delete stack01;
+        delete stack11; delete stack01pruned;
+        return ret;
+    }
+
+    int TestBuildHyperGraph() {
+        HyperGraph graph;
+        graph.BuildHyperGraph(model, set, datas, 2, 0);
+        const std::vector<SpanStack*> & stacks = graph.GetStacks();
+        int ret = 1;
+        // The total number of stacks should be 7: 0-0 0-1 1-1 0-2 1-2 2-2 root
+        if(stacks.size() != 7) {
+            cerr << "stacks.size() != 7: " << stacks.size() << endl; ret = 0;
+        // The number of target spans should be 6: 0-1 1-0 0-2 2-0 1-2 2-1
+        } else if (stacks[3]->size() != 6) {
+            cerr << "Root node stacks[3]->size() != 6: " <<stacks[3]->size()<< endl;
+            BOOST_FOREACH(const TargetSpan *span, stacks[3]->GetSpans())
+                cerr << " " << span->GetTrgLeft() << "-" <<span->GetTrgRight() << endl;
+            ret = 0;
+        } else if (stacks[6]->GetSpans().size() != stacks[3]->size()) {
+            cerr << "Root hypotheses " << stacks[6]->GetSpans().size()
+                 << " and root spans " << stacks[3]->size() << " don't match." <<
+                 endl; ret = 0;
         }
         return ret;
     }
 
-    // Test whether we can add multi-word terminals with no reversal
-    int TestAddMultipleTerminals() {
-        HyperGraph hyper_graph(3,3);
-        hyper_graph.AddTerminals(cal1, 2, false);
+    int TestAccumulateLoss() {
+        // The value of the loss should be 1+2+5+6 = 14 (3 and 4 are not best)
+        double val = my_hg.AccumulateLoss(tsr);
         int ret = 1;
-        // Check that the number of nodes is 3
-        const vector<HyperNode*> & nodes = hyper_graph.GetNodes();
-        if(nodes.size() != 6) {
-            cout << "nodes.size() "<<nodes.size()<<" != 6"<<endl; ret = 0;
+        if(val != 14) {
+            cerr << "my_hg.AccumulateLoss() != 14: " << 
+                     my_hg.AccumulateLoss(tsr) << endl; ret = 0;
         }
-        const vector<HyperEdge*> & edges = hyper_graph.GetEdges();
-        if(edges.size() != 5) {
-            cout << "edges.size() "<<edges.size()<<" != 5"<<endl; ret = 0;
-        }
-        return ret;
-    }
-    
-    // Test whether we can add multi-word terminals with no reversal
-    int TestAddNonTerminals() {
-        HyperGraph hyper_graph(3,3);
-        // Add the terminals
-        // ROOT               -> <  -1   > X0
-        // E0  (T,<0,0,0,0>)  -> <0,0,0,0> X1
-        // E1  (T,<1,1,2,2>)  -> <1,1,2,2> X2
-        // E2  (T,<2,2,1,1>)  -> <2,2,1,1> X3
-        hyper_graph.AddTerminals(cal1, 1, false);
-        // Add the non-terminals (*** are existing nodes)
-        // E3  (S,X0,X1)      -> <0,1,0,2> X4
-        // E4  (I,X0,X1)      -> <0,1,2,0> X5
-        // E5  (S,X1,X2)      -> <1,2,2,1> X6
-        // E6  (I,X1,X2)      -> <1,2,1,2> X7
-        // E7  (S,X3,X2)      -> <0,2,0,1> X8
-        // E8  (R,X8)
-        // E9  (I,X3,X2)      -> <0,2,1,2> X9
-        // E10 (R,X9)
-        // E11 (S,X4,X2)      -> <0,2,2,1> X10
-        // E12 (R,X10)
-        // E13 (I,X4,X2)      -> <0,2,1,0> X11
-        // E14 (R,X11)
-        // E15 (S,X0,X5)      -> <0,2,0,1> X8  ***
-        // E16 (I,X0,X5)      -> <0,2,2,0> X12
-        // E17 (R,X12)
-        // E18 (S,X0,X6)      -> <0,2,0,2> X13
-        // E19 (R,X13)
-        // E20 (I,X0,X6)      -> <0,2,1,0> X11 ***
-        hyper_graph.AddNonTerminals();
-        int ret = 1;
-        // Check that the number of nodes and edges are correct
-        const vector<HyperNode*> & nodes = hyper_graph.GetNodes();
-        if(nodes.size() != 14) {
-            cout << "nodes.size() "<<nodes.size()<<" != 14"<<endl; ret = 0;
-        }
-        const vector<HyperEdge*> & edges = hyper_graph.GetEdges();
-        if(edges.size() != 21) {
-            cout << "edges.size() "<<edges.size()<<" != 21"<<endl; ret = 0;
-        }
+        // Test the rescoring
         return ret;
     }
 
-    // Test that we can calculate the best cumulative score
-    int TestCumulativeScore() {
-        // Build the graph
-        HyperGraph hyper_graph(2,2);
-        HyperNode * node00 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
-        HyperEdge * edge00 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge00->SetScore(1);
-        node00->AddEdge(edge00);
-        node00->SetScore(2);
-        HyperNode * node11 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(1,1,MakePair(1,1),MakePair(1,1)));
-        HyperEdge * edge11 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge11->SetScore(4);
-        node11->AddEdge(edge11);
-        HyperEdge * edge11b = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMINV);
-        edge11b->SetScore(8);
-        node11->AddEdge(edge11b);
-        HyperNode * node01 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(0,1,MakePair(0,0),MakePair(1,1)));
-        HyperEdge * edge01 = hyper_graph.AddNewEdge(HyperEdge::EDGE_STR);
-        edge01->SetLeftChild(node00);
-        edge01->SetRightChild(node11);
-        edge01->SetScore(16);
-        node01->AddEdge(edge01);
-        node01->SetScore(32);
-        // The cumulative score should be:
-        // edge00=1 + node00=2 + edge11b=8 + edge01=16 + node01=32 --> 59
-        int ret = 1;
-        if(node01->GetCumulativeScore() != 59) {
-            cout << "node01->GetCumulativeScore() " << node01->GetCumulativeScore() << " != 59" << endl; ret = 0;
-        }
-        return ret;
-    }
-
-    // Test that we can gather features from a parse
-    int TestAccumulate() {
-        // Build the graph
-        HyperGraph hyper_graph(2,2);
-        HyperNode * node00 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(0,0,MakePair(0,0),MakePair(0,0)));
-        node00->SetFeatureVector(FeatureVectorInt(1,MakePair(10,1)));
-        HyperEdge * edge00 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge00->SetFeatureVector(FeatureVectorInt(1,MakePair(1,1)));
-        edge00->SetLoss(1);
-        node00->AddEdge(edge00);
-        node00->SetBestEdge(0);
-        HyperNode * node11 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(1,1,MakePair(1,1),MakePair(1,1)));
-        node11->SetFeatureVector(FeatureVectorInt(1,MakePair(20,1)));
-        HyperEdge * edge11 = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMSTR);
-        edge11->SetFeatureVector(FeatureVectorInt(1,MakePair(2,1)));
-        node11->AddEdge(edge11);
-        edge11->SetLoss(2);
-        HyperEdge * edge11b = hyper_graph.AddNewEdge(HyperEdge::EDGE_TERMINV);
-        edge11b->SetFeatureVector(FeatureVectorInt(1,MakePair(3,1)));
-        edge11b->SetLoss(4);
-        node11->AddEdge(edge11b);
-        node11->SetBestEdge(1);
-        HyperNode * node01 = hyper_graph.GetNodeAtSpan(
-            HyperSpan(0,1,MakePair(0,0),MakePair(1,1)));
-        node01->SetFeatureVector(FeatureVectorInt(1,MakePair(20,1)));
-        HyperEdge * edge01 = hyper_graph.AddNewEdge(HyperEdge::EDGE_STR);
-        edge01->SetFeatureVector(FeatureVectorInt(1,MakePair(4,1)));
-        edge01->SetLeftChild(node00);
-        edge01->SetRightChild(node11);
-        edge01->SetLoss(8);
-        node01->AddEdge(edge01);
-        node01->SetBestEdge(0);
-        // Feature vector should be
-        // {1:1, 3:1, 4:1, 10:1, 20:2}
+    int TestAccumulateFeatures() {
+        // The value of the loss should be 1:1, 2:1, 5:1, 10:4
+        FeatureVectorInt act = my_hg.AccumulateFeatures(tsr);
         FeatureVectorInt exp;
         exp.push_back(MakePair(1,1));
-        exp.push_back(MakePair(3,1));
-        exp.push_back(MakePair(4,1));
-        exp.push_back(MakePair(10,1));
-        exp.push_back(MakePair(20,2));
-        // Get the actual feature vector and loss
-        FeatureVectorInt act = node01->AccumulateFeatures();
-        int ret = CheckVector(exp,act);
-        double loss = node01->AccumulateLoss();
-        if(loss != 13) {
-            cerr << "loss " << loss << " != 13" << endl; ret = 0;
+        exp.push_back(MakePair(2,1));
+        exp.push_back(MakePair(5,1));
+        exp.push_back(MakePair(10,3));
+        // Test the rescoring
+        return CheckVector(exp, act);
+    }
+
+    // Test that rescoring works
+    int TestRescore() {
+        // Create a model that assigns a weight of -1 to each production
+        ReordererModel mod;
+        vector<double> weights(20,0);
+        weights[10] = -1;
+        mod.SetWeights(weights);
+        int ret = 1;
+        // Simply rescoring with this model should pick the forward production
+        // with a score of -1
+        double score = my_hg.Rescore(mod, 0.0);
+        if(score != -1) {
+            cerr << "Rescore(mod, 0.0) != -1: " << score << endl; ret = 0;
+        }
+        // Rescoring with loss +1 should pick the inverted terminal
+        // with a loss of 14, minus a weight of 3 -> 11
+        score = my_hg.Rescore(mod, 1.0);
+        if(score != 11) {
+            cerr << "Rescore(mod, 1.0) != 11: " << score << endl; ret = 0;
         }
         return ret;
     }
-
-    int TestLossIsZero() {
-        HyperEdge edge;
-        return (edge.GetLoss() == 0) ? 1 : 0;
-    }
-
-private:
-
-    HyperSpan span0, span1, span2;
-    CombinedAlignment cal1;
-
-public:
 
     bool RunTest() {
         int done = 0, succeeded = 0;
-        done++; cout << "TestGetNodeAtSpan()" << endl; if(TestGetNodeAtSpan()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestAddSingleTerminals()" << endl; if(TestAddSingleTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestAddReverseTerminals()" << endl; if(TestAddReverseTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestAddMultipleTerminals()" << endl; if(TestAddMultipleTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestAddNonTerminals()" << endl; if(TestAddNonTerminals()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestCumulativeScore()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestAccumulateFeatures()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
-        done++; cout << "TestLossIsZero()" << endl; if(TestCumulativeScore()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestGetTrgSpanID()" << endl; if(TestGetTrgSpanID()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestGetEdgeFeaturesAndWeights()" << endl; if(TestGetEdgeFeaturesAndWeights()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestProcessOneSpan()" << endl; if(TestProcessOneSpan()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBuildHyperGraph()" << endl; if(TestBuildHyperGraph()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAccumulateLoss()" << endl; if(TestAccumulateLoss()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestAccumulateFeatures()" << endl; if(TestAccumulateFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestRescore()" << endl; if(TestRescore()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
+
+private:
+    HyperEdge edge00, edge11, edge22, edge12t, edge12nt, edge02;
+    CombinedAlignment cal;
+    FeatureDataSequence sent, sent_pos;
+    ReordererModel model;
+    std::vector<double> weights;
+    FeatureSet set;
+    vector<FeatureDataBase*> datas;
+    FeatureSequence *featw, *featp;
+    TargetSpan *ts00, *ts01f, *ts01b, *ts11, *tsr;
+    HyperGraph my_hg;
 
 
 };

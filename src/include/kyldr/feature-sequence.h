@@ -42,15 +42,9 @@ public:
     // Parses a space-separated input string of data
     virtual FeatureDataBase * ParseData(const std::string & str);
 
-    // Generates the features that can be factored over a node
-    virtual FeatureVectorString GenerateNodeFeatures(
-                                const FeatureDataBase & sentence,
-                                const HyperNode & node);
-
     // Generates the features that can be factored over an edge
     virtual FeatureVectorString GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
-                                const HyperNode & node,
                                 const HyperEdge & edge);
 
     // Get the type of this feature generator
@@ -74,10 +68,9 @@ public:
 
 private:
 
-    // Get a feature string defined over a span
     std::string GetSpanFeatureString(const FeatureDataSequence & sent,
-                                     const HyperSpan & span,
-                                     char type);
+                                     int l, int r, char type);
+
 
     std::string GetEdgeFeatureString(const FeatureDataSequence & sent,
                                      const HyperEdge & edge,

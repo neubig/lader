@@ -17,29 +17,29 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
         // Over all values in the corpus
         for(int sent = 0; sent < (int)data_.size(); sent++) {
-            // Make the hypergraph
-            HyperGraph hyper_graph(alignments_[sent].GetSrcLen(),
-                                   alignments_[sent].GetTrgLen());
-            hyper_graph.AddTerminals(alignments_[sent],
-                                     config.GetInt("max_term"),
-                                     config.GetBool("use_reverse"));
-            hyper_graph.AddNonTerminals();
-            // Annotate the hypergraph
+            // Make the hypergraph using cube pruning
+            HyperGraph hyper_graph;
+            hyper_graph.BuildHyperGraph(model_,
+                                        features_,
+                                        data_[sent],
+                                        config.GetInt("max_term"),
+                                        config.GetInt("beam"));
+            // Add losses to the hypotheses in thehypergraph
             BOOST_FOREACH(LossBase * loss, losses_)
                 loss->AddLossToHyperGraph(alignments_[sent], hyper_graph);
-            features_.AddHyperGraphFeatures(data_[sent], hyper_graph);
             // Parse the hypergraph, penalizing loss heavily (oracle)
-            model_.ScoreGraph(hyper_graph, -1e6);
-            oracle_score = hyper_graph.Parse();
-            oracle_loss = hyper_graph.GetRoot()->AccumulateLoss();
-            oracle_score -= oracle_loss * -1e6;
-            oracle_features = hyper_graph.GetRoot()->AccumulateFeatures();
+            oracle_score = hyper_graph.Rescore(model_, -1e6);
+            oracle_features = hyper_graph.AccumulateFeatures(
+                                                    hyper_graph.GetRoot());
+            oracle_loss     = hyper_graph.AccumulateLoss(
+                                                    hyper_graph.GetRoot());
+            oracle_score   -= oracle_loss * -1e6;
             // Inner iterations
             for(int i = 0; i < inner_iters_; i++) {
                 // Parse the hypergraph, slightly boosting loss by 1.0
-                model_.ScoreGraph(hyper_graph, 1.0);
-                model_score = hyper_graph.Parse();
-                model_loss = hyper_graph.GetRoot()->AccumulateLoss();
+                model_score = hyper_graph.Rescore(model_, 1.0);
+                model_loss  = hyper_graph.AccumulateLoss(
+                                                    hyper_graph.GetRoot());
                 model_score -= model_loss * 1;
                 if(i == 0) {
                     // Add the statistics for this iteration
@@ -52,7 +52,8 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                             " model_loss=" << model_loss << endl;
                 }
                 if(model_loss == oracle_loss) break;
-                model_features = hyper_graph.GetRoot()->AccumulateFeatures();
+                model_features = hyper_graph.AccumulateFeatures(
+                                                    hyper_graph.GetRoot());
                 // Add the difference between the vectors
                 model_.AdjustWeights(
                     VectorSubtract(oracle_features, model_features),

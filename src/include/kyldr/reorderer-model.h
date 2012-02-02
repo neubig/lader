@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <kyldr/feature-set.h>
+#include <kyldr/feature-vector.h>
 #include <kyldr/hyper-graph.h>
 
 namespace kyldr {
@@ -16,11 +17,16 @@ public:
     //  to the weight term (0 by default = don't consider loss in scoring)
     void ScoreGraph(HyperGraph & graph, double loss_factor = 0);
 
-    // Calculate the score of one edge
-    void ScoreEdge(HyperEdge & edge, double loss_factor = 0);
+    // // Calculate the score of one edge
+    // void ScoreEdge(HyperEdge & edge, double loss_factor = 0);
 
-    // Calculate the score of one node
-    void ScoreNode(HyperNode & node);
+    // Calculate the score of a feature vector
+    double ScoreFeatureVector(const FeatureVectorInt & vec) const {
+        double ret = 0;
+        BOOST_FOREACH(const FeaturePairInt & fpi, vec)
+            ret += GetWeight(fpi.first) * fpi.second;
+        return ret;
+    }
 
     // Adjust the weights
     void AdjustWeights(const FeatureVectorInt & feats, double weight);
