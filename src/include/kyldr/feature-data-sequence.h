@@ -20,12 +20,22 @@ public:
     FeatureDataSequence() : FeatureDataBase() { }
     virtual ~FeatureDataSequence() { }
 
-    void ParseInput(const std::string & str) {
+    void FromString(const std::string & str) {
         boost::tokenizer<boost::char_separator<char> > 
                                 tokens(str, boost::char_separator<char>(" "));
         sequence_.clear();
         BOOST_FOREACH(std::string s, tokens) { sequence_.push_back(s); }
         num_words_ = sequence_.size();
+    }
+    std::string ToString() const {
+        return boost::algorithm::join(sequence_, " ");
+    }
+    void Reorder(const std::vector<int> & order) {
+        if(order.size() != sequence_.size())
+            THROW_ERROR("Vector sizes in Reorder don't match");
+        std::vector<std::string> old_seq = sequence_;
+        for(int i = 0; i < (int) order.size(); i++)
+            sequence_[i] = old_seq[order[i]];
     }
 
     const std::vector<std::string> & GetSequence() const { return sequence_; }

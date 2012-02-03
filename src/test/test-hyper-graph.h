@@ -33,9 +33,9 @@ public:
         cal = CombinedAlignment(al);
         // Create a sentence
         string str = "he ate rice";
-        sent.ParseInput(str);
+        sent.FromString(str);
         string str_pos = "PRP VBD NN";
-        sent_pos.ParseInput(str_pos);
+        sent_pos.FromString(str_pos);
         // Create a reorderer model with two weights
         weights.push_back(1);
         weights.push_back(2);
@@ -172,7 +172,8 @@ public:
         (*stack11)[0]->AddHypothesis(Hypothesis(2.0,1,1,1,1,HyperEdge::EDGE_FOR));
         graph.SetStack(1, 1, stack11);
         // Try processing 01
-        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, 0);
+        set.SetMaxTerm(0);
+        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1);
         // The stack should contain two target spans (1,0) and (0,1),
         // each with two hypotheses
         int ret = 1;
@@ -193,7 +194,8 @@ public:
         score_act[3] = (*stack01)[1]->GetHypothesis(1)->GetScore();
         ret = CheckVector(score_exp, score_act);
         // Check to make sure that pruning works
-        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, 3);
+        set.SetMaxTerm(0);
+        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3);
         if(stack01pruned->size() != 2) {
             cerr << "stack01pruned->size() != 2: " << stack01pruned->size() << endl; ret = 0;
         } else if((*stack01pruned)[0]->GetHypotheses().size() != 1) {
@@ -201,14 +203,15 @@ public:
         } else if((*stack01pruned)[1]->GetHypotheses().size() != 2) {
             cerr << "(*stack01pruned)[1].size() != 2: " << (*stack01pruned)[1]->GetHypotheses().size() << endl; ret = 0;
         }
-        delete stack00; delete stack01;
-        delete stack11; delete stack01pruned;
+        // delete stack00; delete stack01;
+        // delete stack11; delete stack01pruned;
         return ret;
     }
 
     int TestBuildHyperGraph() {
         HyperGraph graph;
-        graph.BuildHyperGraph(model, set, datas, 2, 0);
+        set.SetMaxTerm(0);
+        graph.BuildHyperGraph(model, set, datas);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;
         // The total number of stacks should be 7: 0-0 0-1 1-1 0-2 1-2 2-2 root
@@ -275,6 +278,50 @@ public:
         return ret;
     }
 
+    // Test various types of reordering in the hypergraph
+    int TestReorderingAndPrint() {
+        // Create the expected reordering vectors
+        vector<int> vec01(2,0); vec01[0] = 0; vec01[1] = 1;
+        vector<int> vec10(2,0); vec10[0] = 1; vec10[1] = 0;
+        vector<string> str01(2); str01[0] = "0"; str01[1] = "1";
+        // Create a forest that can handle various things
+        TargetSpan *span00 = new TargetSpan(0,0,-1,-1),
+                   *span01 = new TargetSpan(0,1,-1,-1),
+                   *span11 = new TargetSpan(1,1,-1,-1),
+                   *spanr = new TargetSpan(0,1,-1,-1);
+        span00->AddHypothesis(Hypothesis(1,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(Hypothesis(1,1,1,-1,-1,HyperEdge::EDGE_FOR));
+        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_FOR));
+        spanr->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        // Get the reordering for forward
+        int ret = 1;
+        vector<int> for_reorder; spanr->GetReordering(for_reorder);
+        ostringstream for_oss; spanr->PrintParse(str01, for_oss);
+        ret = min(ret, CheckVector(vec01, for_reorder));
+        ret = min(ret, CheckString("(F (FW 0) (FW 1))", for_oss.str()));
+        // Get the reordering bac backward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_BAC);
+        vector<int> bac_reorder; spanr->GetReordering(bac_reorder);
+        ostringstream bac_oss; spanr->PrintParse(str01, bac_oss);
+        ret = min(ret, CheckVector(vec10, bac_reorder));
+        ret = min(ret, CheckString("(B (BW 0) (BW 1))", bac_oss.str()));
+        // Get the reordering for forward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_STR);
+        span01->GetHypothesis(0)->SetLeftChild(span00);
+        span01->GetHypothesis(0)->SetRightChild(span11);
+        vector<int> str_reorder; spanr->GetReordering(str_reorder);
+        ostringstream str_oss; spanr->PrintParse(str01, str_oss);
+        ret = min(ret, CheckVector(vec01, str_reorder));
+        ret = min(ret,CheckString("(S (F (FW 0)) (F (FW 1)))",str_oss.str()));
+        // Get the reordering for forward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_INV);
+        vector<int> inv_reorder; spanr->GetReordering(inv_reorder);
+        ostringstream inv_oss; spanr->PrintParse(str01, inv_oss);
+        ret = min(ret, CheckVector(vec10, inv_reorder)); 
+        ret = min(ret,CheckString("(I (F (FW 0)) (F (FW 1)))",inv_oss.str()));
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestGetTrgSpanID()" << endl; if(TestGetTrgSpanID()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -284,6 +331,7 @@ public:
         done++; cout << "TestAccumulateLoss()" << endl; if(TestAccumulateLoss()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateFeatures()" << endl; if(TestAccumulateFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRescore()" << endl; if(TestRescore()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestReorderingAndPrint()" << endl; if(TestReorderingAndPrint()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

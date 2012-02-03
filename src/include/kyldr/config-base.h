@@ -54,14 +54,14 @@ public:
     
     void PrintConf() const {
         // print arguments
-        std::cout << "Main arguments:" << std::endl;
+        std::cerr << "Main arguments:" << std::endl;
         for(int i = 0; i < (int)mainArgs_.size(); i++)
-            std::cout << " "<<i<<": "<<mainArgs_[i]<<std::endl;
-        std::cout << "Optional arguments:"<<std::endl;
+            std::cerr << " "<<i<<": "<<mainArgs_[i]<<std::endl;
+        std::cerr << "Optional arguments:"<<std::endl;
         for(std::vector<std::string>::const_iterator it = argOrder_.begin(); it != argOrder_.end(); it++) {
             ConfigMap::const_iterator oit = optArgs_.find(*it);
             if(oit->second.second.length() != 0)
-                std::cout << " -"<<oit->first<<" \t"<<oit->second.first<<std::endl;
+                std::cerr << " -"<<oit->first<<" \t"<<oit->second.first<<std::endl;
         }
     }
 

@@ -2,6 +2,7 @@
 #define FEATURE_DATA_BASE_H__
 
 #include <vector>
+#include <string>
 
 namespace kyldr {
 
@@ -13,6 +14,12 @@ public:
     FeatureDataBase() : num_words_(-1) { }
     virtual ~FeatureDataBase() { }
  
+    // Reorder the data according to the input vector
+    virtual void Reorder(const std::vector<int> & order) = 0;
+
+    // Convert this data into a string for output
+    virtual std::string ToString() const = 0;
+
     // Accessors
     int GetNumWords() { return num_words_; }
 

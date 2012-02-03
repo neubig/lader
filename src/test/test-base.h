@@ -43,6 +43,14 @@ protected:
         return ok;
     }
 
+    int CheckString(const std::string & exp, const std::string & act) {
+        if(exp != act) {
+            cerr << "String exp='"<<exp<<"' != '"<<act<<"'" <<endl;
+            return 0;
+        }
+        return 1;
+    }
+
 };
 
 }

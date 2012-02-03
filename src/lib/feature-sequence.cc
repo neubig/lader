@@ -64,7 +64,7 @@ void FeatureSequence::ParseConfiguration(const string & str) {
 // the feature generator) into the generator's internal representation
 FeatureDataBase * FeatureSequence::ParseData(const string & str) {
     FeatureDataSequence * data = new FeatureDataSequence;
-    data->ParseInput(str);
+    data->FromString(str);
     return data;
 }
 

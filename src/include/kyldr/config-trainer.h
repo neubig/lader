@@ -30,7 +30,7 @@ public:
         // AddConfigEntry("last_step", "4", "The last step to perform");
         AddConfigEntry("align_in", "", "The input file for the alignments");
         AddConfigEntry("source_in", "", "The input file for the source sentences");
-        AddConfigEntry("max_term", "3", "The maximum length of a terminal ");
+        AddConfigEntry("max_term", "0", "The maximum length of a terminal ");
         AddConfigEntry("beam", "0", "The maximum beam size");
         AddConfigEntry("use_reverse", "true", "Whether to use reverse terminals ");
         AddConfigEntry("loss_profile", "fuzzy=1", "Which loss functions to use");

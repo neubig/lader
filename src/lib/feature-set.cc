@@ -71,6 +71,7 @@ void FeatureSet::ParseConfiguration(const string & str) {
 void FeatureSet::ToStream(ostream & out) {
     out << "feature_set" << endl;
     out << "config_str " << config_str_ << endl;
+    out << "max_term " << max_term_ << endl;
     feature_ids_->ToStream(out);
     out << endl;
 }
@@ -81,6 +82,9 @@ FeatureSet * FeatureSet::FromStream(istream & in) {
     GetConfigLine(in, "config_str", config);
     FeatureSet * ret = new FeatureSet;
     ret->ParseConfiguration(config);
+    GetConfigLine(in, "max_term", config);
+    ret->SetMaxTerm(atof(config.c_str()));
     ret->SetFeatureIds(SymbolSet<string,int>::FromStream(in));
+    GetlineEquals(in, "");
     return ret;
 }

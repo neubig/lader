@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <tr1/unordered_map>
 
-// #define KYLDR_SAFE
+#define KYLDR_SAFE
 
 #define THROW_ERROR(msg) do {                   \
     std::ostringstream oss;                     \

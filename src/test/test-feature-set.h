@@ -29,9 +29,9 @@ public:
         cal = CombinedAlignment(al);
         // Create a sentence
         string str = "he ate rice";
-        sent.ParseInput(str);
+        sent.FromString(str);
         string str_pos = "PRP VBD NN";
-        sent_pos.ParseInput(str_pos);
+        sent_pos.FromString(str_pos);
     }
 
     int TestMakeEdgeFeatures() {

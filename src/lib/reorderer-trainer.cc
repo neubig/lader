@@ -22,7 +22,6 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             hyper_graph.BuildHyperGraph(model_,
                                         features_,
                                         data_[sent],
-                                        config.GetInt("max_term"),
                                         config.GetInt("beam"));
             // Add losses to the hypotheses in thehypergraph
             BOOST_FOREACH(LossBase * loss, losses_)
@@ -73,6 +72,7 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
         THROW_ERROR("Must specify a valid model output with -model_out ('"
                         <<config.GetString("model_out")<<"')");
     features_.ParseConfiguration(config.GetString("feature_profile"));
+    features_.SetMaxTerm(config.GetInt("max_term"));
     learning_rate_ = config.GetDouble("learning_rate");
     std::vector<std::string> losses, first_last;
     algorithm::split(

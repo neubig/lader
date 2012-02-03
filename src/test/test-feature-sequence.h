@@ -31,9 +31,9 @@ public:
         cal = CombinedAlignment(al);
         // Create a sentence
         string str = "he ate rice";
-        sent.ParseInput(str);
+        sent.FromString(str);
         string str_pos = "PRP VBD NN";
-        sent_pos.ParseInput(str_pos);
+        sent_pos.FromString(str_pos);
     }
     ~TestFeatureSequence() { }
 
@@ -47,7 +47,7 @@ public:
         // Create the real value
         string str = "this is a test";
         FeatureDataSequence fds;
-        fds.ParseInput(str);
+        fds.FromString(str);
         vector<string> act = fds.GetSequence();
         return CheckVector(exp, act);
     }
@@ -125,12 +125,30 @@ public:
         return ret;
     }
 
+    int TestReorderData() {
+        FeatureDataSequence data;
+        data.FromString("a b c d");
+        vector<int> order(4,0);
+        order[0] = 2; order[1] = 0; order[2] = 3; order[3] = 1;
+        data.Reorder(order);
+        string act = data.ToString();
+        string exp = "c a d b";
+        int ret = 1;
+        if(exp != act) {
+            cerr << "Reordering failed: act (" << act << ") != " 
+                 << " exp (" << exp << ")" << endl;
+            ret = 0;
+        }
+        return ret; 
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestFeatureDataSequenceParse()" << endl; if(TestFeatureDataSequenceParse()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestFeatureTemplateIsLegal()" << endl; if(TestFeatureTemplateIsLegal()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestLeftRightFeatures()" << endl; if(TestLeftRightFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestEdgeFeatures()" << endl; if(TestEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestReorderData()" << endl; if(TestReorderData()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSequence Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
