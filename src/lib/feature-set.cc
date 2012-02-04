@@ -59,7 +59,7 @@ void FeatureSet::ParseConfiguration(const string & str) {
     for(int i = 0; i < (int)configs.size(); i++) {
         size_t pos = configs[i].find_first_of("=");
         if(pos == string::npos || pos == 0 || pos == configs[i].length()-1)
-            THROW_ERROR("Bad configsiuration string " << str);
+            THROW_ERROR("Bad configuration string " << str);
         string type = configs[i].substr(0, pos);
         feature_gens_[i] = FeatureBase::CreateNew(type);
         string sub_config = configs[i].substr(pos+1);

@@ -70,11 +70,15 @@ private:
 
     std::string GetSpanFeatureString(const FeatureDataSequence & sent,
                                      int l, int r, char type);
-
+    double GetSpanFeatureValue(const FeatureDataSequence & sent,
+                               int l, int r, char type);
 
     std::string GetEdgeFeatureString(const FeatureDataSequence & sent,
                                      const HyperEdge & edge,
                                      char type);
+    double GetEdgeFeatureValue(const FeatureDataSequence & sent,
+                               const HyperEdge & edge,
+                               char type);
 
     std::vector<FeatureTemplate> feature_templates_;
 

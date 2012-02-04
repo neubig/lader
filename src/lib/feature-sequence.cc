@@ -1,6 +1,7 @@
 #include <kyldr/feature-sequence.h>
 
 #include <sstream>
+#include <cfloat>
 
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
@@ -20,7 +21,7 @@ bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
         if(name[1] != 'T')
             return false;
     } else if(name[0] == 'C') {
-        if(name[1] != 'D')
+        if(name[1] != 'D' && name[1] != 'B')
             return false;
     } else {
         if(name[1] != 'S' && name[1] != 'N' && name[1] != 'L' && name[1] != 'R')
@@ -83,9 +84,21 @@ string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
             oss << r - l + 1;
             return oss.str();
         default:
-            THROW_ERROR("Bad feature type " << type);
+            THROW_ERROR("Bad span feature type " << type);
     }
     return "";
+}
+
+double FeatureSequence::GetSpanFeatureValue(const FeatureDataSequence & sent,
+                                             int l, int r,
+                                             char type) {
+    switch (type) {
+        case 'N':
+            return r - l + 1;
+        default:
+            THROW_ERROR("Bad span feature value " << type);
+    }
+    return -DBL_MAX;
 }
 
 
@@ -100,13 +113,35 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
             oss << 
                 abs(edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1);
             return oss.str();
+        case 'B':
+            // Get the balance between the values
+            oss << 
+                edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1;
+            return oss.str();
         case 'T':
             oss << (char)edge.GetType();
             return oss.str();
         default:
-            THROW_ERROR("Bad feature type " << type);
+            THROW_ERROR("Bad edge feature type " << type);
     }
     return "";
+}
+
+double FeatureSequence::GetEdgeFeatureValue(const FeatureDataSequence & sent,
+                                             const HyperEdge & edge,
+                                             char type) {
+    switch (type) {
+        // Get the difference between values
+        case 'D':
+            // Distance is (r-c+1)-(c-l)
+            return abs(edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1);
+        case 'B':
+            // Get the balance between the values
+            return edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1;
+        default:
+            THROW_ERROR("Bad edge feature value " << type);
+    }
+    return -DBL_MAX;
 }
 
 // Generates the features that can be factored over an edge
@@ -121,32 +156,36 @@ FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
     BOOST_FOREACH(FeatureTemplate templ, feature_templates_) {
         // Make sure that this feature is compatible with the edge
         if (templ.first == ALL_FACTORED || is_nonterm) {
-            vector<string> values = templ.second;
-            for(int i = 1; i < (int)values.size(); i++) {
+            vector<string> values(1,templ.second[0]);
+            double feat_val = 1;
+            for(int i = 1; i < (int)templ.second.size(); i++) {
                 // Choose which span to use
-                switch (values[i][0]) {
+                pair<int,int> span(-1, -1);
+                switch (templ.second[i][0]) {
                     case 'S':
-                        values[i] = GetSpanFeatureString(sent_seq,
-                            edge.GetLeft(), edge.GetRight(), values[i][1]);
+                        span = pair<int,int>(edge.GetLeft(), edge.GetRight());
                         break;
                     case 'L':
-                        values[i] = GetSpanFeatureString(sent_seq,
-                            edge.GetLeft(), edge.GetCenter()-1, values[i][1]);
+                        span = pair<int,int>(edge.GetLeft(),edge.GetCenter()-1);
                         break;
                     case 'R':
-                        values[i] = GetSpanFeatureString(sent_seq,
-                            edge.GetCenter(), edge.GetRight(), values[i][1]);
+                        span = pair<int,int>(edge.GetCenter(), edge.GetRight());
                         break;
-                    case 'E':
-                    case 'C':
-                        values[i] = GetEdgeFeatureString(
-                                sent_seq, edge, values[i][1]);
-                        break;
-                    default:
-                        THROW_ERROR("Bad feature template " << values[i]); 
+                }
+                if(templ.second[i].length() == 3) {
+                    feat_val = (span.first == -1 ?
+                        GetEdgeFeatureValue(sent_seq, edge,templ.second[i][1]) :
+                        GetSpanFeatureValue(sent_seq, span.first, span.second, 
+                                                        templ.second[i][1]));
+                } else {
+                    values.push_back(span.first == -1 ?
+                        GetEdgeFeatureString(sent_seq, edge,templ.second[i][1]):
+                        GetSpanFeatureString(sent_seq, span.first, span.second, 
+                                                        templ.second[i][1]));
                 }
             }
-            ret.push_back(MakePair(algorithm::join(values, "||"), 1));
+            if(feat_val)
+                ret.push_back(MakePair(algorithm::join(values, "||"),feat_val));
         }
     }
     return ret;

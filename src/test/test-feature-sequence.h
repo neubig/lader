@@ -106,13 +106,17 @@ public:
 
     int TestEdgeFeatures() {
         FeatureSequence feat;
-        feat.ParseConfiguration("D%CD,T%ET");
+        feat.ParseConfiguration("D%CD,B%CB,D#%CD#,B#%CB#,T%ET");
         // These features apply to non-terminals
         FeatureVectorString edge00exp, edge12exp, edge02exp;
         edge00exp.push_back(MakePair(string("T||F"), 1));
         edge12exp.push_back(MakePair(string("D||0"), 1));
+        edge12exp.push_back(MakePair(string("B||0"), 1));
         edge12exp.push_back(MakePair(string("T||I"), 1));
         edge02exp.push_back(MakePair(string("D||1"), 1));
+        edge02exp.push_back(MakePair(string("B||1"), 1));
+        edge02exp.push_back(MakePair(string("D#"), 1));
+        edge02exp.push_back(MakePair(string("B#"), 1));
         edge02exp.push_back(MakePair(string("T||S"), 1));
         // Test the features
         int ret = 1;
