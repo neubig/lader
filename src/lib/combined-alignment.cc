@@ -4,9 +4,9 @@
 using namespace kyldr;
 using namespace std; 
 
-void CombinedAlignment::BuildFromAlignment(
+void CombinedAlign::BuildFromAlignment(
         const Alignment & align,
-        CombinedAlignment::NullHandler handler) {
+        CombinedAlign::NullHandler handler) {
     // Save the lengths
     trg_len_ = align.GetTrgLen();
     // Create the new alignment vector

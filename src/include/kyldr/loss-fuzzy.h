@@ -16,7 +16,14 @@ public:
 
     virtual double AddLossToProduction(
         int left, int mid_left, int mid_right, int right,
-        HyperEdge::Type type, const CombinedAlignment & combined);
+        HyperEdge::Type type, const Ranks & combined);
+
+    // Calculate the accuracy of a single sentence
+    virtual double CalculateSentenceAcccuracy(
+            const std::vector<int> order, const Ranks & ranks) {
+        THROW_ERROR("LossFuzzy::CalculateSentenceAccuracy is not implemented.");
+    }
+
 
 private:
 

@@ -1,7 +1,7 @@
 #ifndef LOSS_BASE_H__
 #define LOSS_BASE_H__
 
-#include <kyldr/combined-alignment.h>
+#include <kyldr/ranks.h>
 #include <kyldr/hyper-graph.h>
 #include <kyldr/hyper-edge.h>
 
@@ -23,12 +23,16 @@ public:
     // left side of the right span respectively
     virtual double AddLossToProduction(
         int left, int mid_left, int mid_right, int right,
-        HyperEdge::Type type, const CombinedAlignment & combined) = 0;
+        HyperEdge::Type type, const Ranks & ranks) = 0;
+    
+    // Calculate the accuracy of a single sentence
+    virtual double CalculateSentenceAcccuracy(
+            const std::vector<int> order, const Ranks & ranks) = 0;
 
-    // Initializes the loss calculator with a combined 
-    virtual void Initialize(const CombinedAlignment & combined) { }
+    // Initializes the loss calculator with a ranks 
+    virtual void Initialize(const Ranks & ranks) { }
 
-    void AddLossToHyperGraph(const CombinedAlignment & combined,
+    void AddLossToHyperGraph(const Ranks & ranks,
                              HyperGraph & hyper_graph);
 
     // Create a new sub-class of a particular type

@@ -1,4 +1,4 @@
-#include "test-combined-alignment.h"
+#include "test-alignments-and-ranks.h"
 #include "test-hyper-graph.h"
 #include "test-feature-sequence.h"
 #include "test-feature-set.h"
@@ -13,7 +13,7 @@ using namespace kyldr;
 int main() {
     // Initialize all the tests
     vector<TestBase*> tests;
-    tests.push_back(new TestCombinedAlignment());
+    tests.push_back(new TestAlignmentsAndRanks());
     tests.push_back(new TestHyperGraph());
     tests.push_back(new TestFeatureSequence());
     tests.push_back(new TestFeatureSet());

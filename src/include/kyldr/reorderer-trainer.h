@@ -43,9 +43,9 @@ public:
                                 <<align_in);
         std::string line;
         while(getline(in, line))
-            alignments_.push_back(
-                CombinedAlignment(Alignment::FromString(line),
-                                  CombinedAlignment::ATTACH_NULL_LEFT));
+            ranks_.push_back(
+                Ranks(CombinedAlign(Alignment::FromString(line),
+                              CombinedAlign::ATTACH_NULL_LEFT)));
     }
 
     // Write the model to a file
@@ -62,7 +62,7 @@ public:
 
 private:
 
-    std::vector<CombinedAlignment> alignments_; // The alignments
+    std::vector<Ranks> ranks_; // The alignments
     std::vector<std::vector<FeatureDataBase*> > data_; // The data
     ReordererModel model_; // The model
     FeatureSet features_;  // The mapping on feature ids and which to use

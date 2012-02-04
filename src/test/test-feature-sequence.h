@@ -28,7 +28,7 @@ public:
         al.AddAlignment(MakePair(0,0));
         al.AddAlignment(MakePair(1,2));
         al.AddAlignment(MakePair(2,1));
-        cal = CombinedAlignment(al);
+        cal = Ranks(al);
         // Create a sentence
         string str = "he ate rice";
         sent.FromString(str);
@@ -159,7 +159,7 @@ public:
 
 private:
     HyperEdge edge00, edge11, edge22, edge12t, edge12nt, edge02;
-    CombinedAlignment cal;
+    Ranks cal;
     FeatureDataSequence sent, sent_pos;
 
 };

@@ -25,7 +25,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                                         config.GetInt("beam"));
             // Add losses to the hypotheses in thehypergraph
             BOOST_FOREACH(LossBase * loss, losses_)
-                loss->AddLossToHyperGraph(alignments_[sent], hyper_graph);
+                loss->AddLossToHyperGraph(ranks_[sent], hyper_graph);
             // Parse the hypergraph, penalizing loss heavily (oracle)
             oracle_score = hyper_graph.Rescore(model_, -1e6);
             oracle_features = hyper_graph.AccumulateFeatures(

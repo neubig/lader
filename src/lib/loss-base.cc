@@ -13,10 +13,10 @@ LossBase * LossBase::CreateNew(const string & type) {
     return NULL;
 }
 
-void LossBase::AddLossToHyperGraph(const CombinedAlignment & combined,
+void LossBase::AddLossToHyperGraph(const Ranks & ranks,
                                    HyperGraph & hyper_graph) {
     // For each span in the hypergraph
-    int n = combined.GetSrcLen();
+    int n = ranks.GetSrcLen();
     for(int r = 0; r <= n; r++) {
         // When r == n, we want the root, so only do -1
         for(int l = (r == n ? -1 : 0); l <= (r == n ? 0 : r); l++) {
@@ -34,7 +34,7 @@ void LossBase::AddLossToHyperGraph(const CombinedAlignment & combined,
                                  AddLossToProduction(trg_left, mid_left,
                                                      mid_right, trg_right,
                                                      hyp->GetType(),
-                                                     combined));
+                                                     ranks));
                 }
             }
         }
