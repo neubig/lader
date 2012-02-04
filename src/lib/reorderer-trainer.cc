@@ -17,8 +17,12 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
         // Over all values in the corpus
         for(int sent = 0; sent < (int)data_.size(); sent++) {
-            // Make the hypergraph using cube pruning
             HyperGraph hyper_graph;
+            // If we are saving features for efficiency, recover the saved
+            // features and replace them in the hypergraph
+            if(config.GetBool("save_features") && iter != 0)
+                hyper_graph.SetFeatures(SafeAccess(saved_feats_, sent));
+            // Make the hypergraph using cube pruning
             hyper_graph.BuildHyperGraph(model_,
                                         features_,
                                         data_[sent],
@@ -57,6 +61,13 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                 model_.AdjustWeights(
                     VectorSubtract(oracle_features, model_features),
                     learning_rate_);
+            }
+            // If we are saving features
+            if(config.GetBool("save_features")) {
+                if((int)saved_feats_.size() <= sent)
+                    saved_feats_.resize(sent+1);
+                saved_feats_[sent] = hyper_graph.GetFeatures();
+                hyper_graph.ClearFeatures();
             }
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;

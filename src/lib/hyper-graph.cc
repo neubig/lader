@@ -22,10 +22,11 @@ const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
                                 const Sentence & sent,
                                 const HyperEdge & edge) {
     FeatureVectorInt * ret;
-    EdgeFeatureMap::const_iterator it = features_.find(edge);
-    if(it == features_.end()) {
+    if(features_ == NULL) features_ = new EdgeFeatureMap;
+    EdgeFeatureMap::const_iterator it = features_->find(edge);
+    if(it == features_->end()) {
         ret = feature_gen.MakeEdgeFeatures(sent, edge);
-        features_.insert(MakePair(edge, ret));
+        features_->insert(MakePair(edge, ret));
     } else {
         ret = it->second;
     }
@@ -57,8 +58,8 @@ double HyperGraph::Score(const ReordererModel & model,
         HyperEdge::Type t = hyp->GetType();
         if(t != HyperEdge::EDGE_ROOT) {
             EdgeFeatureMap::const_iterator fit = 
-                                        features_.find(HyperEdge(l,c,r,t));
-            if(fit == features_.end())
+                                        features_->find(HyperEdge(l,c,r,t));
+            if(fit == features_->end())
                 THROW_ERROR("No features found in Score for l="
                                         <<l<<", c="<<c<<", r="<<r<<", t="<<(char)t);
             score += model.ScoreFeatureVector(*fit->second);
@@ -263,8 +264,8 @@ void HyperGraph::AccumulateFeatures(const TargetSpan* span,
     // Find the features
     if(hyp->GetType() != HyperEdge::EDGE_ROOT) {
         EdgeFeatureMap::const_iterator fit = 
-                                    features_.find(HyperEdge(l,c,r,t));
-        if(fit == features_.end())
+                                    features_->find(HyperEdge(l,c,r,t));
+        if(fit == features_->end())
             THROW_ERROR("No features found in Accumulate for l="
                                     <<l<<", c="<<c<<", r="<<r<<", t="<<t);
         BOOST_FOREACH(FeaturePairInt feat_pair, *(fit->second))

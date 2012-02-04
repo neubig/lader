@@ -32,6 +32,7 @@ public:
         AddConfigEntry("source_in", "", "The input file for the source sentences");
         AddConfigEntry("max_term", "0", "The maximum length of a terminal ");
         AddConfigEntry("beam", "0", "The maximum beam size");
+        AddConfigEntry("save_features", "true", "Save the features in memory after generating them once (more memory, more speed)");
         AddConfigEntry("use_reverse", "true", "Whether to use reverse terminals ");
         AddConfigEntry("loss_profile", "fuzzy=1", "Which loss functions to use");
         AddConfigEntry("feature_profile", "seq=T%ET,S%ET%SS", "Which loss functions to use ");

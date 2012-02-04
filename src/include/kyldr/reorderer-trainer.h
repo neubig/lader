@@ -20,6 +20,11 @@ public:
                 delete ptr;
         BOOST_FOREACH(LossBase * loss, losses_)
             delete loss;
+        BOOST_FOREACH(EdgeFeatureMap * feat, saved_feats_) {
+            BOOST_FOREACH(EdgeFeaturePair feat_pair, *feat)
+                delete feat_pair.second;
+            delete feat;
+        }
     }
 
     // Initialize the model
@@ -70,6 +75,7 @@ private:
     double learning_rate_; // The learning rate
     int inner_iters_; // The number of iterations of online learning to do for
                       // each construction of the hypergraph
+    std::vector<EdgeFeatureMap*> saved_feats_; // Features for each hypergraph
 
 };
 
