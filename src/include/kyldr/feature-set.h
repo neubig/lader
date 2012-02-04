@@ -66,6 +66,7 @@ public:
         feature_ids_ = feature_ids;
     }
     void SetMaxTerm(int max_term) { max_term_ = max_term; }
+    void SetAdd(bool add) { add_ = add; }
 
 private:
 

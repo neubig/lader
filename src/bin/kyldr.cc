@@ -1,15 +1,14 @@
-
-#include <kyldr/config-evaluator.h>
-#include <kyldr/reorderer-evaluator.h>
+#include <kyldr/config-runner.h>
+#include <kyldr/reorderer-runner.h>
 
 using namespace kyldr;
 using namespace std;
 
 int main(int argc, char** argv) {
     // load the arguments
-    ConfigEvaluator conf;
+    ConfigRunner conf;
     vector<string> args = conf.loadConfig(argc,argv);
     // train the reorderer
-    ReordererEvaluator evaluator;
-    evaluator.Evaluate(conf);
+    ReordererRunner runner;
+    runner.Run(conf);
 }

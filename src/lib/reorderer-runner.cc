@@ -49,6 +49,7 @@ void ReordererRunner::Run(const ConfigRunner & config) {
 // Initialize the model
 void ReordererRunner::InitializeModel(const ConfigRunner & config) {
     ReadModel(config.GetString("model_in"));
+    features_->SetAdd(false);
     tokenizer<char_separator<char> > outs(config.GetString("out_format"),
                                           char_separator<char>(","));
     BOOST_FOREACH(const string & str, outs) {
