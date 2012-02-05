@@ -6,7 +6,7 @@ using namespace std;
 double LossFuzzy::AddLossToProduction(
         int left, int mid_left, int mid_right, int right,
         HyperEdge::Type type, const Ranks & ranks) {
-    int loss = 0;
+    double loss = 0;
     switch (type) {
         // For roots, check that both edges are contiguous
         case HyperEdge::EDGE_ROOT:
