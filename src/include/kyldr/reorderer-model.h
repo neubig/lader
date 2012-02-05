@@ -42,7 +42,7 @@ public:
 
     // Accessors
     double GetWeight(int id) const {
-        return id < (int)weights_.size() ? weights_[id] : 0;
+        return id >= 0 && id < (int)weights_.size() ? weights_[id] : 0;
     }
     const std::vector<double> & GetWeights() const { return weights_; }
     void SetWeights(const std::vector<double> & weights) { weights_ = weights; }

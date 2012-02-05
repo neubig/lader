@@ -144,7 +144,7 @@ public:
 
     void SetUsage(const std::string & str) { usage_ = str; }
 
-    std::vector<std::string> GetMainArgs() { return mainArgs_; }
+    const std::vector<std::string> & GetMainArgs() const { return mainArgs_; }
 	
 };
 

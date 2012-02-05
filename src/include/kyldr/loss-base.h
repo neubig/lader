@@ -26,11 +26,14 @@ public:
         HyperEdge::Type type, const Ranks & ranks) = 0;
     
     // Calculate the accuracy of a single sentence
-    virtual double CalculateSentenceAcccuracy(
+    virtual std::pair<double,double> CalculateSentenceLoss(
             const std::vector<int> order, const Ranks & ranks) = 0;
 
     // Initializes the loss calculator with a ranks 
     virtual void Initialize(const Ranks & ranks) { }
+
+    // Get the name of the subclass
+    virtual std::string GetName() const = 0;
 
     void AddLossToHyperGraph(const Ranks & ranks,
                              HyperGraph & hyper_graph);

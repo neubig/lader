@@ -244,6 +244,7 @@ double HyperGraph::AccumulateLoss(const TargetSpan* span) {
     double score = hyp->GetLoss();
     if(hyp->GetLeftChild())  score += AccumulateLoss(hyp->GetLeftChild());
     if(hyp->GetRightChild())  score += AccumulateLoss(hyp->GetRightChild());
+    // DEBUG cerr << "AccumulateLoss " <<(char)span->GetHypothesis(0)->GetType()<<","<<span->GetLeft()<< "," <<span->GetRight()<<","<<span->GetTrgLeft()<< "," <<span->GetTrgRight() << ": hyp="<<hyp->GetLoss()<<" score=" <<score <<endl;
     return score;
 }
 

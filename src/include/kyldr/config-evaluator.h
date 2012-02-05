@@ -17,17 +17,19 @@ public:
 
     ConfigEvaluator() : ConfigBase() {
         minArgs_ = 2;
-        maxArgs_ = 2;
+        maxArgs_ = 4;
 
         SetUsage(
 "~~~ kyldr-evaluate ~~~\n"
 "  by Graham Neubig\n"
 "\n"
 "Evaluates the reordering accuracy of a particluar reordering for a sentence.\n"
-"  Usage: kyldr-evaluate INPUT ALIGN\n"
+"  Usage: kyldr-evaluate GOLDEN_ALIGNMENT DATA [SRC] [TRG]\n"
 "\n"
+"  GOLDEN_ALIGNMENT: [SRC_LEN]-[TRG_LEN] ||| f1-e1 f2-e2 f3-e3\n"
 "  INPUT: a1 a2 a3 a4 a5 where a1 is the reordered position of source word 1\n"
-"  ALIGN: [SRC_LEN]-[TRG_LEN] ||| f1-e1 f2-e2 f3-e3\n"
+"  TRG: Sentence in the original source order\n"
+"  TRG: Target sentence\n"
 );
 
     }
