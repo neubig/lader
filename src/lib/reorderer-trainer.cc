@@ -1,3 +1,72 @@
+#include <kyldr/reorderer-trainer.h>
+#include <boost/algorithm/string.hpp>
+
+using namespace kyldr;
+using namespace boost;
+using namespace std;
+
+void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
+    InitializeModel(config);
+    ReadData(config.GetString("source_in"));
+    ReadAlignments(config.GetString("align_in"));
+    // Temporary values
+    double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
+    FeatureVectorInt model_features, oracle_features;
+    // Perform an iterations
+    for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
+        double iter_model_loss = 0, iter_oracle_loss = 0;
+        // Over all values in the corpus
+        for(int sent = 0; sent < (int)data_.size(); sent++) {
+            HyperGraph hyper_graph;
+            // If we are saving features for efficiency, recover the saved
+            // features and replace them in the hypergraph
+            if(config.GetBool("save_features") && iter != 0)
+                hyper_graph.SetFeatures(SafeAccess(saved_feats_, sent));
+            // Make the hypergraph using cube pruning
+            hyper_graph.BuildHyperGraph(model_,
+                                        features_,
+                                        data_[sent],
+                                        config.GetInt("beam"));
+            // Add losses to the hypotheses in thehypergraph
+            BOOST_FOREACH(LossBase * loss, losses_)
+                loss->AddLossToHyperGraph(ranks_[sent], hyper_graph);
+            // Parse the hypergraph, penalizing loss heavily (oracle)
+            oracle_score = hyper_graph.Rescore(model_, -1e6);
+            oracle_features = hyper_graph.AccumulateFeatures(
+                                                    hyper_graph.GetRoot());
+            oracle_loss     = hyper_graph.AccumulateLoss(
+                                                    hyper_graph.GetRoot());
+            oracle_score   -= oracle_loss * -1e6;
+            // Inner iterations
+            for(int i = 0; i < inner_iters_; i++) {
+                // Parse the hypergraph, slightly boosting loss by 1.0
+                model_score = hyper_graph.Rescore(model_, 1.0);
+                model_loss  = hyper_graph.AccumulateLoss(
+                                                    hyper_graph.GetRoot());
+                model_score -= model_loss * 1;
+                if(i == 0) {
+                    // Add the statistics for this iteration
+                    iter_model_loss += model_loss;
+                    iter_oracle_loss += oracle_loss;
+                    // Get the reordering
+                    vector<int> order;
+                    hyper_graph.GetRoot()->GetReordering(order);
+                    for(int i = 0; i < (int)order.size(); i++) {
+                        if(i != 0) cout << " "; cout << order[i];
+                    }
+                    cout << endl << "sent=" <<sent <<
+                            " oracle_score=" << oracle_score << 
+                            " model_score=" << model_score << 
+                            " oracle_loss=" << oracle_loss <<
+                            " model_loss=" << model_loss << endl;
+                }
+                if(model_loss == oracle_loss) break;
+                model_features = hyper_graph.AccumulateFeatures(
+                                                    hyper_graph.GetRoot());
+                // Add the difference between the vectors
+                model_.AdjustWeights(
+                    VectorSubtract(oracle_features, model_features),
+                    learning_rate_);
             }
             // If we are saving features
             if(config.GetBool("save_features")) {
