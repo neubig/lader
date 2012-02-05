@@ -51,6 +51,15 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         if(args.size() > 2) {
             getline(*src_in, src);
             cout << "src:\t" << src << endl;
+            // Get the reordered value
+            vector<string> srcs;
+            algorithm::split(srcs, src, is_any_of(" "));
+            vector<vector<string> > src_order;
+            for(int i = 0; i < (int)srcs.size(); i++) {
+                src_order[ranks[i]].push_back(SafeAccess(srcs,i));
+                HERE
+            }
+            HERE
         }
         if(args.size() > 3) {
             getline(*trg_in, trg);
