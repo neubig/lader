@@ -17,12 +17,20 @@ public:
     LossBase() : weight_(1.0) { }
     virtual ~LossBase() { }
     
-    // Add a loss value to a production. left and right are the left and right
-    // sides of the span on the target side. mid_left and mid_right are active
-    // for non-terminals, and represent the right side of the left span and the
-    // left side of the right span respectively
+    // Add a loss value to a production
+    //  src_left: The starting position of the left span
+    //  src_mid: The starting position of the right span (or nonterm -1)
+    //  src_right: The ending position of the right span
+    //  trg_left: The starting target word of the span that will be reordered
+    //            to the left in the target if this production is used
+    //  trg_midleft: Ditto, for ending target word of the left span
+    //  trg_midright: Ditto, for starting target word of the right span
+    //  trg_right: Ditto, for ending target word of the right span
+    //  type: The type of production
+    //  ranks: The correct ranks of the words
     virtual double AddLossToProduction(
-        int left, int mid_left, int mid_right, int right,
+        int src_left, int src_mid, int src_right,
+        int trg_left, int trg_midleft, int trg_midright, int trg_right,
         HyperEdge::Type type, const Ranks & ranks) = 0;
     
     // Calculate the accuracy of a single sentence

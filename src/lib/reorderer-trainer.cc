@@ -48,13 +48,21 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                     // Add the statistics for this iteration
                     iter_model_loss += model_loss;
                     iter_oracle_loss += oracle_loss;
-                    // Get the reordering
-                    vector<int> order;
-                    hyper_graph.GetRoot()->GetReordering(order);
-                    for(int i = 0; i < (int)order.size(); i++) {
-                        if(i != 0) cout << " "; cout << order[i];
-                    }
-                    cout << endl << "sent=" <<sent <<
+                    // // --- DEBUG: Get the reordering ---
+                    // vector<int> order;
+                    // hyper_graph.GetRoot()->GetReordering(order);
+                    // for(int i = 0; i < (int)order.size(); i++) {
+                    //     if(i != 0) cout << " "; cout << order[i];
+                    // }
+                    // cout << endl;
+                    // // --- DEBUG: check both losses match ---
+                    // pair<double,double> sent_loss =
+                    //    losses_[0]->CalculateSentenceLoss(order, ranks_[sent]);
+                    // if(sent_loss.first != model_loss)
+                    //     THROW_ERROR("sent_loss="<<sent_loss
+                    //                 <<", model_loss="<<model_loss);
+                    // // --- END DEBUG ---
+                    cout << "sent=" <<sent <<
                             " oracle_score=" << oracle_score << 
                             " model_score=" << model_score << 
                             " oracle_loss=" << oracle_loss <<

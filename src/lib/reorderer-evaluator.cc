@@ -1,6 +1,7 @@
 #include <kyldr/reorderer-evaluator.h>
 #include <kyldr/feature-data-sequence.h>
 #include <kyldr/loss-fuzzy.h>
+#include <kyldr/loss-tau.h>
 #include <kyldr/ranks.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
@@ -14,6 +15,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
     // Set up the losses
     vector<LossBase*> losses;
     losses.push_back(new LossFuzzy());
+    losses.push_back(new LossTau());
     // Set up the pairs to store the counts
     vector<pair<double,double> > sums(losses.size(), pair<double,double>(0,0));
     // Open the files
@@ -22,7 +24,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
     if(!aligns_in) THROW_ERROR("Couldn't find alignment file " << args[0]);
     ifstream data_in(SafeAccess(args, 1).c_str());
     if(!data_in) THROW_ERROR("Couldn't find input file " << args[1]);
-    ifstream *src_in, *trg_in;
+    ifstream *src_in = NULL, *trg_in = NULL;
     if(args.size() > 2) {
         src_in = new ifstream(SafeAccess(args, 2).c_str());
         if(!(*src_in)) THROW_ERROR("Couldn't find source file " << args[2]);

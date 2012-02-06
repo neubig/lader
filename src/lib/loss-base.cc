@@ -1,4 +1,5 @@
 #include <kyldr/loss-fuzzy.h>
+#include <kyldr/loss-tau.h>
 #include <kyldr/loss-base.h>
 
 using namespace kyldr;
@@ -8,13 +9,17 @@ LossBase * LossBase::CreateNew(const string & type) {
     // Create a new feature base based on the type
     if(type == "fuzzy")
         return new LossFuzzy;
+    else if(type == "tau")
+        return new LossTau;
     else
-        THROW_ERROR("Bad feature type " << type << " (must be 'seq')");
+        THROW_ERROR("Bad feature type " << type << " (must be fuzzy/tau)");
     return NULL;
 }
 
 void LossBase::AddLossToHyperGraph(const Ranks & ranks,
                                    HyperGraph & hyper_graph) {
+    // Initialize the loss
+    Initialize(ranks);
     // For each span in the hypergraph
     int n = ranks.GetSrcLen();
     for(int r = 0; r <= n; r++) {
@@ -26,18 +31,22 @@ void LossBase::AddLossToHyperGraph(const Ranks & ranks,
                 BOOST_FOREACH(Hypothesis* hyp, span->GetHypotheses()) {
                     int trg_left = span->GetTrgLeft(),
                         trg_right = span->GetTrgRight(),
-                        mid_left = -1, mid_right = -1;
+                        trg_midleft = -1, trg_midright = -1,
+                        src_mid = -1;
                     if(hyp->GetType() == HyperEdge::EDGE_STR) {
-                        mid_left = hyp->GetLeftChild()->GetTrgRight();
-                        mid_right = hyp->GetRightChild()->GetTrgLeft();
+                        trg_midleft = hyp->GetLeftChild()->GetTrgRight();
+                        trg_midright = hyp->GetRightChild()->GetTrgLeft();
+                        src_mid = hyp->GetCenter();
                     } else if(hyp->GetType() == HyperEdge::EDGE_INV) {
-                        mid_left = hyp->GetRightChild()->GetTrgRight();
-                        mid_right = hyp->GetLeftChild()->GetTrgLeft();
+                        trg_midleft = hyp->GetRightChild()->GetTrgRight();
+                        trg_midright = hyp->GetLeftChild()->GetTrgLeft();
+                        src_mid = hyp->GetCenter();
                     }
                     // DEBUG cerr << "GetLoss = " <<hyp->GetLoss()<<endl;
                     hyp->SetLoss(hyp->GetLoss() +
-                                 AddLossToProduction(trg_left, mid_left,
-                                                     mid_right, trg_right,
+                                 AddLossToProduction(l, src_mid, r,
+                                                     trg_left, trg_midleft,
+                                                     trg_midright, trg_right,
                                                      hyp->GetType(),
                                                      ranks));
                 }
