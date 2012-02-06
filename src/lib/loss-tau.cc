@@ -34,7 +34,7 @@ double LossTau::AddLossToProduction(
 }
 
 // Get the loss
-double LossTau::GetLoss(const Ranks & ranks, int l, int c, int r,
+int LossTau::GetLoss(const Ranks & ranks, int l, int c, int r,
                bool straight, std::vector<int> & losses) {
     // First check if this is already calculated
     int & loss = AccessArray(losses, l, c, r, ranks.GetSrcLen());

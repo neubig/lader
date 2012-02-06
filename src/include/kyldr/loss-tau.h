@@ -32,13 +32,13 @@ public:
 private:
 
     // Get the loss of a single span
-    double GetLoss(const Ranks & ranks, int l, int c, int r,
+    int GetLoss(const Ranks & ranks, int l, int c, int r,
                     bool straight,std::vector<int> & losses);
     
-    double GetLossStraight(const Ranks & ranks, int l, int c, int r) {
+    int GetLossStraight(const Ranks & ranks, int l, int c, int r) {
         return GetLoss(ranks, l, c, r, true, straight_);
     }
-    double GetLossInverse(const Ranks & ranks, int l, int c, int r) {
+    int GetLossInverse(const Ranks & ranks, int l, int c, int r) {
         return GetLoss(ranks, l, c, r, false, inverse_);
     }
     int & AccessArray(std::vector<int> & arr, int l, int c, int r, int n) {
