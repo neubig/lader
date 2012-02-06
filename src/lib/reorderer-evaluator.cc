@@ -51,15 +51,27 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         if(args.size() > 2) {
             getline(*src_in, src);
             cout << "src:\t" << src << endl;
-            // Get the reordered value
+            // Print the reference reordering
             vector<string> srcs;
             algorithm::split(srcs, src, is_any_of(" "));
-            vector<vector<string> > src_order;
-            for(int i = 0; i < (int)srcs.size(); i++) {
+            vector<vector<string> > src_order(ranks.GetMaxRank()+1);
+            for(int i = 0; i < (int)srcs.size(); i++)
                 src_order[ranks[i]].push_back(SafeAccess(srcs,i));
-                HERE
+            cout << "ref:\t";
+            for(int i = 0; i < (int)src_order.size(); i++) {
+                if(i != 0) cout << " ";
+                // If there is only one, print the string
+                if(src_order[i].size() == 1) {
+                    cout << src_order[i][0];
+                // If there is more than one, print a bracketed group
+                } else {
+                    cout << "{{";
+                    BOOST_FOREACH(const string & s, src_order[i])
+                        cout << " " << s;
+                    cout << " }}";
+                }
             }
-            HERE
+            cout << endl;
         }
         if(args.size() > 3) {
             getline(*trg_in, trg);
