@@ -36,10 +36,14 @@ public:
             delete stack;
     }
     
+    // Build the hypergraph using the specified model, features and sentence
+    //  beam_size: the pop limit for cube pruning
+    //  save_trg: whether to save the target side for use in calculating loss
     void BuildHyperGraph(const ReordererModel & model,
                          FeatureSet & features,
                          const Sentence & sent,
-                         int beam_size = 0);
+                         int beam_size = 0,
+                         bool save_trg = true);
 
     const SpanStack * GetStack(int l, int r) const {
         return SafeAccess(stacks_, GetTrgSpanID(l,r));
@@ -95,7 +99,8 @@ protected:
                                FeatureSet & features,
                                const Sentence & sent,
                                int l, int r,
-                               int beam_size = 0);
+                               int beam_size = 0,
+                               bool save_trg = true);
 
 
     const FeatureVectorInt * GetEdgeFeatures(

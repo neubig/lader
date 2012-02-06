@@ -105,7 +105,7 @@ SpanStack * HyperGraph::ProcessOneSpan(const ReordererModel & model,
                                        FeatureSet & features,
                                        const Sentence & sent,
                                        int l, int r,
-                                       int beam_size) {
+                                       int beam_size, bool save_trg) {
     // Create the temporary data members for this span
     HypothesisQueue q;
     double score;
@@ -146,23 +146,25 @@ SpanStack * HyperGraph::ProcessOneSpan(const ReordererModel & model,
     }
     // Get a map to store identical target spans
     map<pair<int,int>, TargetSpan*> spans;
+    TargetSpan * trg_span = (save_trg?NULL:new TargetSpan(l,r,-1,-1));
     // Start beam search
     int num_processed = 0;
     while((!beam_size || num_processed < beam_size) && q.size()) {
         // Pop a hypothesis from the stack and get its target span
         Hypothesis hyp = q.top(); q.pop();
-        TargetSpan * trg_span;
-        pair<int,int> trg_idx = MakePair(hyp.GetTrgLeft(), hyp.GetTrgRight());
-        map<pair<int,int>, TargetSpan*>::iterator it = spans.find(trg_idx);
-        if(it != spans.end()) {
-            trg_span = it->second;
-        } else {
-            trg_span = new TargetSpan(hyp.GetLeft(), hyp.GetRight(), 
-                                      hyp.GetTrgLeft(), hyp.GetTrgRight());
-            spans.insert(MakePair(trg_idx, trg_span));
+        if(save_trg) {
+            pair<int,int> trg_idx(hyp.GetTrgLeft(), hyp.GetTrgRight());
+            map<pair<int,int>, TargetSpan*>::iterator it = spans.find(trg_idx);
+            if(it != spans.end()) {
+                trg_span = it->second;
+            } else {
+                trg_span = new TargetSpan(hyp.GetLeft(), hyp.GetRight(), 
+                                          hyp.GetTrgLeft(), hyp.GetTrgRight());
+                spans.insert(MakePair(trg_idx, trg_span));
+            }
+            // Insert the hypothesis
+            trg_span->AddHypothesis(hyp);
         }
-        // Insert the hypothesis
-        trg_span->AddHypothesis(hyp);
         num_processed++;
         // If the next hypothesis on the stack is equal to the current
         // hypothesis, remove it, as this just means that we added the same
@@ -216,7 +218,7 @@ SpanStack * HyperGraph::ProcessOneSpan(const ReordererModel & model,
 void HyperGraph::BuildHyperGraph(const ReordererModel & model,
                                  FeatureSet & features,
                                  const Sentence & sent,
-                                 int beam_size) {
+                                 int beam_size, bool save_trg) {
     int n = sent[0]->GetNumWords();
     // Iterate through the right side of the span
     for(int r = 0; r < n; r++) {

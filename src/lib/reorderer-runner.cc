@@ -18,7 +18,7 @@ void ReordererRunner::Run(const ConfigRunner & config) {
         // Build the hypergraph
         HyperGraph hyper_graph;
         hyper_graph.BuildHyperGraph(*model_, *features_, datas, 
-                                    config.GetInt("beam"));
+                                    config.GetInt("beam"), false);
         // Reorder
         std::vector<int> reordering;
         hyper_graph.GetRoot()->GetReordering(reordering);
