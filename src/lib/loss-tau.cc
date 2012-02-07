@@ -54,7 +54,7 @@ int LossTau::GetLoss(const Ranks & ranks, int l, int c, int r,
                     loss++;
         }
     }
-    return loss*weight_;
+    return loss;
 }
 
 // Calculate the accuracy of a single sentence

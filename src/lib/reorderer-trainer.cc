@@ -15,6 +15,9 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     // Perform an iterations
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
+        // HERE
+        // if(config.GetBool("shuffle"))
+        //     random_shuffle(sent_order.first(), sent_order.last());
         // Over all values in the corpus
         for(int sent = 0; sent < (int)data_.size(); sent++) {
             HyperGraph hyper_graph;

@@ -23,6 +23,7 @@ public:
         al.AddAlignment(MakePair(3,1));
         ranks = Ranks(CombinedAlign(al));
         lf.Initialize(ranks);
+        lf.SetWeight(0.5);
     }
     ~TestLossFuzzy() { }
 
@@ -37,13 +38,13 @@ public:
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,2,2,1,1,2,2,
                                                HyperEdge::EDGE_STR,ranks);
-        if(loss12 != 1) {
+        if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a reversed node, loss==1
         double loss23 = lf.AddLossToProduction(2,3,3,2,2,3,3,
                                                HyperEdge::EDGE_STR,ranks);
-        if(loss23 != 1) {
+        if(loss23 != 0.5) {
             cerr << "loss23 "<<loss23<<" != 1"<<endl; ret = 0;
         }
         return ret;
@@ -60,7 +61,7 @@ public:
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,2,2,2,2,1,1,
                                                HyperEdge::EDGE_INV,ranks);
-        if(loss12 != 1) {
+        if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a reversed node, loss==0
@@ -83,13 +84,13 @@ public:
         // Create a skipped node, loss==0
         double loss12 = lf.AddLossToProduction(1,-1,2,1,-1,-1,2,
                                                HyperEdge::EDGE_FOR,ranks);
-        if(loss12 != 1) {
+        if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a three-word, loss==2
         double loss13 = lf.AddLossToProduction(1,-1,3,1,-1,-1,3,
                                                HyperEdge::EDGE_FOR,ranks);
-        if(loss13 != 2) {
+        if(loss13 != 1.0) {
             cerr << "loss13 "<<loss13<<" != 2"<<endl; ret = 0;
         }
         return ret;
@@ -106,13 +107,13 @@ public:
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,-1,2,2,-1,-1,1,
                                                HyperEdge::EDGE_BAC,ranks);
-        if(loss12 != 1) {
+        if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a three-word node, loss==1
         double loss13 = lf.AddLossToProduction(1,-1,3,3,-1,-1,1,
                                                HyperEdge::EDGE_BAC,ranks);
-        if(loss13 != 1) {
+        if(loss13 != 0.5) {
             cerr << "loss13 "<<loss13<<" != 1"<<endl; ret = 0;
         }
         return ret;
@@ -129,7 +130,7 @@ public:
         // Create a reversed node, loss==2
         double loss2 = lf.AddLossToProduction(0,-1,2,2,-1,-1,1,
                                               HyperEdge::EDGE_ROOT,ranks);
-        if(loss2 != 2) {
+        if(loss2 != 1.0) {
             cerr << "loss2 "<<loss2<<" != 2"<<endl; ret = 2;
         }
         return ret;
