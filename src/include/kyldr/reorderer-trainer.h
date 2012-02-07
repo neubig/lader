@@ -13,7 +13,8 @@ namespace kyldr {
 class ReordererTrainer {
 public:
 
-    ReordererTrainer() : learning_rate_(1), inner_iters_(10) { }
+    ReordererTrainer() : learning_rate_(1),
+                         attach_(CombinedAlign::ATTACH_NULL_LEFT) { }
     ~ReordererTrainer() {
         BOOST_FOREACH(std::vector<FeatureDataBase*> vec, data_)
             BOOST_FOREACH(FeatureDataBase* ptr, vec)
@@ -49,8 +50,7 @@ public:
         std::string line;
         while(getline(in, line))
             ranks_.push_back(
-                Ranks(CombinedAlign(Alignment::FromString(line),
-                              CombinedAlign::ATTACH_NULL_LEFT)));
+                Ranks(CombinedAlign(Alignment::FromString(line), attach_)));
     }
 
     // Write the model to a file
@@ -73,9 +73,8 @@ private:
     FeatureSet features_;  // The mapping on feature ids and which to use
     std::vector<LossBase*> losses_; // The loss functions
     double learning_rate_; // The learning rate
-    int inner_iters_; // The number of iterations of online learning to do for
-                      // each construction of the hypergraph
     std::vector<EdgeFeatureMap*> saved_feats_; // Features for each hypergraph
+    CombinedAlign::NullHandler attach_; // Where to attach nulls
 
 };
 

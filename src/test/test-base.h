@@ -43,6 +43,28 @@ protected:
         return ok;
     }
 
+    template<class T>
+    int CheckAlmostVector(const std::vector<T> & exp,
+                          const std::vector<T> & act) {
+        int ok = 1;
+        for(int i = 0; i < (int)max(exp.size(), act.size()); i++) {
+            if(i >= (int)exp.size() || 
+               i >= (int)act.size() || 
+               abs(exp[i] - act[i]) > 0.01) {
+               
+                ok = 0;
+                std::cout << "exp["<<i<<"] != act["<<i<<"] (";
+                if(i >= (int)exp.size()) std::cout << "NULL";
+                else std::cout << exp[i];
+                std::cout <<" != ";
+                if(i >= (int)act.size()) std::cout << "NULL"; 
+                else std::cout << act[i];
+                std::cout << ")" << std::endl;
+            }
+        }
+        return ok;
+    }
+
     int CheckString(const std::string & exp, const std::string & act) {
         if(exp != act) {
             cerr << "String exp='"<<exp<<"' != '"<<act<<"'" <<endl;

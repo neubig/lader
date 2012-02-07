@@ -12,13 +12,14 @@ namespace kyldr {
 class ReordererModel {
 public:
     
+    // Initialize the pegasos model
+    ReordererModel() 
+        : t_(1.0), alpha_(1), v_squared_norm_(0), lambda_(1e-5) { }
+
     // Calculate the scores of each single edge and node in a hypergraph
     //  The loss_factor indicates the multiplier of the loss term compared
     //  to the weight term (0 by default = don't consider loss in scoring)
     void ScoreGraph(HyperGraph & graph, double loss_factor = 0);
-
-    // // Calculate the score of one edge
-    // void ScoreEdge(HyperEdge & edge, double loss_factor = 0);
 
     // Calculate the score of a feature vector
     double ScoreFeatureVector(const FeatureVectorInt & vec) const {
@@ -28,8 +29,8 @@ public:
         return ret;
     }
 
-    // Adjust the weights
-    void AdjustWeights(const FeatureVectorInt & feats, double weight);
+    // Perform one round of Pegasos
+    void AdjustWeights(const FeatureVectorInt & feats);
 
     // IO Functions
     void ToStream(std::ostream & out);
@@ -37,19 +38,34 @@ public:
 
     // Comparators
     bool operator==(const ReordererModel & rhs) {
-        return weights_ == rhs.weights_;
+        return v_ == rhs.v_;
     }
 
     // Accessors
     double GetWeight(int id) const {
-        return id >= 0 && id < (int)weights_.size() ? weights_[id] : 0;
+        return id >= 0 && id < (int)v_.size() ? v_[id] * alpha_: 0;
     }
-    const std::vector<double> & GetWeights() const { return weights_; }
-    void SetWeights(const std::vector<double> & weights) { weights_ = weights; }
+    // Get the weight array
+    const std::vector<double> & GetWeights() { 
+        // Update the values for the entire array
+        if(alpha_ != 1) {
+            BOOST_FOREACH(double & val, v_)
+                val *= alpha_;
+            v_squared_norm_ *= alpha_*alpha_;
+            alpha_ = 1;
+        }
+        return v_;
+    }
+    void SetWeights(const std::vector<double> & weights) { v_ = weights; }
+    void SetCost(double cost) { lambda_ = cost; }
 
 private:
     // Weights over features and weights over losses
-    std::vector<double> weights_;
+    std::vector<double> v_;
+    // Parameters for the pegasos algorithm
+    int t_;
+    // The scaling factor, squared norm, and cost used in learning Pegasos
+    double alpha_, v_squared_norm_, lambda_;
 
 };
 

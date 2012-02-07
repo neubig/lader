@@ -42,24 +42,51 @@ public:
     // }
 
     int TestAdjustWeights() {
-        // Make the input feature vector
-        FeatureVectorInt fvi;
-        fvi.push_back(MakePair(1,1));
-        fvi.push_back(MakePair(2,2));
-        fvi.push_back(MakePair(4,-4));
         // Make the reordering model
         ReordererModel mod;
-        mod.AdjustWeights(fvi, 1);
+        // lambda = 0.01
+        //  1/sqrt(lambda) = 10
+        mod.SetCost(0.01);
+
+        // Make the input feature vector
+        FeatureVectorInt fvi1;
+        fvi1.push_back(MakePair(1,1));
+        fvi1.push_back(MakePair(2,2));
+        fvi1.push_back(MakePair(4,-2));
+        mod.AdjustWeights(fvi1);
         // Make the expected model
+        // This is the first iteration:
+        //  nu = 1/lambda*t = 1/0.01 = 100
+        //  w += nu/1*x
+        //  w_{t+1/2} = 1:100 2:200 4:-200
+        //  norm = sqrt(10000+40000+40000) = 300
+        //  w_{t+1} = 10/300 = 1/30
         vector<double> exp(5,0);
-        exp[1] = 1; exp[2] = 2; exp[4] = -4;
+        exp[1] = 100.0/30.0; exp[2] = 200.0/30.0; exp[4] = -200.0/30.0;
         // Check to make sure it's ok
         int ret = 1;
-        ret *= CheckVector(exp, mod.GetWeights());
-        // Adjust again
-        mod.AdjustWeights(fvi, -2);
-        exp[1] = -1; exp[2] = -2; exp[4] = 4;
-        ret *= CheckVector(exp, mod.GetWeights());
+        ret *= CheckAlmostVector(exp, mod.GetWeights());
+
+        // Try one more iteration
+        FeatureVectorInt fvi2;
+        fvi2.push_back(MakePair(0,2));
+        fvi2.push_back(MakePair(3,1));
+        fvi2.push_back(MakePair(5,-2));
+        mod.AdjustWeights(fvi2);
+        //  nu = 1/lambda*t = 1/0.01/2 = 50
+        //  w += nu*x
+        //  w_{t+1/2} = 0:100 1:50/30 2:100/30 3:50 4:-100 5:-100/30
+        //  val = 100^2+100^2+50^2+(100^2+100^2+50^2)/(30^2) = 22525
+        //  w_{t+1} = 10/sqrt(22525)*w_{t+1/2}
+        exp = vector<double>(6,0);
+        double norm = 10/sqrt(22525);
+        exp[0] = 100.0    *norm;
+        exp[1] = 50.0  /30*norm;
+        exp[2] = 100.0 /30*norm;
+        exp[3] = 50.0     *norm;
+        exp[4] = -100.0/30*norm;
+        exp[5] = -100.0   *norm;
+        ret *= CheckAlmostVector(exp, mod.GetWeights());
         return ret;
     }
 

@@ -32,6 +32,8 @@ public:
 "  TRG: Target sentence\n"
 );
 
+        AddConfigEntry("attach_null", "left", "Whether to attach null alignments to the left or right");
+
     }
 	
 };

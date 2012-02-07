@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <kyldr/config-evaluator.h>
+#include <kyldr/combined-alignment.h>
 
 namespace kyldr {
 
@@ -11,13 +12,14 @@ namespace kyldr {
 class ReordererEvaluator {
 public:
 
-    ReordererEvaluator() { }
+    ReordererEvaluator() : attach_(CombinedAlign::ATTACH_NULL_LEFT) { }
     ~ReordererEvaluator() { }
     
     // Run the evaluator
     void Evaluate(const ConfigEvaluator & config);
 
 private:
+    CombinedAlign::NullHandler attach_;
 
 };
 

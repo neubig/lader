@@ -37,45 +37,41 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             oracle_loss     = hyper_graph.AccumulateLoss(
                                                     hyper_graph.GetRoot());
             oracle_score   -= oracle_loss * -1e6;
-            // Inner iterations
-            for(int i = 0; i < inner_iters_; i++) {
-                // Parse the hypergraph, slightly boosting loss by 1.0
-                model_score = hyper_graph.Rescore(model_, 1.0);
-                model_loss  = hyper_graph.AccumulateLoss(
-                                                    hyper_graph.GetRoot());
-                model_score -= model_loss * 1;
-                if(i == 0) {
-                    // Add the statistics for this iteration
-                    iter_model_loss += model_loss;
-                    iter_oracle_loss += oracle_loss;
-                    // // --- DEBUG: Get the reordering ---
-                    // vector<int> order;
-                    // hyper_graph.GetRoot()->GetReordering(order);
-                    // for(int i = 0; i < (int)order.size(); i++) {
-                    //     if(i != 0) cout << " "; cout << order[i];
-                    // }
-                    // cout << endl;
-                    // // --- DEBUG: check both losses match ---
-                    // pair<double,double> sent_loss =
-                    //    losses_[0]->CalculateSentenceLoss(order, ranks_[sent]);
-                    // if(sent_loss.first != model_loss)
-                    //     THROW_ERROR("sent_loss="<<sent_loss
-                    //                 <<", model_loss="<<model_loss);
-                    // // --- END DEBUG ---
-                    cout << "sent=" <<sent <<
-                            " oracle_score=" << oracle_score << 
-                            " model_score=" << model_score << 
-                            " oracle_loss=" << oracle_loss <<
-                            " model_loss=" << model_loss << endl;
-                }
-                if(model_loss == oracle_loss) break;
-                model_features = hyper_graph.AccumulateFeatures(
-                                                    hyper_graph.GetRoot());
-                // Add the difference between the vectors
-                model_.AdjustWeights(
-                    VectorSubtract(oracle_features, model_features),
-                    learning_rate_);
-            }
+            // Parse the hypergraph, slightly boosting loss by 1.0
+            model_score = hyper_graph.Rescore(model_, 1.0);
+            model_loss  = hyper_graph.AccumulateLoss(
+                                                hyper_graph.GetRoot());
+            model_score -= model_loss * 1;
+            // Add the statistics for this iteration
+            iter_model_loss += model_loss;
+            iter_oracle_loss += oracle_loss;
+            // // --- DEBUG: Get the reordering ---
+            // vector<int> order;
+            // hyper_graph.GetRoot()->GetReordering(order);
+            // for(int i = 0; i < (int)order.size(); i++) {
+            //     if(i != 0) cout << " "; cout << order[i];
+            // }
+            // cout << endl;
+            // // --- DEBUG: check both losses match ---
+            // pair<double,double> sent_loss =
+            //    losses_[0]->CalculateSentenceLoss(order, ranks_[sent]);
+            // if(sent_loss.first != model_loss)
+            //     THROW_ERROR("sent_loss="<<sent_loss
+            //                 <<", model_loss="<<model_loss);
+            // // --- END DEBUG ---
+            // cout << "sent=" <<sent <<
+            //         " oracle_score=" << oracle_score << 
+            //         " model_score=" << model_score << 
+            //         " oracle_loss=" << oracle_loss <<
+            //         " model_loss=" << model_loss << endl;
+            model_features = hyper_graph.AccumulateFeatures(
+                                                hyper_graph.GetRoot());
+            // Add the difference between the vectors if there is at least
+            //  some loss
+            model_.AdjustWeights(
+                model_loss == oracle_loss ?
+                FeatureVectorInt() :
+                VectorSubtract(oracle_features, model_features));
             // If we are saving features
             if(config.GetBool("save_features")) {
                 if((int)saved_feats_.size() <= sent)
@@ -96,9 +92,12 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
     if(!model_out)
         THROW_ERROR("Must specify a valid model output with -model_out ('"
                         <<config.GetString("model_out")<<"')");
+    attach_ = config.GetString("attach_null") == "left" ? 
+                CombinedAlign::ATTACH_NULL_LEFT :
+                CombinedAlign::ATTACH_NULL_RIGHT;
     features_.ParseConfiguration(config.GetString("feature_profile"));
     features_.SetMaxTerm(config.GetInt("max_term"));
-    learning_rate_ = config.GetDouble("learning_rate");
+    model_.SetCost(config.GetDouble("cost"));
     std::vector<std::string> losses, first_last;
     algorithm::split(
         losses, config.GetString("loss_profile"), is_any_of("|"));
