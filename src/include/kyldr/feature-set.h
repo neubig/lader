@@ -14,8 +14,7 @@ namespace kyldr {
 class FeatureSet {
 public:
 
-    FeatureSet() : // feature_ids_(new SymbolSet<std::string,int>),
-                   max_term_(0), add_(true) { }
+    FeatureSet() : max_term_(0) { }
     ~FeatureSet() {
         BOOST_FOREACH(FeatureBase * gen, feature_gens_)
             if(gen)
@@ -66,15 +65,12 @@ public:
     //     feature_ids_ = feature_ids;
     // }
     void SetMaxTerm(int max_term) { max_term_ = max_term; }
-    void SetAdd(bool add) { add_ = add; }
 
 private:
 
     std::string config_str_; // The configuration string
     std::vector<FeatureBase*> feature_gens_; // Feature generators
-    // SymbolSet<std::string,int>* feature_ids_; // Feature names and IDs
     int max_term_; // The maximum length of a terminal
-    bool add_; // Whether to allow the adding of new features
 
 };
 

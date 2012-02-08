@@ -94,8 +94,8 @@ public:
         v_[idx] = w/alpha_;
         v_squared_norm_ += v_[idx]*v_[idx] - old_val*old_val;
     }
-    // void SetWeights(const std::vector<double> & weights) { v_ = weights; }
     void SetCost(double cost) { lambda_ = cost; }
+    void SetAdd(bool add) { add_features_ = add; }
 
 private:
     // Weights over features and weights over losses
