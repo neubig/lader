@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -12,13 +13,14 @@ class TestBase {
 
 public:
 
+    TestBase() : passed_(false) { }
+    virtual ~TestBase() { }
+
     // RunTest must be implemented by any test, and returns true if all
     // tests were passed
     virtual bool RunTest() = 0;
 
 protected:
-
-    TestBase() : passed_(false) { }
 
     bool passed_;
 

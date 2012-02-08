@@ -12,24 +12,18 @@ if(@ARGV != 0) {
     exit 1;
 }
 
-my (@feats);
-$_ = <STDIN>; chomp; /feature_set/ or die "Bad line in model $_";
-$_ = <STDIN>; chomp; /config_str/ or die "Bad line in model $_";
-$_ = <STDIN>; chomp; /max_term/ or die "Bad line in model $_";
-$_ = <STDIN>; chomp; /^\d*$/ or die "Bad line in model $_";
 while(<STDIN>) {
     chomp;
-    last if not $_;
-    push @feats, [$_, 0];
+    last if /reorderer_model/;
 }
 
-$_ = <STDIN>; chomp; /^$/ or die "Bad line in model $_";
-$_ = <STDIN>; chomp; /reorderer_model/ or die "Bad line in model $_";
-foreach my $i (0 .. $#feats) {
-    $_ = <STDIN>; chomp;
-    $feats[$i]->[1] = $_;
+my %feats;
+while(<STDIN>) {
+    chomp;
+    my ($name, $val) = split(/\t/);
+    $feats{$name} = $val;
 }
 
-for(sort { my $val = ($b->[1] <=> $a->[1]); $val = ($a->[0] cmp $b->[0]) if not $val; $val } @feats) {
-    print join("\t", @$_)."\n" if $_->[1];
+for(sort {$feats{$b} <=> $feats{$a}} keys %feats) {
+    print "$_\t$feats{$_}\n";
 }
