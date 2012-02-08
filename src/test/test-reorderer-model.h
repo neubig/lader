@@ -12,9 +12,8 @@ public:
 
     TestReordererModel() {
         // Create a model with weights
-        weights.push_back(1);
-        weights.push_back(2);
-        model.SetWeights(weights);
+        model.SetWeight("WEIGHT1", 1);
+        model.SetWeight("WEIGHT2", 2);
         // Create a feature vector
         feats.push_back(MakePair(0,1));
         feats.push_back(MakePair(1,2));
@@ -92,14 +91,20 @@ public:
 
     int TestModelIO() {
         ReordererModel exp;
-        vector<double> weights(6,0);
-        weights[1] = 1; weights[4] = 5;
-        exp.SetWeights(weights);
+        exp.SetWeight("WEIGHT0", 0);
+        exp.SetWeight("WEIGHT1", 1);
+        exp.SetWeight("WEIGHT2", 0);
+        exp.SetWeight("WEIGHT3", 0);
+        exp.SetWeight("WEIGHT4", 5);
+        exp.SetWeight("WEIGHT5", 0);
         ostringstream oss;
         exp.ToStream(oss);
         istringstream iss(oss.str());
         ReordererModel * act = ReordererModel::FromStream(iss);
-        int ret = (exp == *act) ? 1 : 0;
+        int ret = 1;
+        if(exp != *act) {
+            cerr << "Models are not equal" << endl; ret = 0;
+        }
         delete act;
         return ret;
     }

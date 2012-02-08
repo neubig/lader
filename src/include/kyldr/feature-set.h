@@ -14,14 +14,14 @@ namespace kyldr {
 class FeatureSet {
 public:
 
-    FeatureSet() : feature_ids_(new SymbolSet<std::string,int>),
+    FeatureSet() : // feature_ids_(new SymbolSet<std::string,int>),
                    max_term_(0), add_(true) { }
     ~FeatureSet() {
         BOOST_FOREACH(FeatureBase * gen, feature_gens_)
             if(gen)
                 delete gen;
-        if(feature_ids_)
-            delete feature_ids_;
+        // if(feature_ids_)
+        //     delete feature_ids_;
     }
 
     // Add a feature generator, and take control of it
@@ -30,8 +30,8 @@ public:
     }
 
     // Generates the features that can be factored over a node
-    FeatureVectorInt * MakeEdgeFeatures(
-        const Sentence & sent, const HyperEdge & edge);
+    FeatureVectorString * MakeEdgeFeatures(
+        const Sentence & sent, const HyperEdge & edge) const;
     
     // Change an integer-indexed feature vector into a string-indexed vector
     FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec);
@@ -50,21 +50,21 @@ public:
     bool operator== (const FeatureSet & rhs) {
         return (config_str_ == rhs.config_str_ &&
                 feature_gens_.size() == rhs.feature_gens_.size() &&
-                feature_ids_->size() == rhs.feature_ids_->size() &&
+                // feature_ids_->size() == rhs.feature_ids_->size() &&
                 max_term_ == rhs.max_term_);
     }
 
     // Accessors
     const FeatureBase* GetGenerator(int id) const { return feature_gens_[id]; }
-    const std::string & GetFeatureName(int id) const {
-        return feature_ids_->GetSymbol(id);
-    }
+    // const std::string & GetFeatureName(int id) const {
+    //     return feature_ids_->GetSymbol(id);
+    // }
     int GetMaxTerm() const { return max_term_; }
 
-    void SetFeatureIds(SymbolSet<std::string,int>* feature_ids) {
-        if(feature_ids_) delete feature_ids_;
-        feature_ids_ = feature_ids;
-    }
+    // void SetFeatureIds(SymbolSet<std::string,int>* feature_ids) {
+    //     if(feature_ids_) delete feature_ids_;
+    //     feature_ids_ = feature_ids;
+    // }
     void SetMaxTerm(int max_term) { max_term_ = max_term; }
     void SetAdd(bool add) { add_ = add; }
 
@@ -72,7 +72,7 @@ private:
 
     std::string config_str_; // The configuration string
     std::vector<FeatureBase*> feature_gens_; // Feature generators
-    SymbolSet<std::string,int>* feature_ids_; // Feature names and IDs
+    // SymbolSet<std::string,int>* feature_ids_; // Feature names and IDs
     int max_term_; // The maximum length of a terminal
     bool add_; // Whether to allow the adding of new features
 

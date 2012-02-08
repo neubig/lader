@@ -39,6 +39,7 @@ public:
                 delete *it;
     }
 
+    const std::vector<Key*> & GetSymbols() const { return vocab_; }
     const Key & GetSymbol(T id) const {
         return *SafeAccess(vocab_, id);
     }
@@ -61,7 +62,7 @@ public:
         return -1;
     }
     T GetId(const Key & sym) const {
-        return const_cast< SymbolSet<Key,T,Hash>* >(this)->getId(sym,false);
+        return const_cast< SymbolSet<Key,T,Hash>* >(this)->GetId(sym,false);
     }
     size_t size() const { return vocab_.size() - reuse_.size(); }
     size_t capacity() const { return vocab_.size(); }

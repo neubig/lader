@@ -38,9 +38,8 @@ public:
         string str_pos = "PRP VBD NN";
         sent_pos.FromString(str_pos);
         // Create a reorderer model with two weights
-        weights.push_back(1);
-        weights.push_back(2);
-        model.SetWeights(weights);
+        model.SetWeight("W1", 1);
+        model.SetWeight("W2", 2);
         // Set up the feature generators
         featw = new FeatureSequence;
         featp = new FeatureSequence;
@@ -125,6 +124,8 @@ public:
     }
 
     int TestGetEdgeFeaturesAndWeights() {
+        // Make a reorderer model
+        ReordererModel mod;
         // Test that these features are made properly
         FeatureVectorString edge02exp;
         edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
@@ -136,16 +137,16 @@ public:
         HyperGraph hyper_graph;
         // Generate the features
         const FeatureVectorInt * edge02int = 
-                            hyper_graph.GetEdgeFeatures(set, datas, edge02);
-        FeatureVectorString edge02act =
-                                    set.StringifyFeatureIndices(*edge02int);
+                        hyper_graph.GetEdgeFeatures(mod, set, datas, edge02);
+        FeatureVectorString * edge02act =
+                        mod.StringifyFeatureVector(*edge02int);
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(edge02exp, edge02act);
+        ret *= CheckVector(edge02exp, *edge02act);
         ret *= CheckVector(edge02intexp, *edge02int);
         // Generate the features again
         const FeatureVectorInt * edge02int2 = 
-                            hyper_graph.GetEdgeFeatures(set, datas, edge02);
+                        hyper_graph.GetEdgeFeatures(mod, set, datas, edge02);
         // Make sure that the pointers are equal
         if(edge02int != edge02int2) {
             cerr << "Edge pointers are not equal." << endl;
@@ -260,9 +261,12 @@ public:
     int TestRescore() {
         // Create a model that assigns a weight of -1 to each production
         ReordererModel mod;
-        vector<double> weights(20,0);
-        weights[10] = -1;
-        mod.SetWeights(weights);
+        for(int i = 0; i < 20; i++) {
+            ostringstream oss;
+            oss << "WEIGHT" << i;
+            mod.SetWeight(oss.str(), 0);
+        }
+        mod.SetWeight("WEIGHT10", -1);
         int ret = 1;
         // Simply rescoring with this model should pick the forward production
         // with a score of -1

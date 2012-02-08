@@ -39,8 +39,8 @@ public:
     // Build the hypergraph using the specified model, features and sentence
     //  beam_size: the pop limit for cube pruning
     //  save_trg: whether to save the target side for use in calculating loss
-    void BuildHyperGraph(const ReordererModel & model,
-                         FeatureSet & features,
+    void BuildHyperGraph(ReordererModel & model,
+                         const FeatureSet & features,
                          const Sentence & sent,
                          int beam_size = 0,
                          bool save_trg = true);
@@ -95,8 +95,8 @@ public:
     void ClearFeatures() { features_ = NULL; }
 
 protected:
-    SpanStack * ProcessOneSpan(const ReordererModel & model,
-                               FeatureSet & features,
+    SpanStack * ProcessOneSpan(ReordererModel & model,
+                               const FeatureSet & features,
                                const Sentence & sent,
                                int l, int r,
                                int beam_size = 0,
@@ -104,7 +104,8 @@ protected:
 
 
     const FeatureVectorInt * GetEdgeFeatures(
-                                FeatureSet & feature_gen,
+                                ReordererModel & model,
+                                const FeatureSet & feature_gen,
                                 const Sentence & sent,
                                 const HyperEdge & edge);
 
@@ -113,8 +114,8 @@ protected:
         features_->insert(MakePair(edge, feat));
     }
 
-    double GetEdgeScore(const ReordererModel & model,
-                        FeatureSet & feature_gen,
+    double GetEdgeScore(ReordererModel & model,
+                        const FeatureSet & feature_gen,
                         const Sentence & sent,
                         const HyperEdge & edge);
 

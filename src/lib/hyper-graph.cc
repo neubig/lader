@@ -18,14 +18,17 @@ struct DescendingScore {
 
 // Return the edge feature vector
 const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
-                                FeatureSet & feature_gen,
+                                ReordererModel & model,
+                                const FeatureSet & feature_gen,
                                 const Sentence & sent,
                                 const HyperEdge & edge) {
     FeatureVectorInt * ret;
     if(features_ == NULL) features_ = new EdgeFeatureMap;
     EdgeFeatureMap::const_iterator it = features_->find(edge);
     if(it == features_->end()) {
-        ret = feature_gen.MakeEdgeFeatures(sent, edge);
+        FeatureVectorString * str = feature_gen.MakeEdgeFeatures(sent, edge);
+        ret = model.IndexFeatureVector(*str);
+        delete str;
         features_->insert(MakePair(edge, ret));
     } else {
         ret = it->second;
@@ -91,18 +94,18 @@ double HyperGraph::Rescore(const ReordererModel & model, double loss_multiplier)
 }
 
 // Get the score for a single edge
-double HyperGraph::GetEdgeScore(const ReordererModel & model,
-                                FeatureSet & feature_gen,
+double HyperGraph::GetEdgeScore(ReordererModel & model,
+                                const FeatureSet & feature_gen,
                                 const Sentence & sent,
                                 const HyperEdge & edge) {
     const FeatureVectorInt * vec = 
-                GetEdgeFeatures(feature_gen, sent, edge);
+                GetEdgeFeatures(model, feature_gen, sent, edge);
     return model.ScoreFeatureVector(SafeReference(vec));
 }
 
 // Build a hypergraph using beam search and cube pruning
-SpanStack * HyperGraph::ProcessOneSpan(const ReordererModel & model,
-                                       FeatureSet & features,
+SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
+                                       const FeatureSet & features,
                                        const Sentence & sent,
                                        int l, int r,
                                        int beam_size, bool save_trg) {
@@ -215,8 +218,8 @@ SpanStack * HyperGraph::ProcessOneSpan(const ReordererModel & model,
 }
 
 // Build a hypergraph using beam search and cube pruning
-void HyperGraph::BuildHyperGraph(const ReordererModel & model,
-                                 FeatureSet & features,
+void HyperGraph::BuildHyperGraph(ReordererModel & model,
+                                 const FeatureSet & features,
                                  const Sentence & sent,
                                  int beam_size, bool save_trg) {
     int n = sent[0]->GetNumWords();

@@ -48,9 +48,10 @@ public:
     virtual FeatureDataBase * ParseData(const std::string & str);
 
     // Generates the features that can be factored over an edge
-    virtual FeatureVectorString GenerateEdgeFeatures(
+    virtual void GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
-                                const HyperEdge & edge);
+                                const HyperEdge & edge,
+                                FeatureVectorString & feats);
 
     // Get the type of this feature generator
     virtual std::string GetType() const { return "seq"; }

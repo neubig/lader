@@ -12,7 +12,7 @@ namespace kyldr {
 
 // A virtual class for feature generators
 // Four functions must be implemented to create a feature generator
-//   ParseConfiguration, ParseData, GenerateNodeFeatures, GenerateEdgeFeatures
+//   ParseConfiguration, ParseData, GenerateEdgeFeatures
 class FeatureBase {
 public:
     // Types of features, whether they are factored over nodes, all edges,
@@ -35,9 +35,10 @@ public:
     virtual FeatureDataBase * ParseData(const std::string & str) = 0;
 
     // Generates the features that can be factored over an edge
-    virtual FeatureVectorString GenerateEdgeFeatures(
+    virtual void GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
-                                const HyperEdge & edge) = 0;
+                                const HyperEdge & edge,
+                                FeatureVectorString & feats) = 0;
 
     // Get the type string of this particular value
     virtual std::string GetType() const = 0;

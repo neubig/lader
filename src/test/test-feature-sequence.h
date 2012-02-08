@@ -72,6 +72,7 @@ public:
     }
 
     int TestLeftRightFeatures() {
+        ReordererModel mod;
         FeatureSequence featl, featr, feata;
         featl.ParseConfiguration("L%LL,R%LR,S%LS,N%LN");
         featr.ParseConfiguration("L%RL,R%RR,S%RS,N%RN");
@@ -90,20 +91,23 @@ public:
         FeatureVectorString edge00a, edge02a;
         edge02a.push_back(
             MakePair(string("A||he ate rice||he||ate rice"), 1));
+        // Create vectors
+        FeatureVectorString edge00lact, edge02lact, edge00ract, 
+                            edge02ract, edge00aact, edge02aact;
+        featl.GenerateEdgeFeatures(sent, edge00, edge00lact);
+        featl.GenerateEdgeFeatures(sent, edge02, edge02lact);
+        featr.GenerateEdgeFeatures(sent, edge00, edge00ract);
+        featr.GenerateEdgeFeatures(sent, edge02, edge02ract);
+        feata.GenerateEdgeFeatures(sent, edge00, edge00aact);
+        feata.GenerateEdgeFeatures(sent, edge02, edge02aact);
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(edge00l,
-                           featl.GenerateEdgeFeatures(sent, edge00));
-        ret *= CheckVector(edge02l,
-                           featl.GenerateEdgeFeatures(sent, edge02));
-        ret *= CheckVector(edge00r,
-                           featr.GenerateEdgeFeatures(sent, edge00));
-        ret *= CheckVector(edge02r,
-                           featr.GenerateEdgeFeatures(sent, edge02));
-        ret *= CheckVector(edge00a,
-                           feata.GenerateEdgeFeatures(sent, edge00));
-        ret *= CheckVector(edge02a,
-                           feata.GenerateEdgeFeatures(sent, edge02));
+        ret *= CheckVector(edge00l, edge00lact);
+        ret *= CheckVector(edge02l, edge02lact);
+        ret *= CheckVector(edge00r, edge00ract);
+        ret *= CheckVector(edge02r, edge02ract);
+        ret *= CheckVector(edge00a, edge00aact);
+        ret *= CheckVector(edge02a, edge02aact);
         return ret;
     }
 
@@ -125,12 +129,14 @@ public:
         feat00.push_back(MakePair(string("QE||1||+"), 1));
         feat00.push_back(MakePair(string("Q1||1"), 0.2));
         feat02.push_back(MakePair(string("QE||3||-"), 1));
+        // Create the actual features
+        FeatureVectorString edge00act, edge02act;
+        feat.GenerateEdgeFeatures(sent, edge00, edge00act);
+        feat.GenerateEdgeFeatures(sent, edge02, edge02act);
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(feat00,
-                           feat.GenerateEdgeFeatures(sent, edge00));
-        ret *= CheckVector(feat02,
-                           feat.GenerateEdgeFeatures(sent, edge02));
+        ret *= CheckVector(feat00, edge00act);
+        ret *= CheckVector(feat02, edge02act);
         return ret;
     }
 
@@ -148,14 +154,16 @@ public:
         edge02exp.push_back(MakePair(string("D#"), 1));
         edge02exp.push_back(MakePair(string("B#"), 1));
         edge02exp.push_back(MakePair(string("T||S"), 1));
+        // Create the actual features
+        FeatureVectorString edge00act, edge12ntact, edge02act;
+        feat.GenerateEdgeFeatures(sent, edge00, edge00act);
+        feat.GenerateEdgeFeatures(sent, edge12nt, edge12ntact);
+        feat.GenerateEdgeFeatures(sent, edge02, edge02act);
         // Test the features
         int ret = 1;
-        ret *= CheckVector(edge00exp,
-                           feat.GenerateEdgeFeatures(sent, edge00));
-        ret *= CheckVector(edge12exp,
-                           feat.GenerateEdgeFeatures(sent, edge12nt));
-        ret *= CheckVector(edge02exp,
-                           feat.GenerateEdgeFeatures(sent, edge02));
+        ret *= CheckVector(edge00exp, edge00act);
+        ret *= CheckVector(edge12exp, edge12ntact);
+        ret *= CheckVector(edge02exp, edge02act);
         return ret;
     }
 

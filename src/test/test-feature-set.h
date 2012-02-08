@@ -54,13 +54,11 @@ public:
         edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
         edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
         // Generate the features
-        FeatureVectorInt * edge02int = set.MakeEdgeFeatures(datas, edge02);
-        FeatureVectorString edge02act =
-                                    set.StringifyFeatureIndices(*edge02int);
+        FeatureVectorString * edge02act = set.MakeEdgeFeatures(datas, edge02);
         // Do the parsing and checking
         int ret = 1;
-        ret *= CheckVector(edge02exp, edge02act);
-        delete edge02int;
+        ret *= CheckVector(edge02exp, *edge02act);
+        delete edge02act;
         return ret;
     }
 
@@ -82,7 +80,7 @@ public:
         // Create and generate some features
         FeatureSet exp;
         exp.ParseConfiguration("seq=S%SS|seq=T%ET,L%ET%LL");
-        FeatureVectorInt * feat = exp.MakeEdgeFeatures(datas, edge02);
+        FeatureVectorString * feat = exp.MakeEdgeFeatures(datas, edge02);
         // Read and write toa  stream
         ostringstream oss;
         exp.ToStream(oss);

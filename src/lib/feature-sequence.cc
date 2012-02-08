@@ -169,11 +169,11 @@ double FeatureSequence::GetEdgeFeatureValue(const FeatureDataSequence & sent,
 }
 
 // Generates the features that can be factored over an edge
-FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
+void FeatureSequence::GenerateEdgeFeatures(
                             const FeatureDataBase & sent,
-                            const HyperEdge & edge) {
+                            const HyperEdge & edge,
+                            FeatureVectorString & feat) {
     const FeatureDataSequence & sent_seq = (const FeatureDataSequence &)sent;
-    FeatureVectorString ret;
     bool is_nonterm = (edge.GetType() == HyperEdge::EDGE_INV || 
                        edge.GetType() == HyperEdge::EDGE_STR);
     // Iterate over each feature
@@ -209,8 +209,7 @@ FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
                 }
             }
             if(feat_val)
-                ret.push_back(MakePair(algorithm::join(values, "||"),feat_val));
+                feat.push_back(MakePair(algorithm::join(values,"||"),feat_val));
         }
     }
-    return ret;
 }
