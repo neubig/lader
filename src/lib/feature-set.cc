@@ -65,7 +65,7 @@ FeatureSet * FeatureSet::FromStream(istream & in) {
     FeatureSet * ret = new FeatureSet;
     ret->ParseConfiguration(config);
     GetConfigLine(in, "max_term", config);
-    ret->SetMaxTerm(atof(config.c_str()));
+    ret->SetMaxTerm(atoi(config.c_str()));
     GetlineEquals(in, "");
     return ret;
 }
