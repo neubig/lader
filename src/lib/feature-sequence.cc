@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <cfloat>
+#include <fstream>
 
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
@@ -12,24 +13,31 @@ using namespace kyldr;
 using namespace std;
 
 bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
-    if(name.length() < 2 || name.length() > 3)
+    if(name.length() < 2)
         return false;
-    if(name[0] != 'S' && name[0] != 'L' && name[0] != 'R' && 
-       name[0] != 'E' && name[0] != 'C')
-        return false;
+    // For edge values, the only type is 'T'
     if(name[0] == 'E') {
-        if(name[1] != 'T')
-            return false;
+        return name[1] == 'T';
+    // For comparison values, difference or balance
     } else if(name[0] == 'C') {
-        if(name[1] != 'D' && name[1] != 'B')
-            return false;
+        return name[1] == 'D' || name[1] == 'B';
     } else {
-        if(name[1] != 'S' && name[1] != 'N' && name[1] != 'L' && name[1] != 'R')
+        // For sequence matcher Q, check to make sure that the type
+        //  name[2] = E (existance indicator) or # (feature)
+        //  name[3] = [0-9] (for the number of the dictionary)
+        //  name[4] = [0-9] (for the number of the feature if #)
+        if(name[1] == 'Q') {
+            return ((name.length() == 5 && name[2] == '#' 
+                            && IsDigit(name[3]) && IsDigit(name[4])) || 
+                   (name.length() == 4 && name[2] == 'E' && IsDigit(name[3])));
+        // For other span values
+        } else if(name[1] == 'S' || name[1] == 'N' ||
+                                         name[1] == 'L' || name[1] == 'R') {
+            return name.length() == 2 || (name.length() == 3 && name[2] == '#');
+        } else {
             return false;
+        }
     }
-    if(name.length() == 3 && name[2] != '#')
-        return false;
-    return true;
 }
 
 // Parse the comma-separated list of configuration options
@@ -38,8 +46,13 @@ void FeatureSequence::ParseConfiguration(const string & str) {
     // Iterate through all the comma-separated strings
     tokenizer<char_separator<char> > feats(str, char_separator<char>(","));
     BOOST_FOREACH(string feat, feats) {
-        // First assume this is node-factored until we find something that
-        // indicates that it shouldn't be
+        // First check if this is specifying a special option
+        if(!feat.compare(0, 5, "dict=")) {
+            ifstream in(feat.substr(5).c_str());
+            dicts_.push_back(Dictionary::FromStream(in));
+            continue;
+        }
+        // Otherwise assume a feature template
         FeatureType my_type = ALL_FACTORED;
         vector<string> my_name;
         // Iterate through all the percent-separated features (first is name)
@@ -71,8 +84,9 @@ FeatureDataBase * FeatureSequence::ParseData(const string & str) {
 
 string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
                                              int l, int r,
-                                             char type) {
+                                             const string & str) {
     ostringstream oss;
+    char type = str[1];
     switch (type) {
         case 'L':
             return sent.GetElement(l);
@@ -83,6 +97,10 @@ string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
         case 'N':
             oss << r - l + 1;
             return oss.str();
+        case 'Q':
+            return SafeAccess(dicts_, 
+                        str[3]-'0')->Exists(sent.GetRangeString(l, r)) ?
+                    "+" : "-";
         default:
             THROW_ERROR("Bad span feature type " << type);
     }
@@ -91,10 +109,14 @@ string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
 
 double FeatureSequence::GetSpanFeatureValue(const FeatureDataSequence & sent,
                                              int l, int r,
-                                             char type) {
+                                             const std::string & str) {
+    char type = str[1];
     switch (type) {
         case 'N':
             return r - l + 1;
+        case 'Q':
+            return SafeAccess(dicts_,str[3]-'0')->GetFeature(
+                        sent.GetRangeString(l, r), str[4]-'0');
         default:
             THROW_ERROR("Bad span feature value " << type);
     }
@@ -104,7 +126,8 @@ double FeatureSequence::GetSpanFeatureValue(const FeatureDataSequence & sent,
 
 string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
                                              const HyperEdge & edge,
-                                             char type) {
+                                             const std::string & str) {
+    char type = str[1];
     ostringstream oss;
     switch (type) {
         // Get the difference between values
@@ -129,7 +152,8 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
 
 double FeatureSequence::GetEdgeFeatureValue(const FeatureDataSequence & sent,
                                              const HyperEdge & edge,
-                                             char type) {
+                                             const std::string & str) {
+    char type = str[1];
     switch (type) {
         // Get the difference between values
         case 'D':
@@ -172,16 +196,16 @@ FeatureVectorString FeatureSequence::GenerateEdgeFeatures(
                         span = pair<int,int>(edge.GetCenter(), edge.GetRight());
                         break;
                 }
-                if(templ.second[i].length() == 3) {
+                if(templ.second[i].length() >= 3 && templ.second[i][2] == '#') {
                     feat_val = (span.first == -1 ?
-                        GetEdgeFeatureValue(sent_seq, edge,templ.second[i][1]) :
+                        GetEdgeFeatureValue(sent_seq, edge,templ.second[i]) :
                         GetSpanFeatureValue(sent_seq, span.first, span.second, 
-                                                        templ.second[i][1]));
+                                                        templ.second[i]));
                 } else {
                     values.push_back(span.first == -1 ?
-                        GetEdgeFeatureString(sent_seq, edge,templ.second[i][1]):
+                        GetEdgeFeatureString(sent_seq, edge,templ.second[i]):
                         GetSpanFeatureString(sent_seq, span.first, span.second, 
-                                                        templ.second[i][1]));
+                                                        templ.second[i]));
                 }
             }
             if(feat_val)

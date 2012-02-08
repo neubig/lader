@@ -6,6 +6,7 @@
 #include <kyldr/feature-vector.h>
 #include <kyldr/feature-data-base.h>
 #include <kyldr/hyper-edge.h>
+#include <kyldr/dictionary.h>
 
 namespace kyldr {
 

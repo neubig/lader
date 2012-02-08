@@ -6,6 +6,7 @@
 #include <kyldr/feature-sequence.h>
 #include <kyldr/feature-data-sequence.h>
 #include <kyldr/feature-set.h>
+#include <fstream>
 
 namespace kyldr {
 
@@ -53,11 +54,13 @@ public:
     }
     
     int TestFeatureTemplateIsLegal() {
-        const int num = 8;
+        const int num = 12;
         const char* templ[num] = { "SS", "LN", "RS", "CD", "ET",
-                                   "XY", "SD", "CR" };
+                                   "XY", "SD", "CR", "SQE", "LQ1",
+                                   "LQE1", "SQ#04" };
         const bool exp[num] = {true, true, true, true, true,
-                               false, false, false};
+                               false, false, false, false, false,
+                               true, true};
         int ret = 1;
         for(int i = 0; i < num; i++) {
             if(FeatureSequence::FeatureTemplateIsLegal(templ[i]) != exp[i]) {
@@ -101,6 +104,33 @@ public:
                            feata.GenerateEdgeFeatures(sent, edge00));
         ret *= CheckVector(edge02a,
                            feata.GenerateEdgeFeatures(sent, edge02));
+        return ret;
+    }
+
+    int TestSequenceFeatures() {
+        // Create a dictionary and write it to /tmp/dict.txt
+        std::vector<double> hvec(2,0), arvec(2,0);
+        hvec[0] = 0.1; hvec[1] = 0.2;
+        arvec[0] = 0.3; arvec[1] = 0.4;
+        Dictionary dict;
+        dict.AddEntry("he", hvec); dict.AddEntry("ate rice", arvec);
+        ofstream out("/tmp/dict.txt");
+        dict.ToStream(out);
+        out.close();
+        // Parse the feature sequence
+        FeatureSequence feat;
+        feat.ParseConfiguration("dict=/tmp/dict.txt,QE%SN%SQE0,Q1%SN%SQ#01");
+        // Test for the span
+        FeatureVectorString feat00, feat02;
+        feat00.push_back(MakePair(string("QE||1||+"), 1));
+        feat00.push_back(MakePair(string("Q1||1"), 0.2));
+        feat02.push_back(MakePair(string("QE||3||-"), 1));
+        // Do the parsing and checking
+        int ret = 1;
+        ret *= CheckVector(feat00,
+                           feat.GenerateEdgeFeatures(sent, edge00));
+        ret *= CheckVector(feat02,
+                           feat.GenerateEdgeFeatures(sent, edge02));
         return ret;
     }
 
@@ -153,6 +183,7 @@ public:
         done++; cout << "TestLeftRightFeatures()" << endl; if(TestLeftRightFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestEdgeFeatures()" << endl; if(TestEdgeFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReorderData()" << endl; if(TestReorderData()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestSequenceFeatures()" << endl; if(TestSequenceFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureSequence Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

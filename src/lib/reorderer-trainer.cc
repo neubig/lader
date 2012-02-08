@@ -12,14 +12,17 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     // Temporary values
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
     FeatureVectorInt model_features, oracle_features;
-    // Perform an iterations
+    vector<int> sent_order(data_.size());
+    for(int i = 0 ; i < (int)sent_order.size(); i++)
+        sent_order[i] = i;
+    // Perform an iteration
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
-        // HERE
-        // if(config.GetBool("shuffle"))
-        //     random_shuffle(sent_order.first(), sent_order.last());
+        // Shuffle
+        if(config.GetBool("shuffle"))
+            random_shuffle(sent_order.begin(), sent_order.end());
         // Over all values in the corpus
-        for(int sent = 0; sent < (int)data_.size(); sent++) {
+        BOOST_FOREACH(int sent, sent_order) {
             HyperGraph hyper_graph;
             // If we are saving features for efficiency, recover the saved
             // features and replace them in the hypergraph
@@ -91,6 +94,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
 }
 
 void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
+    srand(time(NULL));
     ofstream model_out(config.GetString("model_out").c_str());
     if(!model_out)
         THROW_ERROR("Must specify a valid model output with -model_out ('"

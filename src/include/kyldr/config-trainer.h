@@ -39,6 +39,7 @@ public:
         AddConfigEntry("feature_profile", "seq=T%ET,S%ET%SS", "Which loss functions to use ");
         AddConfigEntry("iterations", "10", "The number of iterations of training to perform.");
         AddConfigEntry("cost", "1e-5", "The rate at which to learn\n");
+        AddConfigEntry("shuffle", "true", "Whether to shuffle the input");
         AddConfigEntry("model_out", "", "An output file for the model");
 
     }

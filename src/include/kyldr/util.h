@@ -67,6 +67,10 @@ inline std::istream & operator>> (std::istream & in, std::pair<X,Y>& s) {
 
 namespace kyldr {
 
+inline bool IsDigit(char c) {
+    return c >= '0' && c <= '9';
+}
+
 // Make a pair without all the difficult coding
 template < class X, class Y >
 inline std::pair<X,Y> MakePair(const X & x, const Y & y) {
