@@ -45,6 +45,40 @@ public:
         }
         return ret;
     }
+    
+    // Test whether blocking works
+    // x......
+    // xx.....
+    // .x.....
+    // .x.....
+    // ...x.x.
+    // ....x.x
+    int TestBlockingCombination() {
+        Alignment al(MakePair(7,6));
+        al.AddAlignment(MakePair(0,0));
+        al.AddAlignment(MakePair(0,1));
+        al.AddAlignment(MakePair(1,1));
+        al.AddAlignment(MakePair(1,3));
+        al.AddAlignment(MakePair(3,4));
+        al.AddAlignment(MakePair(4,5));
+        al.AddAlignment(MakePair(5,4));
+        al.AddAlignment(MakePair(6,5));
+        CombinedAlign cal;
+        cal.BuildFromAlignment(al, 
+                               CombinedAlign::LEAVE_NULL_AS_IS,
+                               CombinedAlign::COMBINE_BLOCKS); 
+        // Create the expected alignment, which should have two blocks and one
+        // null
+        vector<pair<int,int> > exp(7), act = cal.GetSpans();
+        exp[0] = MakePair(0,3);
+        exp[1] = MakePair(0,3);
+        exp[2] = MakePair(-1,-1);
+        exp[3] = MakePair(4,5);
+        exp[4] = MakePair(4,5);
+        exp[5] = MakePair(4,5);
+        exp[6] = MakePair(4,5);
+        return CheckVector(exp, act);
+    }
 
     // Test whether left and right combination work
     // 0-0 2-2 ->
@@ -170,6 +204,7 @@ public:
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestSimpleCombination()" << endl; if(TestSimpleCombination()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBlockingCombination()" << endl; if(TestBlockingCombination()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAttachNull()" << endl; if(TestAttachNull()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAlignmentReadWrite()" << endl; if(TestAlignmentReadWrite()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAlignmentIsLesser()" << endl; if(TestAlignmentIsLesser()) succeeded++; else cout << "FAILED!!!" << endl;

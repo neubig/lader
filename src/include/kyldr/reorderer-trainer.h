@@ -14,7 +14,8 @@ class ReordererTrainer {
 public:
 
     ReordererTrainer() : learning_rate_(1),
-                         attach_(CombinedAlign::ATTACH_NULL_LEFT) { }
+                         attach_(CombinedAlign::ATTACH_NULL_LEFT),
+                         combine_(CombinedAlign::COMBINE_BLOCKS) { }
     ~ReordererTrainer() {
         BOOST_FOREACH(std::vector<FeatureDataBase*> vec, data_)
             BOOST_FOREACH(FeatureDataBase* ptr, vec)
@@ -50,7 +51,8 @@ public:
         std::string line;
         while(getline(in, line))
             ranks_.push_back(
-                Ranks(CombinedAlign(Alignment::FromString(line), attach_)));
+                Ranks(CombinedAlign(Alignment::FromString(line),
+                                    attach_, combine_)));
     }
 
     // Write the model to a file
@@ -75,6 +77,7 @@ private:
     double learning_rate_; // The learning rate
     std::vector<EdgeFeatureMap*> saved_feats_; // Features for each hypergraph
     CombinedAlign::NullHandler attach_; // Where to attach nulls
+    CombinedAlign::BlockHandler combine_; // Whether to combine blocks
 
 };
 

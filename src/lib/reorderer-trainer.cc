@@ -105,6 +105,9 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
     attach_ = config.GetString("attach_null") == "left" ? 
                 CombinedAlign::ATTACH_NULL_LEFT :
                 CombinedAlign::ATTACH_NULL_RIGHT;
+    combine_ = config.GetBool("combine_blocks") ? 
+                CombinedAlign::COMBINE_BLOCKS :
+                CombinedAlign::LEAVE_BLOCKS_AS_IS;
     features_.ParseConfiguration(config.GetString("feature_profile"));
     features_.SetMaxTerm(config.GetInt("max_term"));
     model_.SetCost(config.GetDouble("cost"));

@@ -12,7 +12,8 @@ namespace kyldr {
 class ReordererEvaluator {
 public:
 
-    ReordererEvaluator() : attach_(CombinedAlign::ATTACH_NULL_LEFT) { }
+    ReordererEvaluator() : attach_(CombinedAlign::ATTACH_NULL_LEFT),
+        combine_(CombinedAlign::COMBINE_BLOCKS) { }
     ~ReordererEvaluator() { }
     
     // Run the evaluator
@@ -20,6 +21,7 @@ public:
 
 private:
     CombinedAlign::NullHandler attach_;
+    CombinedAlign::BlockHandler combine_;
 
 };
 

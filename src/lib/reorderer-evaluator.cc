@@ -15,6 +15,9 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
     // Set the attachment handler
     attach_ = config.GetString("attach_null") == "left"
         ? CombinedAlign::ATTACH_NULL_LEFT : CombinedAlign::ATTACH_NULL_RIGHT;
+    combine_ = config.GetBool("combine_blocks") ? 
+                CombinedAlign::COMBINE_BLOCKS :
+                CombinedAlign::LEAVE_BLOCKS_AS_IS;
     // Set up the losses
     vector<LossBase*> losses;
     losses.push_back(new LossFuzzy());
@@ -47,7 +50,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         while(iss >> ival) order.push_back(ival);
         // Get the ranks
         Ranks ranks = Ranks(CombinedAlign(Alignment::FromString(align), 
-                                          attach_));
+                                          attach_, combine_));
         // Print the input values
         cout << "sys_ord:\t" << datas[0] << endl;
         for(int i = 1; i < (int)datas.size(); i++)
