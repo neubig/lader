@@ -9,6 +9,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     InitializeModel(config);
     ReadData(config.GetString("source_in"));
     ReadAlignments(config.GetString("align_in"));
+    int verbose = config.GetInt("verbose");
     // Temporary values
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
     FeatureVectorInt model_features, oracle_features;
@@ -65,11 +66,13 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             //     THROW_ERROR("sent_loss="<<sent_loss
             //                 <<", model_loss="<<model_loss);
             // // --- END DEBUG ---
-            // cout << "sent=" <<sent <<
-            //         " oracle_score=" << oracle_score << 
-            //         " model_score=" << model_score << 
-            //         " oracle_loss=" << oracle_loss <<
-            //         " model_loss=" << model_loss << endl;
+            if(verbose > 0) {
+                cout << "sent=" <<sent <<
+                        " oracle_score=" << oracle_score << 
+                        " model_score=" << model_score << 
+                        " oracle_loss=" << oracle_loss <<
+                        " model_loss=" << model_loss << endl;
+            }
             model_features = hyper_graph.AccumulateFeatures(
                                                 hyper_graph.GetRoot());
             // Add the difference between the vectors if there is at least
