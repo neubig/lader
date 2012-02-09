@@ -35,6 +35,7 @@ public:
         AddConfigEntry("save_features", "true", "Save the features in memory after generating them once (more memory, more speed)");
         AddConfigEntry("use_reverse", "true", "Whether to use reverse terminals ");
         AddConfigEntry("attach_null", "left", "Whether to attach null alignments to the left or right");
+        AddConfigEntry("combine_blocks", "true", "Whether to combine alignments into blocks");
         AddConfigEntry("loss_profile", "fuzzy=1", "Which loss functions to use");
         AddConfigEntry("feature_profile", "seq=T%ET,S%ET%SS", "Which loss functions to use ");
         AddConfigEntry("iterations", "10", "The number of iterations of training to perform.");

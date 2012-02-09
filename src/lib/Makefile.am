@@ -2,7 +2,8 @@ KYLDRCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
            feature-sequence.cc feature-set.cc feature-base.cc \
            feature-vector.cc reorderer-model.cc loss-fuzzy.cc \
            reorderer-trainer.cc loss-base.cc reorderer-runner.cc \
-           ranks.cc reorderer-evaluator.cc loss-tau.cc dictionary.cc
+           ranks.cc reorderer-evaluator.cc loss-tau.cc dictionary.cc \
+           feature-data-parse.cc
 
 
 AM_CPPFLAGS = -I$(srcdir)/../include

@@ -17,23 +17,34 @@ public:
         ATTACH_NULL_LEFT
     } NullHandler;
 
+    // How to handle words on the source side that align to overlapping spans
+    // on the target side. We can either leave them as is, or combine them
+    // together until there are no overlapping alignments
+    typedef enum {
+        LEAVE_BLOCKS_AS_IS,
+        COMBINE_BLOCKS
+    } BlockHandler;
+
     // Constructor, do nothing
     CombinedAlign() : trg_len_(-1) { }
     CombinedAlign(const Alignment & al,
-                      NullHandler handler = LEAVE_NULL_AS_IS) {
-        BuildFromAlignment(al, handler);
+                      NullHandler null_hand = LEAVE_NULL_AS_IS,
+                      BlockHandler block_hand = LEAVE_BLOCKS_AS_IS) {
+        BuildFromAlignment(al, null_hand, block_hand);
     }
 
     // Build a combined alignment from an uncombined alignment, using
     // the designated null handler to either leave nulls as is, or attach
     // them to their right or left aligned counterparts
     void BuildFromAlignment(const Alignment & align, 
-                            NullHandler handler = LEAVE_NULL_AS_IS);
+                            NullHandler null_hand = LEAVE_NULL_AS_IS,
+                            BlockHandler block_hand = LEAVE_BLOCKS_AS_IS);
 
     // Accessors
     const std::pair<int,int> & operator[] (size_t src) const {
         return SafeAccess(spans_, src);
     }
+    const std::vector<std::pair<int,int> > & GetSpans() const {return spans_;}
     int GetSrcLen() const { return spans_.size(); }
     int GetTrgLen() const { return trg_len_; }
 
