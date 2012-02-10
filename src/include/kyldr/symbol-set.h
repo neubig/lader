@@ -1,20 +1,19 @@
 #ifndef SYMBOL_SET_H__
 #define SYMBOL_SET_H__
 
-#include <tr1/unordered_map>
 #include <vector>
 #include <stdexcept>
 #include <kyldr/util.h>
 
 namespace kyldr {
 
-template < class Key, class T, class Hash = std::tr1::hash<Key> >
+template < class T >
 class SymbolSet {
 
 public:
 
-    typedef std::tr1::unordered_map< Key, T, Hash > Map;
-    typedef std::vector< Key* > Vocab;
+    typedef StringMap<T> Map;
+    typedef std::vector< std::string* > Vocab;
     typedef std::vector< T > Ids;
 
 protected:
@@ -28,9 +27,9 @@ public:
     SymbolSet(const SymbolSet & ss) : 
                 map_(ss.map_), vocab_(ss.vocab_), reuse_(ss.reuse_) {
         for(typename Vocab::iterator it = vocab_.begin(); 
-                it != vocab_.end(); it++) 
+                                                it != vocab_.end(); it++) 
             if(*it)
-                *it = new Key(**it);
+                *it = new std::string(**it);
     }
     ~SymbolSet() {
         for(typename Vocab::iterator it = vocab_.begin(); 
@@ -39,11 +38,11 @@ public:
                 delete *it;
     }
 
-    const std::vector<Key*> & GetSymbols() const { return vocab_; }
-    const Key & GetSymbol(T id) const {
+    const std::vector<std::string*> & GetSymbols() const { return vocab_; }
+    const std::string & GetSymbol(T id) const {
         return *SafeAccess(vocab_, id);
     }
-    T GetId(const Key & sym, bool add = false) {
+    T GetId(const std::string & sym, bool add = false) {
         typename Map::const_iterator it = map_.find(sym);
         if(it != map_.end())
             return it->second;
@@ -51,18 +50,18 @@ public:
             T id;
             if(reuse_.size() != 0) {
                 id = reuse_.back(); reuse_.pop_back();
-                vocab_[id] = new Key(sym);
+                vocab_[id] = new std::string(sym);
             } else {
                 id = vocab_.size();
-                vocab_.push_back(new Key(sym));
+                vocab_.push_back(new std::string(sym));
             }
-            map_.insert(std::pair<Key,T>(sym,id));
+            map_.insert(MakePair(sym,id));
             return id;
         }
         return -1;
     }
-    T GetId(const Key & sym) const {
-        return const_cast< SymbolSet<Key,T,Hash>* >(this)->GetId(sym,false);
+    T GetId(const std::string & sym) const {
+        return const_cast< SymbolSet<T>* >(this)->GetId(sym,false);
     }
     size_t size() const { return vocab_.size() - reuse_.size(); }
     size_t capacity() const { return vocab_.size(); }
@@ -80,10 +79,10 @@ public:
             out << *vocab_[i] << std::endl;
         out << std::endl;
     }
-    static SymbolSet<Key,T,Hash>* FromStream(std::istream & in) {
+    static SymbolSet<T>* FromStream(std::istream & in) {
         std::string line;
         int size;
-        SymbolSet<Key,T,Hash> * ret = new SymbolSet<Key,T,Hash>;
+        SymbolSet<T> * ret = new SymbolSet<T>;
         getline(in, line); std::istringstream iss(line);
         for(iss >> size; size > 0 && getline(in, line); size--)
             ret->GetId(line, true);

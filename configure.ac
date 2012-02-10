@@ -56,6 +56,11 @@ AC_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_SIZE_T
 
+# Check to make sure that we have unordered_map
+AC_LANG([C++])
+AC_CHECK_HEADERS([tr1/unordered_map])
+AC_CHECK_HEADERS([ext/hash_map])
+
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
 
