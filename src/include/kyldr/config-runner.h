@@ -5,7 +5,6 @@
 #include <vector>
 #include <cstdlib>
 #include <sstream>
-#include <tr1/unordered_map>
 #include <kyldr/util.h>
 #include <kyldr/config-base.h>
 
