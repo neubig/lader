@@ -2,6 +2,7 @@
 #include <kyldr/util.h>
 #include <boost/foreach.hpp>
 #include <map>
+#include <iostream>
 
 using namespace std;
 using namespace kyldr;
@@ -9,8 +10,8 @@ using namespace kyldr;
 // Find the ranks of each 
 Ranks::Ranks(const CombinedAlign & combined) {
     // Sort the combined alignments in rank order (allowing ties)
-    typedef pair<pair<int,int>, vector<int> > RankPair;
-    typedef map<pair<int,int>, vector<int>, AlignmentIsLesser> RankMap;
+    typedef pair<pair<double,double>, vector<int> > RankPair;
+    typedef map<pair<double,double>, vector<int>, AlignmentIsLesser> RankMap;
     RankMap rank_map;
     for(int i = 0; i < (int)combined.GetSrcLen(); i++) {
         RankMap::iterator it = rank_map.find(combined[i]);

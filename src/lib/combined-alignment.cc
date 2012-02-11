@@ -1,6 +1,7 @@
 
 #include <kyldr/combined-alignment.h>
 #include <iostream>
+#include <cfloat>
 
 using namespace kyldr;
 using namespace std; 
@@ -18,31 +19,36 @@ void CombinedAlign::AlignBracketSpans(const vector<string> & words) {
         // Find a matching closing bracket
         for(j = 0; j < num_brackets_ && words[i] != closing_brackets_[j]; j++);
         // If this matches the last opening bracket on the stack
-        if(j != num_brackets_ && stack.size() != 0
-            && words[*stack.rbegin()] == opening_brackets_[j]) {
+        if(j != num_brackets_ && stack.size() != 0) {
+            if(words[*stack.rbegin()] == opening_brackets_[j]) {
             // Find the span of the internal words
-            j = *stack.rbegin()+1;
-            double f1 = spans_[j].first, f2 = spans_[j].second;
-            for(j++ ; j < i; j++) {
-                f1 = (f1 == -1) ? spans_[j].first : min(spans_[j].first, f1);
-                f2 = max(spans_[j].second, f2);
+            double f1 = DBL_MAX, f2 = -1;
+            for(j = *stack.rbegin() + 1 ; j < i; j++) {
+                if(spans_[j].first != -1) {
+                    f1 = min(spans_[j].first, f1);
+                    f2 = max(spans_[j].second, f2);
+                }
             }
             // Fix the span of the external words
-            spans_[*stack.rbegin()] = MakePair(f1-1e-4, f1-1e-4);
-            spans_[i] = MakePair(f2+1e-4, f2+1e-4);
+            if(f2 != -1) {
+                spans_[*stack.rbegin()] = MakePair(f1-1e-4, f1-1e-4);
+                spans_[i] = MakePair(f2+1e-4, f2+1e-4);
+            }
             // Clear the stack and continue
             stack.pop_back(); continue;
+            }
         }
         // Find a match of an opening bracket
         for(j = 0; j < num_brackets_ && words[i] != opening_brackets_[j]; j++);
-        if(j != num_brackets_) 
+        if(j != num_brackets_) { 
             stack.push_back(i);
+        }
     }
 }
 
 void CombinedAlign::CombineBlocks() {
     // Sort the source values in ascending order of target alignment
-    vector<pair<pair<int,int>, int> > word_spans(spans_.size());
+    vector<pair<pair<double,double>, int> > word_spans(spans_.size());
     for(int i = 0; i < (int)spans_.size(); i++)
         word_spans[i] = MakePair(spans_[i], i);
     sort(word_spans.begin(), word_spans.end());
@@ -51,8 +57,8 @@ void CombinedAlign::CombineBlocks() {
     int i = 0;
     while(i < (int)spans_.size()) {
         // Start a new span with a single source word
-        double f1 = word_spans[i].second, f2 = f1,
-               e1 = spans_[f1].first, e2 = spans_[f1].second;
+        int f1 = word_spans[i].second, f2 = f1;
+        double e1 = spans_[f1].first, e2 = spans_[f1].second;
         // Skip null aligned spans
         if(e1 == -1) { i++; continue;  }
         // Step to the next word and check if it overlaps with this span
@@ -83,7 +89,8 @@ void CombinedAlign::BuildFromAlignment(
     spans_ = vector<pair<double,double> >(align.GetSrcLen(), MakePair(-1,-1));
     // Combine the spans
     for(int i = 0; i < (int)vec.size(); i++) {
-        double src = vec[i].first, trg = vec[i].second;
+        int src = vec[i].first;
+        double trg = vec[i].second;
         if(spans_[src].first == -1) {
             spans_[src] = MakePair(trg,trg);
         } else {
@@ -103,8 +110,12 @@ void CombinedAlign::BuildFromAlignment(
     // Attach any null alignments
     int i;
     if(null_hand == ATTACH_NULL_LEFT) {
+        // Skip unaligned words at the end, mainly for periords
+        int last;
+        for(last = spans_.size()-1; last >= 0 && spans_[last].first==-1; last--)
+            spans_[last] = MakePair(DBL_MAX,DBL_MAX);
         // Attach all words to the left
-        for(i = 1; i < (int)spans_.size(); i++)
+        for(i = 1; i < last; i++)
             if(spans_[i].first == -1)
                 spans_[i] = spans_[i-1];
         // Attach trailing nulls to the right
