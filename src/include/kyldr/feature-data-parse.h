@@ -33,11 +33,6 @@ public:
         for(int i = 0; i < (int) order.size(); i++)
             sequence_[i] = old_seq[order[i]];
     }
-
-    const std::vector<std::string> & GetSequence() const { return sequence_; }
-    const std::string & GetElement(int i) const {
-        return SafeAccess(sequence_, i); 
-    }
     
     // Return space-separate string representing a sequence
     const std::string GetRangeString(int i, int j, 
@@ -56,7 +51,6 @@ public:
 
 private:
 
-    std::vector<std::string> sequence_;
     typedef std::map<std::pair<int,int>, std::string> SpanMap;
     SpanMap spans_;
 

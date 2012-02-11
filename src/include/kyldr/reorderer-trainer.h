@@ -15,7 +15,8 @@ public:
 
     ReordererTrainer() : learning_rate_(1),
                          attach_(CombinedAlign::ATTACH_NULL_LEFT),
-                         combine_(CombinedAlign::COMBINE_BLOCKS) { }
+                         combine_(CombinedAlign::COMBINE_BLOCKS),
+                         bracket_(CombinedAlign::ALIGN_BRACKET_SPANS) { }
     ~ReordererTrainer() {
         BOOST_FOREACH(std::vector<FeatureDataBase*> vec, data_)
             BOOST_FOREACH(FeatureDataBase* ptr, vec)
@@ -49,10 +50,12 @@ public:
         if(!in) THROW_ERROR("Could not open alignment file (-align_in): "
                                 <<align_in);
         std::string line;
+        int i = 0;
         while(getline(in, line))
             ranks_.push_back(
-                Ranks(CombinedAlign(Alignment::FromString(line),
-                                    attach_, combine_)));
+                Ranks(CombinedAlign(SafeAccess(data_,i++)[0]->GetSequence(),
+                                    Alignment::FromString(line),
+                                    attach_, combine_, bracket_)));
     }
 
     // Write the model to a file
@@ -78,6 +81,7 @@ private:
     std::vector<EdgeFeatureMap*> saved_feats_; // Features for each hypergraph
     CombinedAlign::NullHandler attach_; // Where to attach nulls
     CombinedAlign::BlockHandler combine_; // Whether to combine blocks
+    CombinedAlign::BracketHandler bracket_; // Whether to handle brackets
 
 };
 

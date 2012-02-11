@@ -22,11 +22,12 @@ public:
         //  x..
         //  ..x
         //  .x.
+        vector<string> words(3, "x");
         Alignment al(MakePair(3,3));
         al.AddAlignment(MakePair(0,0));
         al.AddAlignment(MakePair(1,2));
         al.AddAlignment(MakePair(2,1));
-        ranks = Ranks(CombinedAlign(al));
+        ranks = Ranks(CombinedAlign(words, al));
         // Create a sentence
         string str = "he ate rice";
         sent.FromString(str);

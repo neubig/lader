@@ -16,12 +16,13 @@ public:
         // xx..
         // ...x
         // ..x.
+        vector<string> words(4,"x");
         Alignment al(MakePair(4,3));
         al.AddAlignment(MakePair(0,0));
         al.AddAlignment(MakePair(1,0));
         al.AddAlignment(MakePair(2,2));
         al.AddAlignment(MakePair(3,1));
-        ranks = Ranks(CombinedAlign(al));
+        ranks = Ranks(CombinedAlign(words, al));
         lf.Initialize(ranks);
         lf.SetWeight(0.5);
     }

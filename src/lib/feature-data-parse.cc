@@ -47,5 +47,4 @@ void FeatureDataParse::FromString(const std::string & str) {
     }
     if(stack.size() != 0)
         THROW_ERROR("Too many open brackets in parse: " << str);
-    num_words_ = sequence_.size();
 }

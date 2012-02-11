@@ -13,7 +13,9 @@ class ReordererEvaluator {
 public:
 
     ReordererEvaluator() : attach_(CombinedAlign::ATTACH_NULL_LEFT),
-        combine_(CombinedAlign::COMBINE_BLOCKS) { }
+        combine_(CombinedAlign::COMBINE_BLOCKS),
+        bracket_(CombinedAlign::ALIGN_BRACKET_SPANS)
+         { }
     ~ReordererEvaluator() { }
     
     // Run the evaluator
@@ -22,6 +24,7 @@ public:
 private:
     CombinedAlign::NullHandler attach_;
     CombinedAlign::BlockHandler combine_;
+    CombinedAlign::BracketHandler bracket_;
 
 };
 

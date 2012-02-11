@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <kyldr/util.h>
 
 namespace kyldr {
 
@@ -11,7 +12,7 @@ namespace kyldr {
 // easier to check to make sure that all sizes are equal
 class FeatureDataBase {
 public:
-    FeatureDataBase() : num_words_(-1) { }
+    FeatureDataBase() { }
     virtual ~FeatureDataBase() { }
  
     // Reorder the data according to the input vector
@@ -21,11 +22,17 @@ public:
     virtual std::string ToString() const = 0;
 
     // Accessors
-    int GetNumWords() { return num_words_; }
+    int GetNumWords() { return sequence_.size(); }
+    const std::vector<std::string> & GetSequence() {
+        return sequence_;
+    }
+    const std::string & GetElement(int i) const {
+        return SafeAccess(sequence_, i); 
+    }
 
 protected:
-    // The number of words in the sentence
-    int num_words_;
+    // The words in the sentence
+    std::vector<std::string> sequence_;
 
 private:
 
