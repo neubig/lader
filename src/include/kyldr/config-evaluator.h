@@ -33,6 +33,7 @@ public:
 );
 
         AddConfigEntry("attach_null", "left", "Whether to attach null alignments to the left or right");
+        AddConfigEntry("combine_blocks", "true", "Whether to attach the blocks together");
 
     }
 	
