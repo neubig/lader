@@ -105,7 +105,7 @@ private:
     // The scaling factor, squared norm, and cost used in learning Pegasos
     double alpha_, v_squared_norm_, lambda_;
     // Feature name values
-    SymbolSet<std::string,int> feature_ids_; // Feature names and IDs
+    SymbolSet<int> feature_ids_; // Feature names and IDs
     bool add_features_; // Whether to allow the adding of new features
 
 };

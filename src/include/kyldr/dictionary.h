@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <tr1/unordered_map>
 #include <boost/foreach.hpp>
 #include <kyldr/util.h>
 
@@ -61,7 +60,7 @@ public:
     bool operator !=(const Dictionary & rhs) const { return !(*this == rhs); }
 
 private:
-    typedef std::tr1::unordered_map<std::string,std::vector<double> > DictionaryData;
+    typedef StringMap<std::vector<double> > DictionaryData;
     typedef std::pair<std::string,std::vector<double> > DictionaryPair;
     DictionaryData dict_;
     int max_len_;

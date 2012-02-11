@@ -48,39 +48,39 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         istringstream iss(datas[0]);
         std::vector<int> order; int ival;
         while(iss >> ival) order.push_back(ival);
+        // Get the source file
+        getline(*src_in, src);
+        vector<string> srcs;
+        algorithm::split(srcs, src, is_any_of(" "));
         // Get the ranks
-        Ranks ranks = Ranks(CombinedAlign(Alignment::FromString(align), 
-                                          attach_, combine_));
+        Ranks ranks = Ranks(CombinedAlign(srcs,
+                                          Alignment::FromString(align), 
+                                          attach_, combine_, bracket_));
         // Print the input values
         cout << "sys_ord:\t" << datas[0] << endl;
         for(int i = 1; i < (int)datas.size(); i++)
             cout << "sys_"<<i<<":\t" << datas[i] << endl;
         // If source and target files exist, print them as well
-        if(args.size() > 2) {
-            getline(*src_in, src);
-            cout << "src:\t" << src << endl;
-            // Print the reference reordering
-            vector<string> srcs;
-            algorithm::split(srcs, src, is_any_of(" "));
-            vector<vector<string> > src_order(ranks.GetMaxRank()+1);
-            for(int i = 0; i < (int)srcs.size(); i++)
-                src_order[ranks[i]].push_back(SafeAccess(srcs,i));
-            cout << "ref:\t";
-            for(int i = 0; i < (int)src_order.size(); i++) {
-                if(i != 0) cout << " ";
-                // If there is only one, print the string
-                if(src_order[i].size() == 1) {
-                    cout << src_order[i][0];
-                // If there is more than one, print a bracketed group
-                } else {
-                    cout << "{{";
-                    BOOST_FOREACH(const string & s, src_order[i])
-                        cout << " " << s;
-                    cout << " }}";
-                }
+        cout << "src:\t" << src << endl;
+        // Print the reference reordering
+        vector<vector<string> > src_order(ranks.GetMaxRank()+1);
+        for(int i = 0; i < (int)srcs.size(); i++)
+            src_order[ranks[i]].push_back(SafeAccess(srcs,i));
+        cout << "ref:\t";
+        for(int i = 0; i < (int)src_order.size(); i++) {
+            if(i != 0) cout << " ";
+            // If there is only one, print the string
+            if(src_order[i].size() == 1) {
+                cout << src_order[i][0];
+            // If there is more than one, print a bracketed group
+            } else {
+                cout << "{{";
+                BOOST_FOREACH(const string & s, src_order[i])
+                    cout << " " << s;
+                cout << " }}";
             }
-            cout << endl;
         }
+        cout << endl;
         if(args.size() > 3) {
             getline(*trg_in, trg);
             cout << "trg:\t" << src << endl;

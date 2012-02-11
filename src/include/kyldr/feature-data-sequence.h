@@ -25,7 +25,6 @@ public:
                                 tokens(str, boost::char_separator<char>(" "));
         sequence_.clear();
         BOOST_FOREACH(std::string s, tokens) { sequence_.push_back(s); }
-        num_words_ = sequence_.size();
     }
     std::string ToString() const {
         return boost::algorithm::join(sequence_, " ");
@@ -37,11 +36,6 @@ public:
         for(int i = 0; i < (int) order.size(); i++)
             sequence_[i] = old_seq[order[i]];
     }
-
-    const std::vector<std::string> & GetSequence() const { return sequence_; }
-    const std::string & GetElement(int i) const {
-        return SafeAccess(sequence_, i); 
-    }
     
     // Return space-separate string representing a sequence
     const std::string GetRangeString(int i, int j, 
@@ -51,10 +45,6 @@ public:
             sep.c_str());
         return ret;
     }
-
-private:
-
-    std::vector<std::string> sequence_;
 
 };
 

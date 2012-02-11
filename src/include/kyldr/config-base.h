@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
-#include <tr1/unordered_map>
 #include <kyldr/util.h>
 
 namespace kyldr {
@@ -22,8 +21,7 @@ class ConfigBase {
 protected:
 
     // name -> value, description
-    typedef std::tr1::unordered_map<
-                std::string, std::pair<std::string,std::string> > ConfigMap;
+    typedef StringMap<std::pair<std::string,std::string> > ConfigMap;
 
     // argument functions
     int minArgs_, maxArgs_;   // min and max number of main arguments

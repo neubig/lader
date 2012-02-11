@@ -7,7 +7,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-#include <tr1/unordered_map>
 
 #define KYLDR_SAFE
 
@@ -17,18 +16,38 @@
     throw std::runtime_error(oss.str()); }       \
   while (0);
 
+#ifdef HAVE_TR1_UNORDERED_MAP
+#   include <tr1/unordered_map>
+    template <class T>
+    class StringMap : public std::tr1::unordered_map<std::string,T> { };
+#elif HAVE_EXT_HASH_MAP
+#   include <ext/hash_map>
+    namespace __gnu_cxx {
+    template <>
+    struct hash<std::string> {
+    size_t operator() (const std::string& x) const { return hash<const char*>()(x.c_str()); }
+    };
+    }
+    template <class T>
+    class StringMap : public __gnu_cxx::hash_map<std::string,T> { };
+#else
+#   include <map>
+    template <class T>
+    class StringMap : public std::map<std::string,T> { };
+#endif
+
 namespace std {
 
 // Unordered map equality function
-template < class Key, class T, class Hash >
-inline bool operator==(const std::tr1::unordered_map< Key, T, Hash > & lhs, 
-                       const std::tr1::unordered_map< Key, T, Hash > & rhs) {
+template < class T >
+inline bool operator==(const StringMap<T> & lhs, 
+                       const StringMap<T> & rhs) {
     if(lhs.size() != rhs.size())
         return false;
-    for(typename std::tr1::unordered_map< Key, T, Hash >::const_iterator it = lhs.begin();
+    for(typename StringMap<T>::const_iterator it = lhs.begin();
         it != lhs.end();
         it++) {
-        typename std::tr1::unordered_map< Key, T, Hash >::const_iterator it2 = rhs.find(it->first);
+        typename StringMap<T>::const_iterator it2 = rhs.find(it->first);
         if(it2 == rhs.end() || it2->second != it->second)
             return false;
     }
@@ -143,14 +162,13 @@ inline bool ApproximateDoubleEquals(const std::vector<double> & a,
     return true;
 }
 
-template < class Key, class Hash >
 inline bool ApproximateDoubleEquals(
-    const std::tr1::unordered_map< Key, double, Hash > & a,
-    const std::tr1::unordered_map< Key, double, Hash > & b) {
+    const StringMap<double> & a,
+    const StringMap<double> & b) {
     if(a.size() != b.size())
         return false;
-    for(typename std::tr1::unordered_map< Key, double, Hash >::const_iterator it = a.begin(); it != a.end(); it++) {
-        typename std::tr1::unordered_map< Key, double, Hash >::const_iterator it2 = b.find(it->first);
+    for(StringMap<double>::const_iterator it = a.begin(); it != a.end(); it++) {
+        StringMap<double>::const_iterator it2 = b.find(it->first);
         if(it2 == b.end() || !ApproximateDoubleEquals(it->second, it2->second))
             return false;
     }

@@ -25,33 +25,59 @@ public:
         COMBINE_BLOCKS
     } BlockHandler;
 
-    // Constructor, do nothing
-    CombinedAlign() : trg_len_(-1) { }
-    CombinedAlign(const Alignment & al,
-                      NullHandler null_hand = LEAVE_NULL_AS_IS,
-                      BlockHandler block_hand = LEAVE_BLOCKS_AS_IS) {
-        BuildFromAlignment(al, null_hand, block_hand);
+    // How to handle null-aligned brackets. Either leave them as-is, or
+    // make sure that they are aligned directly to the left and right of
+    // the words in-between them
+    typedef enum {
+        LEAVE_BRACKETS_AS_IS,
+        ALIGN_BRACKET_SPANS
+    } BracketHandler;
+    static const int num_brackets_ = 7;
+    static const char* opening_brackets_[num_brackets_];
+    static const char* closing_brackets_[num_brackets_];
+
+    // Constructor
+    CombinedAlign() { }
+    CombinedAlign(const std::vector<std::string> & words,
+                  const Alignment & al,
+                  NullHandler null_hand = LEAVE_NULL_AS_IS,
+                  BlockHandler block_hand = LEAVE_BLOCKS_AS_IS,
+                  BracketHandler bracket_hand = LEAVE_BRACKETS_AS_IS) {
+        BuildFromAlignment(words, al, null_hand, block_hand, bracket_hand);
     }
 
     // Build a combined alignment from an uncombined alignment, using
     // the designated null handler to either leave nulls as is, or attach
     // them to their right or left aligned counterparts
-    void BuildFromAlignment(const Alignment & align, 
+    void BuildFromAlignment(const std::vector<std::string> & words,
+                            const Alignment & align, 
                             NullHandler null_hand = LEAVE_NULL_AS_IS,
-                            BlockHandler block_hand = LEAVE_BLOCKS_AS_IS);
+                            BlockHandler block_hand = LEAVE_BLOCKS_AS_IS,
+                            BracketHandler bracket_hand = LEAVE_BRACKETS_AS_IS);
+
+
+    // For brackets that are both null-aligned and matching, find the leftmost
+    // and rightmost alignment that falls between them, and align them directly
+    // to the left and right of the span
+    void AlignBracketSpans(const std::vector<std::string> & words);
+    
+    // Combine alignments into contiguous blocks that can be recovered by an
+    // ITG reordering
+    void CombineBlocks();
 
     // Accessors
-    const std::pair<int,int> & operator[] (size_t src) const {
+    const std::pair<double,double> & operator[] (size_t src) const {
         return SafeAccess(spans_, src);
     }
-    const std::vector<std::pair<int,int> > & GetSpans() const {return spans_;}
+    const std::vector<std::pair<double,double> > & GetSpans() const {
+        return spans_;
+    }
     int GetSrcLen() const { return spans_.size(); }
-    int GetTrgLen() const { return trg_len_; }
 
 private:
-
-    std::vector<std::pair<int,int> > spans_;
-    int trg_len_;
+    
+    // The set of opening and closing brackets to be used in alignment
+    std::vector<std::pair<double,double> > spans_;
 
 };
 
