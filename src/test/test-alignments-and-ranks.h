@@ -98,6 +98,9 @@ public:
                                CombinedAlign::LEAVE_NULL_AS_IS,
                                CombinedAlign::COMBINE_BLOCKS,
                                CombinedAlign::ALIGN_BRACKET_SPANS);
+        if(cal[1].first <= 0 || cal[1].first >= 1) {
+            cerr << "Bad brackets: " << cal[1].first << endl; ret = 0;
+        }
         if(cal[4].first <= 2 || cal[4].first >= 3) {
             cerr << "Bad brackets: " << cal[4].first << endl; ret = 0;
         }
@@ -109,6 +112,9 @@ public:
                                CombinedAlign::LEAVE_NULL_AS_IS,
                                CombinedAlign::COMBINE_BLOCKS,
                                CombinedAlign::ALIGN_BRACKET_SPANS);
+        if(cal[1].first <= 0 || cal[1].first >= 1) {
+            cerr << "Bad brackets: " << cal[1].first << endl; ret = 0;
+        }
         if(cal1[4].first <= 2 || cal1[4].first >= 3) {
             cerr << "Bad brackets: " << cal1[4].first << endl; ret = 0;
         }

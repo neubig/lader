@@ -83,8 +83,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         cout << endl;
         if(args.size() > 3) {
             getline(*trg_in, trg);
-            cout << "trg:\t" << src << endl;
-            cout << trg << endl;
+            cout << "trg:\t" << trg << endl;
         }
         // Score the values
         for(int i = 0; i < (int) losses.size(); i++) {
