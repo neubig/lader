@@ -114,17 +114,17 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
                                        int beam_size, bool save_trg) {
     // Create the temporary data members for this span
     HypothesisQueue q;
-    double score;
+    double score, viterbi_score;
     // If the length is OK, add a terminal
     if((features.GetMaxTerm() == 0) || (r-l < features.GetMaxTerm())) {
         // Create a hypothesis with the forward terminal
         score = GetEdgeScore(model, features, sent,
                                 HyperEdge(l, -1, r, HyperEdge::EDGE_FOR));
-        q.push(Hypothesis(score, l, r, l, r, HyperEdge::EDGE_FOR));
+        q.push(Hypothesis(score, score, l, r, l, r, HyperEdge::EDGE_FOR));
         // Create a hypothesis with the backward terminal
         score = GetEdgeScore(model, features, sent, 
                                 HyperEdge(l, -1, r, HyperEdge::EDGE_BAC));
-        q.push(Hypothesis(score, l, r, r, l, HyperEdge::EDGE_BAC));
+        q.push(Hypothesis(score, score, l, r, r, l, HyperEdge::EDGE_BAC));
     }
     TargetSpan *left_trg, *right_trg, 
                *new_left_trg, *old_left_trg,
@@ -135,17 +135,17 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         left_trg = GetTrgSpan(l, c-1, 0);
         right_trg = GetTrgSpan(c, r, 0);
         // Add the straight terminal
-        score = left_trg->GetScore() + right_trg->GetScore() + 
-                  GetEdgeScore(model, features, sent, 
+        score = GetEdgeScore(model, features, sent, 
                                 HyperEdge(l, c, r, HyperEdge::EDGE_STR));
-        q.push(Hypothesis(score, l, r,
+        viterbi_score = score + left_trg->GetScore() + right_trg->GetScore();
+        q.push(Hypothesis(viterbi_score, score, l, r,
                          left_trg->GetTrgLeft(), right_trg->GetTrgRight(),
                          HyperEdge::EDGE_STR, c, 0, 0, left_trg, right_trg));
         // Add the inverted terminal
-        score = left_trg->GetScore() + right_trg->GetScore() + 
-                  GetEdgeScore(model, features, sent, 
+        score = GetEdgeScore(model, features, sent, 
                                 HyperEdge(l, c, r, HyperEdge::EDGE_INV));
-        q.push(Hypothesis(score, l, r,
+        viterbi_score = score + left_trg->GetScore() + right_trg->GetScore();
+        q.push(Hypothesis(viterbi_score, score, l, r,
                          right_trg->GetTrgLeft(), left_trg->GetTrgRight(),
                          HyperEdge::EDGE_INV, c, 0, 0, left_trg, right_trg));
 
@@ -239,7 +239,7 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
     SpanStack * root_stack = new SpanStack;
     for(int i = 0; i < (int)top->size(); i++) {
         TargetSpan * root = new TargetSpan(0, n-1, (*top)[i]->GetTrgLeft(), (*top)[i]->GetTrgRight());
-        root->AddHypothesis(Hypothesis((*top)[i]->GetScore(), 0, n-1, 0, n-1,
+        root->AddHypothesis(Hypothesis((*top)[i]->GetScore(), 0, 0, n-1, 0, n-1,
                                     HyperEdge::EDGE_ROOT, -1, i, -1, (*top)[i]));
         root_stack->AddSpan(root);
     }

@@ -5,6 +5,7 @@
 #include <kyldr/alignment.h>
 #include <kyldr/combined-alignment.h>
 #include <kyldr/ranks.h>
+#include <cfloat>
 
 namespace kyldr {
 
@@ -143,7 +144,7 @@ public:
         ca_left.BuildFromAlignment(words, al, CombinedAlign::ATTACH_NULL_LEFT);
         if(ca_left[0] != MakePair(1.0,1.0) ||
            ca_left[2] != MakePair(1.0,1.0) ||
-           ca_left[4] != MakePair(3.0,3.0)) {
+           ca_left[4] != MakePair(DBL_MAX,DBL_MAX)) {
             cout << " @ left0 = 1/1 == " <<ca_left[0] << endl;
             cout << " @ left2 = 1/1 == " <<ca_left[2] << endl;
             cout << " @ left4 = 3/3 == " <<ca_left[4] << endl;

@@ -61,13 +61,13 @@ public:
         ts11 = new TargetSpan(1,1,1,1);
         tsr = new TargetSpan(0,1,0,1);
         // Add the hypotheses
-        ts00->AddHypothesis(Hypothesis(1,0,0,0,0,HyperEdge::EDGE_FOR));
-        ts11->AddHypothesis(Hypothesis(2,1,1,1,1,HyperEdge::EDGE_FOR));
-        ts01f->AddHypothesis(Hypothesis(4,0,1,0,1,HyperEdge::EDGE_FOR));
-        ts01f->AddHypothesis(Hypothesis(3,0,1,0,1,HyperEdge::EDGE_STR,1,0,0,ts00,ts11));
-        ts01b->AddHypothesis(Hypothesis(5,0,1,1,0,HyperEdge::EDGE_INV,1,0,0,ts00,ts11));
-        tsr->AddHypothesis(Hypothesis(6,1,0,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01b));
-        tsr->AddHypothesis(Hypothesis(6,0,1,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01f));
+        ts00->AddHypothesis(Hypothesis(1,1,0,0,0,0,HyperEdge::EDGE_FOR));
+        ts11->AddHypothesis(Hypothesis(2,2,1,1,1,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(Hypothesis(4,4,0,1,0,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(Hypothesis(3,3,0,1,0,1,HyperEdge::EDGE_STR,1,0,0,ts00,ts11));
+        ts01b->AddHypothesis(Hypothesis(5,5,0,1,1,0,HyperEdge::EDGE_INV,1,0,0,ts00,ts11));
+        tsr->AddHypothesis(Hypothesis(6,6,1,0,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01b));
+        tsr->AddHypothesis(Hypothesis(6,6,0,1,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01f));
         // Add the features
         FeatureVectorInt 
             *fv00 = new FeatureVectorInt(1, MakePair(1,1)),
@@ -169,10 +169,10 @@ public:
         // Create two spans for 00 and 11, so we can process 01
         SpanStack *stack00 = new SpanStack, *stack11 = new SpanStack;
         stack00->push_back(new TargetSpan(0,0,0,0));
-        (*stack00)[0]->AddHypothesis(Hypothesis(1.0,0,0,0,0,HyperEdge::EDGE_FOR));
+        (*stack00)[0]->AddHypothesis(Hypothesis(1,1.0,0,0,0,0,HyperEdge::EDGE_FOR));
         graph.SetStack(0, 0, stack00);
         stack11->push_back(new TargetSpan(1,1,1,1));
-        (*stack11)[0]->AddHypothesis(Hypothesis(2.0,1,1,1,1,HyperEdge::EDGE_FOR));
+        (*stack11)[0]->AddHypothesis(Hypothesis(2,2.0,1,1,1,1,HyperEdge::EDGE_FOR));
         graph.SetStack(1, 1, stack11);
         // Try processing 01
         set.SetMaxTerm(0);
@@ -295,10 +295,10 @@ public:
                    *span01 = new TargetSpan(0,1,-1,-1),
                    *span11 = new TargetSpan(1,1,-1,-1),
                    *spanr = new TargetSpan(0,1,-1,-1);
-        span00->AddHypothesis(Hypothesis(1,0,0,-1,-1,HyperEdge::EDGE_FOR));
-        span11->AddHypothesis(Hypothesis(1,1,1,-1,-1,HyperEdge::EDGE_FOR));
-        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_FOR));
-        spanr->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        span00->AddHypothesis(Hypothesis(1,1,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(Hypothesis(1,1,1,1,-1,-1,HyperEdge::EDGE_FOR));
+        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_FOR));
+        spanr->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
         // Get the reordering for forward
         int ret = 1;
         vector<int> for_reorder; spanr->GetReordering(for_reorder);
@@ -337,10 +337,10 @@ public:
                    *span01 = new TargetSpan(0,1,-1,-1),
                    *span11 = new TargetSpan(1,1,-1,-1),
                    *spanr = new TargetSpan(0,1,-1,-1);
-        span00->AddHypothesis(Hypothesis(1,0,0,-1,-1,HyperEdge::EDGE_FOR));
-        span11->AddHypothesis(Hypothesis(1,1,1,-1,-1,HyperEdge::EDGE_BAC));
-        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_INV,-1,1,-1,span00,span11));
-        spanr->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        span00->AddHypothesis(Hypothesis(1,1,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(Hypothesis(1,1,1,1,-1,-1,HyperEdge::EDGE_BAC));
+        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_INV,-1,1,-1,span00,span11));
+        spanr->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
         // Get the reordering for forward
         int ret = 1;
         span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_FOR);
@@ -384,16 +384,16 @@ public:
         span01->GetHypothesis(0)->SetRightChild(NULL);
         ostringstream graph_stream1;
         hg.PrintHyperGraph(str01, graph_stream1);
-        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0 1\", \"[R] ||| [F]\"], \"nodes\": [[{\"rule\":1}], [{\"tail\":[0],\"rule\":2}]], \"goal\": 1}",graph_stream1.str()));
+        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0 1\", \"[R] ||| [F]\"], \"nodes\": [[{\"feature\":{\"parser\":1},\"rule\":1}], [{\"tail\":[0],\"feature\":{\"parser\":1},\"rule\":2}]], \"goal\": 1}",graph_stream1.str()));
         // Make another hypothesis
         span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_INV);
         span01->GetHypothesis(0)->SetLeftChild(span00);
         span01->GetHypothesis(0)->SetRightChild(span11);
-        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_STR,-1,1,-1,span00,span11));
+        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_STR,-1,1,-1,span00,span11));
         // Print again
         ostringstream graph_stream;
         hg.PrintHyperGraph(str01, graph_stream);
-        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0\", \"[B] ||| 1\", \"[I] ||| [F] [B]\", \"[S] ||| [F] [B]\", \"[R] ||| [I]\", \"[R] ||| [S]\"], \"nodes\": [[{\"rule\":1}], [{\"rule\":2}], [{\"tail\":[0,1],\"rule\":3}], [{\"tail\":[0,1],\"rule\":4}], [{\"tail\":[2],\"rule\":5}, {\"tail\":[3],\"rule\":6}]], \"goal\": 4}",graph_stream.str()));
+        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0\", \"[B] ||| 1\", \"[I] ||| [F] [B]\", \"[S] ||| [F] [B]\", \"[R] ||| [I]\", \"[R] ||| [S]\"], \"nodes\": [[{\"feature\":{\"parser\":1},\"rule\":1}], [{\"feature\":{\"parser\":1},\"rule\":2}], [{\"tail\":[0,1],\"feature\":{\"parser\":1},\"rule\":3}], [{\"tail\":[0,1],\"feature\":{\"parser\":1},\"rule\":4}], [{\"tail\":[2],\"feature\":{\"parser\":1},\"rule\":5}, {\"tail\":[3],\"feature\":{\"parser\":1},\"rule\":6}]], \"goal\": 4}",graph_stream.str()));
         return ret;
     }
 

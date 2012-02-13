@@ -13,12 +13,14 @@ class TargetSpan;
 // A tuple that is used to hold hypotheses during cube pruning
 class Hypothesis {
 public:
-    Hypothesis(double viterbi_score, int left, int right,
+    Hypothesis(double viterbi_score, double single_score,
+               int left, int right,
                int trg_left, int trg_right,
                HyperEdge::Type type, int center = -1,
                int left_rank = -1, int right_rank = -1,
                TargetSpan* left_child = NULL, TargetSpan* right_child = NULL) :
-               viterbi_score_(viterbi_score), single_score_(0), loss_(0),
+               viterbi_score_(viterbi_score),
+               single_score_(single_score), loss_(0),
                left_(left), right_(right),
                trg_left_(trg_left), trg_right_(trg_right),
                type_(type), center_(center), 
