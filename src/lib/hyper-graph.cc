@@ -6,10 +6,12 @@
 #include <kyldr/reorderer-model.h>
 #include <kyldr/target-span.h>
 #include <kyldr/util.h>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 
 using namespace kyldr;
 using namespace std;
+using namespace boost;
 
 template <class T>
 struct DescendingScore {
@@ -249,7 +251,6 @@ double HyperGraph::AccumulateLoss(const TargetSpan* span) {
     double score = hyp->GetLoss();
     if(hyp->GetLeftChild())  score += AccumulateLoss(hyp->GetLeftChild());
     if(hyp->GetRightChild())  score += AccumulateLoss(hyp->GetRightChild());
-    // DEBUG cerr << "AccumulateLoss " <<(char)span->GetHypothesis(0)->GetType()<<","<<span->GetLeft()<< "," <<span->GetRight()<<","<<span->GetTrgLeft()<< "," <<span->GetTrgRight() << ": hyp="<<hyp->GetLoss()<<" score=" <<score <<endl;
     return score;
 }
 
@@ -279,4 +280,87 @@ void HyperGraph::AccumulateFeatures(const TargetSpan* span,
     }
     if(hyp->GetLeftChild()) AccumulateFeatures(hyp->GetLeftChild(), feat_map);
     if(hyp->GetRightChild())AccumulateFeatures(hyp->GetRightChild(),feat_map);
+}
+
+template <class T>
+inline string GetNodeString(char type, const T * hyp) {
+    if(!hyp) return "";
+    ostringstream oss;
+    oss << type << "-" << hyp->GetLeft() << "-" << hyp->GetRight();
+    return oss.str(); 
+}
+
+// Print the whole hypergraph
+void HyperGraph::PrintHyperGraph(const std::vector<std::string> & strs,
+                                 std::ostream & out) {
+    SymbolSet<int> nodes, rules;
+    vector<vector<string> > node_strings;
+    // Reset the node IDs
+    BOOST_FOREACH(SpanStack * stack, stacks_)
+        BOOST_FOREACH(TargetSpan * span, stack->GetSpans())
+            span->ResetId();
+    // Add the node IDs
+    int last_id = 0;
+    GetRoot()->LabelWithIds(last_id); 
+    // For each ending point of a span
+    set<char> null_set; null_set.insert(0);
+    for(int j = 0; j <= (int)strs.size(); j++) {
+        // For each starting point of a span
+        bool root = j==(int)strs.size();
+        for(int i = (root?-1:j); i >= (root?-1:0); i--) {
+            SpanStack * stack = GetStack(i, j);
+            // For each target span
+            BOOST_FOREACH(TargetSpan * span, stack->GetSpans()) {
+                if(span->GetId() == -1)
+                    continue;
+                // For each hypothesis
+                cerr << "hyps = " << span->GetHypotheses().size() << endl;
+                BOOST_FOREACH(const Hypothesis * hyp, span->GetHypotheses()) {
+                    cerr << "Hypothesis: " << (char)hyp->GetType() << ", " << hyp->GetLeft() << ", " << hyp->GetRight() << endl;
+                    span->SetHasType(hyp->GetType());
+                    int top_id = nodes.GetId(GetNodeString(hyp->GetType(), hyp),true);
+                    if((int)node_strings.size() <= top_id)
+                        node_strings.resize(top_id+1);
+                    TargetSpan *left_child = hyp->GetLeftChild();
+                    TargetSpan *right_child = hyp->GetRightChild();
+                    // For each type in the left
+                    BOOST_FOREACH(char left_type, 
+                                  left_child ? left_child->GetHasTypes() : null_set) {
+                        int left_id = nodes.GetId(GetNodeString(left_type, left_child));
+                        // For each type in the right
+                        BOOST_FOREACH(char right_type, 
+                                      right_child ? right_child->GetHasTypes() : null_set) {
+                            int right_id = nodes.GetId(GetNodeString(right_type, right_child));
+                            int rule_id = 1 + rules.GetId(hyp->GetRuleString(strs, left_type, right_type), true);
+                            ostringstream rule_oss;
+                            rule_oss << "{";
+                            if(left_id != -1) {
+                                rule_oss << "\"tail\":[" << left_id;
+                                if(right_id != -1)
+                                    rule_oss << "," << right_id;
+                                rule_oss<<"],";
+                            }
+                            rule_oss << "\"rule\":" << rule_id << "}";
+                            node_strings[top_id].push_back(rule_oss.str());
+                        }
+                    }
+                }
+            }
+            // We only need one time for the root
+            if(i == -1) break;
+        }
+    }
+    const vector<string*> & rule_vocab = rules.GetSymbols();
+    out << "{\"rules\": [";
+    for(int i = 0; i < (int)rule_vocab.size(); i++) {
+        if(i != 0) out << ", ";
+        out << "\"" << *rule_vocab[i] << "\"";
+    }
+    out << "], \"nodes\": [";
+    for(int i = 0; i < (int)node_strings.size(); i++) {
+        if(i != 0) out << ", ";
+        out << "[" << algorithm::join(node_strings[i], ", ") << "]";
+    }
+    out << "], \"goal\": " << node_strings.size()-1 << "}";
+    
 }

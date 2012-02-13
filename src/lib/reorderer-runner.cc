@@ -30,6 +30,8 @@ void ReordererRunner::Run(const ConfigRunner & config) {
                 cout << datas[0]->ToString();
             } else if(outputs_[i] == OUTPUT_PARSE) {
                 hyper_graph.GetRoot()->PrintParse(words, cout);
+            } else if(outputs_[i] == OUTPUT_HYPERGRAPH) {
+                hyper_graph.PrintHyperGraph(words, cout);
             } else if(outputs_[i] == OUTPUT_ORDER) {
                 for(int j = 0; j < (int)reordering.size(); j++) {
                     if(j != 0) cout << " ";
@@ -57,6 +59,8 @@ void ReordererRunner::InitializeModel(const ConfigRunner & config) {
             outputs_.push_back(OUTPUT_STRING);
         else if(str == "parse")
             outputs_.push_back(OUTPUT_PARSE);
+        else if(str == "hypergraph")
+            outputs_.push_back(OUTPUT_HYPERGRAPH);
         else if(str == "order")
             outputs_.push_back(OUTPUT_ORDER);
         else

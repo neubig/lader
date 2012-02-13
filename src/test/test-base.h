@@ -69,7 +69,11 @@ protected:
 
     int CheckString(const std::string & exp, const std::string & act) {
         if(exp != act) {
-            cerr << "String exp='"<<exp<<"' != '"<<act<<"'" <<endl;
+            cerr << "CheckString failed" << endl << "exp: '"<<exp<<"'"
+                 <<endl<<"act: '"<<act<<"'" <<endl;
+            for(int i = 0; i < (int)min(exp.length(), act.length()); i++)
+                if(exp[i] != act[i])
+                    cerr << "exp[" << i << "] '" << exp[i] << "' != act["<<i<<"] '"<<act[i]<<"'" <<endl;
             return 0;
         }
         return 1;

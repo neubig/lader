@@ -3,6 +3,8 @@
 
 #include <kyldr/hyper-edge.h>
 #include <kyldr/util.h>
+#include <sstream>
+#include <iostream>
 
 namespace kyldr {
 
@@ -24,6 +26,27 @@ public:
                left_rank_(left_rank), right_rank_(right_rank)
                { }
 
+    // Get a string representing the rule of this hypothesis
+    std::string GetRuleString(const std::vector<std::string> & sent,
+                              char left_val = 0, char right_val = 0) const {
+        std::ostringstream ret;
+        ret << "[" << (char)type_ << "] |||";
+        if(left_val) {
+            ret << " ["<<left_val<<"]";
+            if(right_val) ret << " ["<<right_val<<"]";
+        } else {
+            for(int i = left_; i <= right_; i++) {
+                ret << " ";
+                for(int j = 0; j < (int)sent[i].length(); j++) {
+                    if(sent[i][j] == '\\' || sent[i][j] == '\"') ret << "\\";
+                    ret << sent[i][j];
+                }
+            }
+        }
+        std::cerr << "ret.str() == " << ret.str() << std::endl;
+        return ret.str();
+    }
+
     // Comparators
     bool operator< (const Hypothesis & rhs) const {
         return 
@@ -36,7 +59,6 @@ public:
             left_child_ < rhs.left_child_ || (left_child_ == rhs.left_child_ && (
             right_child_ < rhs.right_child_))))))))))));
     }
-    // Add the value
     bool operator== (const Hypothesis & rhs) const {
         return
             viterbi_score_ == rhs.viterbi_score_ &&

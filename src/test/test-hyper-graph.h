@@ -328,6 +328,75 @@ public:
         return ret;
     }
 
+    // Test various types of reordering in the hypergraph
+    int TestPrintHyperGraph() {
+        // Create the expected reordering vectors
+        vector<string> str01(2); str01[0] = "0"; str01[1] = "1";
+        // Create a forest that can handle various things
+        TargetSpan *span00 = new TargetSpan(0,0,-1,-1),
+                   *span01 = new TargetSpan(0,1,-1,-1),
+                   *span11 = new TargetSpan(1,1,-1,-1),
+                   *spanr = new TargetSpan(0,1,-1,-1);
+        span00->AddHypothesis(Hypothesis(1,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(Hypothesis(1,1,1,-1,-1,HyperEdge::EDGE_BAC));
+        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_INV,-1,1,-1,span00,span11));
+        spanr->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        // Get the reordering for forward
+        int ret = 1;
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_FOR);
+        ret = min(ret, CheckString("[R] ||| [F]",
+            spanr->GetHypothesis(0)->GetRuleString(str01, 'F')));
+        ret = min(ret, CheckString("[F] ||| 0 1",
+            span01->GetHypothesis(0)->GetRuleString(str01)));
+        // Get the reordering bac backward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_BAC);
+        ret = min(ret, CheckString("[R] ||| [B]",
+            spanr->GetHypothesis(0)->GetRuleString(str01, 'B')));
+        ret = min(ret, CheckString("[B] ||| 0 1",
+            span01->GetHypothesis(0)->GetRuleString(str01)));
+        // Get the reordering for forward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_STR);
+        span01->GetHypothesis(0)->SetLeftChild(span00);
+        span01->GetHypothesis(0)->SetRightChild(span11);
+        ret = min(ret, CheckString("[R] ||| [S]",
+            spanr->GetHypothesis(0)->GetRuleString(str01, 'S')));
+        ret = min(ret, CheckString("[S] ||| [F] [B]",
+            span01->GetHypothesis(0)->GetRuleString(str01, 'F', 'B')));
+        ret = min(ret, CheckString("[F] ||| 0",
+            span00->GetHypothesis(0)->GetRuleString(str01)));
+        ret = min(ret, CheckString("[B] ||| 1",
+            span11->GetHypothesis(0)->GetRuleString(str01)));
+        // Get the reordering for forward
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_INV);
+        ret = min(ret, CheckString("[R] ||| [I]",
+            spanr->GetHypothesis(0)->GetRuleString(str01, 'I')));
+        ret = min(ret, CheckString("[I] ||| [F] [B]",
+            span01->GetHypothesis(0)->GetRuleString(str01, 'F', 'B')));
+        // Create a hypergraph
+        HyperGraph hg;
+        SpanStack * stack00 = new SpanStack; stack00->push_back(span00); hg.SetStack(0, 0, stack00);
+        SpanStack * stack11 = new SpanStack; stack11->push_back(span11); hg.SetStack(1, 1, stack11);
+        SpanStack * stack01 = new SpanStack; stack01->push_back(span01); hg.SetStack(0, 1, stack01);
+        SpanStack * stackr  = new SpanStack; stackr->push_back(spanr); hg.SetStack(0, 2, stackr);
+        // Check that the trimmed hypergraph only contains rules that should be there
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_FOR);
+        span01->GetHypothesis(0)->SetLeftChild(NULL);
+        span01->GetHypothesis(0)->SetRightChild(NULL);
+        ostringstream graph_stream1;
+        hg.PrintHyperGraph(str01, graph_stream1);
+        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0 1\", \"[R] ||| [F]\"], \"nodes\": [[{\"rule\":1}], [{\"tail\":[0],\"rule\":2}]], \"goal\": 1}",graph_stream1.str()));
+        // Make another hypothesis
+        span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_INV);
+        span01->GetHypothesis(0)->SetLeftChild(span00);
+        span01->GetHypothesis(0)->SetRightChild(span11);
+        span01->AddHypothesis(Hypothesis(1,0,1,-1,-1,HyperEdge::EDGE_STR,-1,1,-1,span00,span11));
+        // Print again
+        ostringstream graph_stream;
+        hg.PrintHyperGraph(str01, graph_stream);
+        ret = min(ret, CheckString("{\"rules\": [\"[F] ||| 0\", \"[B] ||| 1\", \"[I] ||| [F] [B]\", \"[S] ||| [F] [B]\", \"[R] ||| [I]\", \"[R] ||| [S]\"], \"nodes\": [[{\"rule\":1}], [{\"rule\":2}], [{\"tail\":[0,1],\"rule\":3}], [{\"tail\":[0,1],\"rule\":4}], [{\"tail\":[2],\"rule\":5}, {\"tail\":[3],\"rule\":6}]], \"goal\": 4}",graph_stream.str()));
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestGetTrgSpanID()" << endl; if(TestGetTrgSpanID()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -338,6 +407,7 @@ public:
         done++; cout << "TestAccumulateFeatures()" << endl; if(TestAccumulateFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRescore()" << endl; if(TestRescore()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestReorderingAndPrint()" << endl; if(TestReorderingAndPrint()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestPrintHyperGraph()" << endl; if(TestPrintHyperGraph()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestHyperGraph Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }

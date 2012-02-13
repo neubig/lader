@@ -18,6 +18,7 @@ public:
     typedef enum {
         OUTPUT_STRING,
         OUTPUT_PARSE,
+        OUTPUT_HYPERGRAPH,
         OUTPUT_ORDER
     } OutputType;
 

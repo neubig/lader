@@ -3,9 +3,11 @@
 
 #include <boost/foreach.hpp>
 #include <kyldr/hypothesis.h>
+#include <kyldr/symbol-set.h>
 #include <kyldr/util.h>
 #include <vector>
 #include <cfloat>
+#include <set>
 
 namespace kyldr {
 
@@ -13,30 +15,16 @@ class TargetSpan {
 public:
     TargetSpan(int left, int right, int trg_left, int trg_right)
                     : left_(left), right_(right), 
-                      trg_left_(trg_left), trg_right_(trg_right) { }
+                      trg_left_(trg_left), trg_right_(trg_right),
+                      id_(-1) { }
     ~TargetSpan() {
         BOOST_FOREACH(Hypothesis * hyp, hyps_)
             delete hyp;
     }
 
+    // Print a parse tree in Penn Treebank format
     void PrintParse(const std::vector<std::string> & strs,
-                                            std::ostream & out) const {
-        HyperEdge::Type type = hyps_[0]->GetType();
-        if(type == HyperEdge::EDGE_FOR || type == HyperEdge::EDGE_BAC) {
-            out << "(" << (char)type;
-            for(int i = left_; i <= right_; i++)
-                out << " ("<<(char)type<<"W " << strs[i]<<")";
-            out << ")";
-        } else if(type == HyperEdge::EDGE_ROOT) {
-            hyps_[0]->GetLeftChild()->PrintParse(strs, out);
-        } else {
-            out << "("<<(char)type<<" ";
-            hyps_[0]->GetLeftChild()->PrintParse(strs, out);
-            out << " ";
-            hyps_[0]->GetRightChild()->PrintParse(strs, out);
-            out << ")";
-        }
-    }
+                    std::ostream & out) const;
 
     void GetReordering(std::vector<int> & reord) const {
         HyperEdge::Type type = hyps_[0]->GetType();
@@ -57,10 +45,22 @@ public:
         }
     }
 
+    void LabelWithIds(int & curr_id) {
+        if(id_ != -1) return;
+        BOOST_FOREACH(Hypothesis * hyp, hyps_) {
+            if(hyp->GetLeftChild())
+                hyp->GetLeftChild()->LabelWithIds(curr_id);
+            if(hyp->GetRightChild())
+                hyp->GetRightChild()->LabelWithIds(curr_id);
+        }
+        id_ = curr_id++;
+    }
+
     double GetScore() const {
         double ret = !hyps_.size() ? -DBL_MAX : hyps_[0]->GetScore();
         return ret;
     }
+    int GetId() const { return id_; }
     int GetLeft() const { return left_; }
     int GetRight() const { return right_; }
     int GetTrgLeft() const { return trg_left_; }
@@ -68,15 +68,22 @@ public:
     void AddHypothesis(const Hypothesis & hyp) {
         hyps_.push_back(new Hypothesis(hyp));
     }
+    const std::set<char> & GetHasTypes() { return has_types_; }
     const std::vector<Hypothesis*> & GetHypotheses() const { return hyps_; }
     std::vector<Hypothesis*> & GetHypotheses() { return hyps_; }
     const Hypothesis* GetHypothesis(int i) const { return SafeAccess(hyps_,i); }
     Hypothesis* GetHypothesis(int i) { return SafeAccess(hyps_,i); }
+    void ResetId() { id_ = -1; has_types_.clear(); }
+    void SetId(int id) { id_ = id; }
+    void SetHasType(char c) { has_types_.insert(c); }
+    
 
 private:
+
     int left_, right_, trg_left_, trg_right_;
     std::vector<Hypothesis*> hyps_;
-    int viterbi_hyp_;
+    int id_;
+    std::set<char> has_types_;
 };
 
 }

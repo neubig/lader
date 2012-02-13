@@ -14,7 +14,7 @@ public:
     
     // Initialize the pegasos model
     ReordererModel() 
-        : t_(1), alpha_(1), v_squared_norm_(0), lambda_(1e-5) { }
+        : t_(1), alpha_(1), v_squared_norm_(0), lambda_(1e-5), add_features_(true) { }
 
     // Calculate the scores of each single edge and node in a hypergraph
     //  The loss_factor indicates the multiplier of the loss term compared

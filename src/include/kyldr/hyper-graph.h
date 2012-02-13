@@ -73,10 +73,17 @@ public:
             return SafeAccess(stacks_, idx)->GetSpanOfRank(rank);
     }
 
+    // Print the whole hypergraph in JSON format
+    void PrintHyperGraph(const std::vector<std::string> & sent,
+                         std::ostream & out);
+
     // Rescore the hypergraph using the given model and a loss multiplier
     double Rescore(const ReordererModel & model, double loss_multiplier);
 
     const TargetSpan * GetRoot() const {
+        return SafeAccess(stacks_, stacks_.size()-1)->GetSpanOfRank(0);
+    }
+    TargetSpan * GetRoot() {
         return SafeAccess(stacks_, stacks_.size()-1)->GetSpanOfRank(0);
     }
 
