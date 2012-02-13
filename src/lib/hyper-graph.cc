@@ -69,6 +69,7 @@ double HyperGraph::Score(const ReordererModel & model,
                                         <<l<<", c="<<c<<", r="<<r<<", t="<<(char)t);
             score += model.ScoreFeatureVector(*fit->second);
         }
+        hyp->SetSingleScore(score);
         if(hyp->GetLeftChild()) 
             score += Score(model, loss_multiplier, hyp->GetLeftChild());
         if(hyp->GetRightChild()) 
@@ -338,7 +339,7 @@ void HyperGraph::PrintHyperGraph(const std::vector<std::string> & strs,
                                     rule_oss << "," << right_id;
                                 rule_oss<<"],";
                             }
-                            rule_oss << "\"feature\":{\"parser\":" << hyp->GetScore()<<"},"
+                            rule_oss << "\"feature\":{\"parser\":" << hyp->GetSingleScore()<<"},"
                                     << "\"rule\":" << rule_id << "}";
                             node_strings[top_id].push_back(rule_oss.str());
                         }

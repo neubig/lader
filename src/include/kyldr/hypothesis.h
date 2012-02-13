@@ -18,7 +18,7 @@ public:
                HyperEdge::Type type, int center = -1,
                int left_rank = -1, int right_rank = -1,
                TargetSpan* left_child = NULL, TargetSpan* right_child = NULL) :
-               viterbi_score_(viterbi_score), loss_(0),
+               viterbi_score_(viterbi_score), single_score_(0), loss_(0),
                left_(left), right_(right),
                trg_left_(trg_left), trg_right_(trg_right),
                type_(type), center_(center), 
@@ -71,6 +71,7 @@ public:
 
     // Accessors
     double GetScore() const { return viterbi_score_; }
+    double GetSingleScore() const { return single_score_; }
     double GetLoss() const { return loss_; }
     int GetLeft() const { return left_; }
     int GetRight() const { return right_; }
@@ -84,10 +85,8 @@ public:
     int GetRightRank() const { return right_rank_; }
 
     void SetScore(double dub) { viterbi_score_ = dub; }
-    void SetLoss(double dub) {
-        // DEBUG std::cerr << "<" << GetLeft() << ", " << GetRight() << ", " << GetTrgLeft() << ", " << GetTrgRight() << ", " << (char)GetType() << ", " << GetCenter() << ">" << std::endl;
-        loss_ = dub;
-    }
+    void SetSingleScore(double dub) { single_score_ = dub; }
+    void SetLoss(double dub) { loss_ = dub; }
     void SetLeftChild (TargetSpan* dub)  { left_child_ = dub; }
     void SetRightChild(TargetSpan* dub) { right_child_ = dub; }
     void SetLeftRank (int dub)  { left_rank_ = dub; }
@@ -100,6 +99,7 @@ public:
 private:
     double viterbi_score_; // The Viterbi score for the entire subtree that
                            // this hypothesis represents
+    double single_score_;  // The score for only this edge
     double loss_;          // The loss for the single action represented
                            // by this hypothesis
     int left_, right_; // The source words on the left and right of the span
