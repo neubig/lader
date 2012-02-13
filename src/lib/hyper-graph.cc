@@ -338,7 +338,8 @@ void HyperGraph::PrintHyperGraph(const std::vector<std::string> & strs,
                                     rule_oss << "," << right_id;
                                 rule_oss<<"],";
                             }
-                            rule_oss << "\"rule\":" << rule_id << "}";
+                            rule_oss << "\"feature\":{\"parser\":" << hyp->GetScore()<<"},"
+                                    << "\"rule\":" << rule_id << "}";
                             node_strings[top_id].push_back(rule_oss.str());
                         }
                     }
