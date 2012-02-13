@@ -43,7 +43,6 @@ public:
                 }
             }
         }
-        std::cerr << "ret.str() == " << ret.str() << std::endl;
         return ret.str();
     }
 

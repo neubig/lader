@@ -314,9 +314,7 @@ void HyperGraph::PrintHyperGraph(const std::vector<std::string> & strs,
                 if(span->GetId() == -1)
                     continue;
                 // For each hypothesis
-                cerr << "hyps = " << span->GetHypotheses().size() << endl;
                 BOOST_FOREACH(const Hypothesis * hyp, span->GetHypotheses()) {
-                    cerr << "Hypothesis: " << (char)hyp->GetType() << ", " << hyp->GetLeft() << ", " << hyp->GetRight() << endl;
                     span->SetHasType(hyp->GetType());
                     int top_id = nodes.GetId(GetNodeString(hyp->GetType(), hyp),true);
                     if((int)node_strings.size() <= top_id)
