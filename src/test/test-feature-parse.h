@@ -3,9 +3,9 @@
 
 #include "test-base.h"
 #include <kyldr/combined-alignment.h>
-// #include <kyldr/feature-parse.h>
 #include <kyldr/feature-data-parse.h>
 #include <kyldr/feature-set.h>
+#include <kyldr/feature-parse.h>
 #include <fstream>
 
 namespace kyldr {
@@ -14,15 +14,18 @@ class TestFeatureParse : public TestBase {
 
 public:
 
-    TestFeatureParse() { }
+    TestFeatureParse() :
+            edge00(0, -1, 0, HyperEdge::EDGE_FOR), 
+            edge02(0, 1, 2, HyperEdge::EDGE_INV),
+            edge13(1, 2, 3, HyperEdge::EDGE_STR) {
+        // Create the real value
+        string str = "(S (N this) (VP (V is) (NP (DET a) (N test))))";
+        fdp.FromString(str);
+    }
     ~TestFeatureParse() { }
 
     int TestFeatureDataParse() {
         int ret = 1;
-        // Create the real value
-        string str = "(S (N this) (VP (V is) (NP (DET a) (N test))))";
-        FeatureDataParse fdp;
-        fdp.FromString(str);
         // Create the expected/actual value of the sequence
         vector<string> act_seq = fdp.GetSequence(), exp_seq;
         exp_seq.push_back("this");
@@ -46,14 +49,64 @@ public:
         return ret;
     }
 
+    // Feature templates include
+    // ST, LT, RT for the tags of each span
+    int TestFeatureTemplateIsLegal() {
+        const int num = 12;
+        const char* templ[num] = { "SP", "LP", "RP", "CD", "ET",
+                                   "XY", "SD", "CR", "SQE", "LQ1",
+                                   "LQE1", "SQ#04" };
+        const bool exp[num] = {true, true, true, false, true,
+                               false, false, false, false, false,
+                               false, false};
+        int ret = 1;
+        for(int i = 0; i < num; i++) {
+            if(FeatureParse::FeatureTemplateIsLegal(templ[i]) != exp[i]) {
+                cout << "FeatureTemplateIsLegal failed on " << templ[i] << endl;
+                ret = 0;
+            }
+        }
+        return ret;
+    }
+
+    int TestLeftRightFeatures() {
+        ReordererModel mod;
+        FeatureParse feat;
+        feat.ParseConfiguration("L%LP,R%RP,S%SP");
+        // These features apply to only non-terminals
+        FeatureVectorString edge00exp, edge02exp, edge13exp;
+        edge00exp.push_back(MakePair(string("S||N"), 1));
+        edge02exp.push_back(MakePair(string("L||N"), 1));
+        edge02exp.push_back(MakePair(string("R||X"), 1));
+        edge02exp.push_back(MakePair(string("S||X"), 1));
+        edge13exp.push_back(MakePair(string("L||V"), 1));
+        edge13exp.push_back(MakePair(string("R||NP"), 1));
+        edge13exp.push_back(MakePair(string("S||VP"), 1));
+        // Create vectors
+        FeatureVectorString edge00act, edge02act, edge13act; 
+        feat.GenerateEdgeFeatures(fdp, edge00, edge00act);
+        feat.GenerateEdgeFeatures(fdp, edge02, edge02act);
+        feat.GenerateEdgeFeatures(fdp, edge13, edge13act);
+        // Do the parsing and checking
+        int ret = 1;
+        ret *= CheckVector(edge00exp, edge00act);
+        ret *= CheckVector(edge02exp, edge02act);
+        ret *= CheckVector(edge13exp, edge13act);
+        return ret;
+    }
+
     bool RunTest() {
         int done = 0, succeeded = 0;
         done++; cout << "TestFeatureDataParse()" << endl; if(TestFeatureDataParse()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestFeatureTemplateIsLegal()" << endl; if(TestFeatureTemplateIsLegal()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestLeftRightFeatures()" << endl; if(TestLeftRightFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         cout << "#### TestFeatureParse Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
 private:
+    FeatureDataParse fdp;
+    HyperEdge edge00, edge02, edge13;
 
 };
 

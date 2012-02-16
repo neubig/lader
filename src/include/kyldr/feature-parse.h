@@ -1,23 +1,23 @@
-#ifndef FEATURE_SEQUENCE_H__ 
-#define FEATURE_SEQUENCE_H__
+#ifndef FEATURE_PARSE_H__ 
+#define FEATURE_PARSE_H__
 
 #include <vector>
 #include <string>
-#include <kyldr/feature-data-sequence.h>
+#include <kyldr/feature-data-parse.h>
 #include <kyldr/feature-base.h>
 #include <kyldr/dictionary.h>
 
 namespace kyldr {
 
-// A class to calculate features that concern sequences of words, tags, etc.
-class FeatureSequence : public FeatureBase {
+// A class to calculate features that concern parses of words, tags, etc.
+class FeatureParse : public FeatureBase {
 public:
     // A template for the features given the type, and a vector containing
     // the feature name and the values to be replaced
     typedef std::pair<FeatureType, std::vector<std::string> > FeatureTemplate;
 
-    FeatureSequence() { }
-    virtual ~FeatureSequence() { }
+    FeatureParse() { }
+    virtual ~FeatureParse() { }
  
     // Parse the configuration
     // The configuration takes the following format:
@@ -60,7 +60,7 @@ public:
     virtual bool CheckEqual(const FeatureBase & rhs) const {
         if(rhs.GetType() != this->GetType())
             return false;
-        const FeatureSequence & rhs_seq = (const FeatureSequence &)rhs;
+        const FeatureParse & rhs_seq = (const FeatureParse &)rhs;
         if(feature_templates_.size() != rhs_seq.feature_templates_.size())
             return false;
         for(int i = 0; i < (int)feature_templates_.size(); i++)
@@ -74,20 +74,19 @@ public:
 
 private:
 
-    std::string GetSpanFeatureString(const FeatureDataSequence & sent,
+    std::string GetSpanFeatureString(const FeatureDataParse & sent,
                                      int l, int r, const std::string & type);
-    double GetSpanFeatureValue(const FeatureDataSequence & sent,
+    double GetSpanFeatureValue(const FeatureDataParse & sent,
                                int l, int r, const std::string & type);
 
-    std::string GetEdgeFeatureString(const FeatureDataSequence & sent,
+    std::string GetEdgeFeatureString(const FeatureDataParse & sent,
                                      const HyperEdge & edge,
                                      const std::string & type);
-    double GetEdgeFeatureValue(const FeatureDataSequence & sent,
+    double GetEdgeFeatureValue(const FeatureDataParse & sent,
                                const HyperEdge & edge,
                                const std::string & type);
 
     std::vector<FeatureTemplate> feature_templates_;
-    std::vector<Dictionary*> dicts_;
 
 };
 
