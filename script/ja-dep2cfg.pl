@@ -7,12 +7,23 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+sub makesafe {
+    $_ = shift;
+    $_ =~ s/\(/-LRB-/g;
+    $_ =~ s/\)/-RRB-/g;
+    $_ =~ s/\[/-LSB-/g;
+    $_ =~ s/\]/-RSB-/g;
+    $_ =~ s/\{/-LCB-/g;
+    $_ =~ s/\}/-RCB-/g;
+    return $_;
+}
+
 sub readtree {
     $_ = shift;
     # Split and remove the leading ID
     my @lines = split(/\n/);
     shift @lines if $lines[0] =~ /^ID/;
-    my @ret = map { my @arr = split(/ /); $arr[0]--; $arr[1]--; \@arr } @lines;
+    my @ret = map { my @arr = split(/ /); $arr[0]--; $arr[1]--; $arr[2] = makesafe($arr[2]); $arr[3] = makesafe($arr[3]); \@arr } @lines;
     return @ret;
 }
 sub getchildren {
