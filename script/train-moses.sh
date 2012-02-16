@@ -33,7 +33,7 @@ if [[ $# != 3 ]]; then
     exit 1;
 fi
 
-DATATYPE=mc50
+DATATYPE=cfg
 
 # Set up the values
 SRC=$1
