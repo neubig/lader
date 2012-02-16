@@ -31,9 +31,10 @@ sub buildcfg {
     my $str = "(".$tree->[$root]->[3]." ".$tree->[$root]->[2].")";
     # Traverse left->right for children that fall on the right hand side
     # And then right->left for children that fall on the left hand side
+    # Then, finally, traverse right-hand-side punctuation
     @child = sort { 
-        my $aa = ($a < $root ? 1e4 - $a : $a);
-        my $bb = ($b < $root ? 1e4 - $b : $b);
+        my $aa = ($a < $root ? 1e4 - $a : ($tree->[$a]->[3] =~ /記号/ ? 2e4 + $a : $a));
+        my $bb = ($b < $root ? 1e4 - $b : ($tree->[$b]->[3] =~ /記号/ ? 2e4 + $b : $b));
         $aa <=> $bb } @child;
     # print "root=$root\tchild=@child\n";
     # Build the phrase constituents

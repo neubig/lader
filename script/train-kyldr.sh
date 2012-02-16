@@ -1,7 +1,7 @@
 COST=1e-3
 LANG=en-ja
 DATA=srccfg
-LOSS=fuztau
+LOSS=fuz
 AMOUNT=dev
 MOD=WOIQN-d$DATA-c$COST-l$LOSS-a$AMOUNT
 NAME=$LANG-$MOD
@@ -39,4 +39,4 @@ WD=`pwd`;
 # # With three sequences
 # time src/bin/train-kyldr -cost $COST -attach_null $ATTACH -loss_profile "$LOSS" -feature_profile "seq=dict=straight-tables/$LANG-phrase.txt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SN%SQE0,Q%SN%SQE0%ET,N%SN%ET,BIAS|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET" -iterations 500 -beam 50 -model_out test/$LANG/$NAME.mod -source_in data/$LANG-$DATA.$AMOUNT -align_in data/$LANG-align.$AMOUNT &> test/$LANG/$NAME.log
 
-./test.sh $LANG $MOD $DATA &> log/$NAME.log
+script/test-kyldr.sh $LANG $MOD $DATA &> log/$NAME.log
