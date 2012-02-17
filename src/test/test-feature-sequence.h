@@ -55,13 +55,13 @@ public:
     }
     
     int TestFeatureTemplateIsLegal() {
-        const int num = 12;
+        const int num = 14;
         const char* templ[num] = { "SS", "LN", "RS", "CD", "ET",
                                    "XY", "SD", "CR", "SQE", "LQ1",
-                                   "LQE1", "SQ#04" };
+                                   "LQE1", "SQ#04", "SS5", "CL" };
         const bool exp[num] = {true, true, true, true, true,
                                false, false, false, false, false,
-                               true, true};
+                               true, true, true, true};
         int ret = 1;
         for(int i = 0; i < num; i++) {
             if(FeatureSequence::FeatureTemplateIsLegal(templ[i]) != exp[i]) {
@@ -77,7 +77,7 @@ public:
         FeatureSequence featl, featr, feata;
         featl.ParseConfiguration("L%LL,R%LR,S%LS,N%LN");
         featr.ParseConfiguration("L%RL,R%RR,S%RS,N%RN");
-        feata.ParseConfiguration("A%SS%LS%RS");
+        feata.ParseConfiguration("A%SS%LS%RS,S%SS1");
         // These features apply to only non-terminals
         FeatureVectorString edge00l, edge02l;
         edge02l.push_back(MakePair(string("L||he"), 1));
@@ -90,8 +90,10 @@ public:
         edge02r.push_back(MakePair(string("S||ate rice"), 1));
         edge02r.push_back(MakePair(string("N||2"), 1));
         FeatureVectorString edge00a, edge02a;
+        edge00a.push_back(MakePair(string("S||he"), 1));
         edge02a.push_back(
             MakePair(string("A||he ate rice||he||ate rice"), 1));
+        edge02a.push_back(MakePair(string("S||"), 1));
         // Create vectors
         FeatureVectorString edge00lact, edge02lact, edge00ract, 
                             edge02ract, edge00aact, edge02aact;
@@ -143,15 +145,17 @@ public:
 
     int TestEdgeFeatures() {
         FeatureSequence feat;
-        feat.ParseConfiguration("D%CD,B%CB,D#%CD#,B#%CB#,T%ET");
+        feat.ParseConfiguration("D%CD,B%CB,L%CL,D#%CD#,B#%CB#,T%ET");
         // These features apply to non-terminals
         FeatureVectorString edge00exp, edge12exp, edge02exp;
         edge00exp.push_back(MakePair(string("T||F"), 1));
         edge12exp.push_back(MakePair(string("D||0"), 1));
         edge12exp.push_back(MakePair(string("B||0"), 1));
+        edge12exp.push_back(MakePair(string("L||E"), 1));
         edge12exp.push_back(MakePair(string("T||I"), 1));
         edge02exp.push_back(MakePair(string("D||1"), 1));
         edge02exp.push_back(MakePair(string("B||1"), 1));
+        edge02exp.push_back(MakePair(string("L||R"), 1));
         edge02exp.push_back(MakePair(string("D#"), 1));
         edge02exp.push_back(MakePair(string("B#"), 1));
         edge02exp.push_back(MakePair(string("T||S"), 1));

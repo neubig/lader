@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <climits>
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -39,7 +40,9 @@ public:
     
     // Return space-separate string representing a sequence
     const std::string GetRangeString(int i, int j, 
+                                     int max_len = INT_MAX,
                                      std::string sep = " ") const {
+        if(j-i >= max_len) return "";
         std::string ret = boost::algorithm::join(
             MakePair(sequence_.begin() + i, sequence_.begin() + j + 1),
             sep.c_str());

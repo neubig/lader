@@ -18,9 +18,9 @@ bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
     // For edge values, the only type is 'T'
     if(name[0] == 'E') {
         return name[1] == 'T';
-    // For comparison values, difference or balance
+    // For comparison values, difference, balance, or longer side
     } else if(name[0] == 'C') {
-        return name[1] == 'D' || name[1] == 'B';
+        return name[1] == 'D' || name[1] == 'B' || name[1] == 'L';
     } else {
         // For sequence matcher Q, check to make sure that the type
         //  name[2] = E (existance indicator) or # (feature)
@@ -31,8 +31,11 @@ bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
                             && IsDigit(name[3]) && IsDigit(name[4])) || 
                    (name.length() == 4 && name[2] == 'E' && IsDigit(name[3])));
         // For other span values
-        } else if(name[1] == 'S' || name[1] == 'N' ||
-                                         name[1] == 'L' || name[1] == 'R') {
+        } else if(name[1] == 'S') {
+            return name.length() == 2 || 
+                (name.length() == 3 && 
+                    (name[2] == '#' || (name[2] >= '0' && name[2] <= '9')));
+        } else if (name[1] == 'N' || name[1] == 'L' || name[1] == 'R') {
             return name.length() == 2 || (name.length() == 3 && name[2] == '#');
         } else {
             return false;
@@ -93,7 +96,7 @@ string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
         case 'R':
             return sent.GetElement(r);
         case 'S':
-            return sent.GetRangeString(l, r);
+            return sent.GetRangeString(l, r, (str.length() == 3 ? str[2]-'0' : INT_MAX));
         case 'N':
             oss << r - l + 1;
             return oss.str();
@@ -129,6 +132,7 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
                                              const std::string & str) {
     char type = str[1];
     ostringstream oss;
+    int bal;
     switch (type) {
         // Get the difference between values
         case 'D':
@@ -137,10 +141,13 @@ string FeatureSequence::GetEdgeFeatureString(const FeatureDataSequence & sent,
                 abs(edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1);
             return oss.str();
         case 'B':
+        case 'L':
             // Get the balance between the values
-            oss << 
-                edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1;
-            return oss.str();
+            bal = edge.GetRight()-2*edge.GetCenter()+edge.GetLeft()+1;
+            if(type == 'B') { oss << bal; return oss.str(); }
+            else if(bal < 0) { return "L"; }
+            else if(bal > 0) { return "R"; }
+            else { return "E"; }
         case 'T':
             oss << (char)edge.GetType();
             return oss.str();

@@ -30,7 +30,7 @@ public:
     //  E: For features defined over an edge (edge type)
     //
     // The templates that can be used and combined for binary features are:
-    //  %[SLR]S :    entire String of a span
+    //  %[SLR]S[1-9] :    entire String of a span, up to length 1-9
     //  %[SLR][LR] : Left or Right-most word of a span
     //  %[SLR]N :    Number of words in a span
     //  %[SLR]QE[0-9]: Whether a span exists in dictionary numbered 0-9,
