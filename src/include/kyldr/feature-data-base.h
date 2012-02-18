@@ -22,7 +22,7 @@ public:
     virtual std::string ToString() const = 0;
 
     // Accessors
-    int GetNumWords() { return sequence_.size(); }
+    int GetNumWords() const { return sequence_.size(); }
     const std::vector<std::string> & GetSequence() {
         return sequence_;
     }

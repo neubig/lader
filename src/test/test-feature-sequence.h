@@ -55,13 +55,15 @@ public:
     }
     
     int TestFeatureTemplateIsLegal() {
-        const int num = 14;
+        const int num = 16;
         const char* templ[num] = { "SS", "LN", "RS", "CD", "ET",
                                    "XY", "SD", "CR", "SQE", "LQ1",
-                                   "LQE1", "SQ#04", "SS5", "CL" };
+                                   "LQE1", "SQ#04", "SS5", "CL",
+                                   "SB", "LA" };
         const bool exp[num] = {true, true, true, true, true,
                                false, false, false, false, false,
-                               true, true, true, true};
+                               true, true, true, true,
+                               true, true};
         int ret = 1;
         for(int i = 0; i < num; i++) {
             if(FeatureSequence::FeatureTemplateIsLegal(templ[i]) != exp[i]) {
@@ -75,19 +77,23 @@ public:
     int TestLeftRightFeatures() {
         ReordererModel mod;
         FeatureSequence featl, featr, feata;
-        featl.ParseConfiguration("L%LL,R%LR,S%LS,N%LN");
-        featr.ParseConfiguration("L%RL,R%RR,S%RS,N%RN");
+        featl.ParseConfiguration("L%LL,R%LR,S%LS,B%LB,A%LA,N%LN");
+        featr.ParseConfiguration("L%RL,R%RR,S%RS,B%RB,A%RA,N%RN");
         feata.ParseConfiguration("A%SS%LS%RS,S%SS1");
         // These features apply to only non-terminals
         FeatureVectorString edge00l, edge02l;
         edge02l.push_back(MakePair(string("L||he"), 1));
         edge02l.push_back(MakePair(string("R||he"), 1));
         edge02l.push_back(MakePair(string("S||he"), 1));
+        edge02l.push_back(MakePair(string("B||<s>"), 1));
+        edge02l.push_back(MakePair(string("A||ate"), 1));
         edge02l.push_back(MakePair(string("N||1"), 1));
         FeatureVectorString edge00r, edge02r;
         edge02r.push_back(MakePair(string("L||ate"), 1));
         edge02r.push_back(MakePair(string("R||rice"), 1));
         edge02r.push_back(MakePair(string("S||ate rice"), 1));
+        edge02r.push_back(MakePair(string("B||he"), 1));
+        edge02r.push_back(MakePair(string("A||<s>"), 1));
         edge02r.push_back(MakePair(string("N||2"), 1));
         FeatureVectorString edge00a, edge02a;
         edge00a.push_back(MakePair(string("S||he"), 1));

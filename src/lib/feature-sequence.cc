@@ -35,7 +35,8 @@ bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
             return name.length() == 2 || 
                 (name.length() == 3 && 
                     (name[2] == '#' || (name[2] >= '0' && name[2] <= '9')));
-        } else if (name[1] == 'N' || name[1] == 'L' || name[1] == 'R') {
+        } else if (name[1] == 'N' || name[1] == 'L' || name[1] == 'R'
+                                  || name[1] == 'B' || name[1] == 'A') {
             return name.length() == 2 || (name.length() == 3 && name[2] == '#');
         } else {
             return false;
@@ -97,6 +98,10 @@ string FeatureSequence::GetSpanFeatureString(const FeatureDataSequence & sent,
             return sent.GetElement(l);
         case 'R':
             return sent.GetElement(r);
+        case 'B':
+            return l == 0 ? "<s>" : sent.GetElement(l-1);
+        case 'A':
+            return r == sent.GetNumWords() - 1 ? "<s>" : sent.GetElement(r+1);
         case 'S':
             return sent.GetRangeString(l, r, (str.length() == 3 ? str[2]-'0' : INT_MAX));
         case 'N':
