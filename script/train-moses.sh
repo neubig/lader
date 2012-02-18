@@ -28,17 +28,16 @@ set -e
 # If you have any problems running this, please report them to
 # Graham Neubig at by sending a mail to [his last name] at gmail.com
 
-if [[ $# != 3 ]]; then
-    echo "Usage: process.sh SRC TRG MOD";
+if [[ $# != 4 ]]; then
+    echo "Usage: process.sh SRC TRG MOD DATA";
     exit 1;
 fi
-
-DATATYPE=cfg
 
 # Set up the values
 SRC=$1
 TRG=$2
 MOD=$3
+DATATYPE=$4
 
 # Set up the constants
 KYLDR="/home/neubig/usr/arcs/local/kyldr/src/bin/kyldr"

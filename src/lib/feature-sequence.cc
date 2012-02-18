@@ -52,6 +52,8 @@ void FeatureSequence::ParseConfiguration(const string & str) {
         // First check if this is specifying a special option
         if(!feat.compare(0, 5, "dict=")) {
             ifstream in(feat.substr(5).c_str());
+            if(!in)
+                THROW_ERROR("Could not find dictionary: " << feat.substr(5).c_str());
             dicts_.push_back(Dictionary::FromStream(in));
             continue;
         }
