@@ -121,10 +121,12 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         score = GetEdgeScore(model, features, sent,
                                 HyperEdge(l, -1, r, HyperEdge::EDGE_FOR));
         q.push(Hypothesis(score, score, l, r, l, r, HyperEdge::EDGE_FOR));
-        // Create a hypothesis with the backward terminal
-        score = GetEdgeScore(model, features, sent, 
-                                HyperEdge(l, -1, r, HyperEdge::EDGE_BAC));
-        q.push(Hypothesis(score, score, l, r, r, l, HyperEdge::EDGE_BAC));
+        if(features.GetUseReverse()) {
+            // Create a hypothesis with the backward terminal
+            score = GetEdgeScore(model, features, sent, 
+                                    HyperEdge(l, -1, r, HyperEdge::EDGE_BAC));
+            q.push(Hypothesis(score, score, l, r, r, l, HyperEdge::EDGE_BAC));
+        }
     }
     TargetSpan *left_trg, *right_trg, 
                *new_left_trg, *old_left_trg,
@@ -231,7 +233,7 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
         // Move the span from l to r, building hypotheses from small to large
         for(int l = r; l >= 0; l--) {
             SetStack(l, r, ProcessOneSpan(model, features, sent, 
-                                          l, r, beam_size));
+                                          l, r, beam_size, save_trg));
         }
     }
     // Build the root node

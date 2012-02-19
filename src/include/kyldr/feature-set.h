@@ -14,7 +14,7 @@ namespace kyldr {
 class FeatureSet {
 public:
 
-    FeatureSet() : max_term_(0) { }
+    FeatureSet() : max_term_(0), use_reverse_(true) { }
     ~FeatureSet() {
         BOOST_FOREACH(FeatureBase * gen, feature_gens_)
             if(gen)
@@ -59,18 +59,21 @@ public:
     //     return feature_ids_->GetSymbol(id);
     // }
     int GetMaxTerm() const { return max_term_; }
+    bool GetUseReverse() const { return use_reverse_; }
 
     // void SetFeatureIds(SymbolSet<std::string,int>* feature_ids) {
     //     if(feature_ids_) delete feature_ids_;
     //     feature_ids_ = feature_ids;
     // }
     void SetMaxTerm(int max_term) { max_term_ = max_term; }
+    void SetUseReverse(bool use_reverse) { use_reverse_ = use_reverse; }
 
 private:
 
     std::string config_str_; // The configuration string
     std::vector<FeatureBase*> feature_gens_; // Feature generators
     int max_term_; // The maximum length of a terminal
+    bool use_reverse_; // Reverse
 
 };
 

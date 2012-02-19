@@ -33,7 +33,8 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             hyper_graph.BuildHyperGraph(model_,
                                         features_,
                                         data_[sent],
-                                        config.GetInt("beam"));
+                                        config.GetInt("beam"),
+                                        true);
             // Add losses to the hypotheses in thehypergraph
             BOOST_FOREACH(LossBase * loss, losses_)
                 loss->AddLossToHyperGraph(ranks_[sent], hyper_graph);

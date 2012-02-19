@@ -55,6 +55,7 @@ void FeatureSet::ToStream(ostream & out) {
     out << "feature_set" << endl;
     out << "config_str " << config_str_ << endl;
     out << "max_term " << max_term_ << endl;
+    out << "use_reverse " << use_reverse_ << endl;
     out << endl;
 }
 FeatureSet * FeatureSet::FromStream(istream & in) {
@@ -66,6 +67,8 @@ FeatureSet * FeatureSet::FromStream(istream & in) {
     ret->ParseConfiguration(config);
     GetConfigLine(in, "max_term", config);
     ret->SetMaxTerm(atoi(config.c_str()));
+    GetConfigLine(in, "use_reverse", config);
+    ret->SetUseReverse(config == "true");
     GetlineEquals(in, "");
     return ret;
 }
