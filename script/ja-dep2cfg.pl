@@ -7,6 +7,8 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
+my $BINARIZE = 0;
+
 sub makesafe {
     $_ = shift;
     $_ =~ s/\(/-LRB-/g;
@@ -40,20 +42,28 @@ sub buildcfg {
     my @child = getchildren($tree, $root);
     # Get the initial single-word node
     my $str = "(".$tree->[$root]->[3]." ".$tree->[$root]->[2].")";
-    # Traverse left->right for children that fall on the right hand side
-    # And then right->left for children that fall on the left hand side
-    # Then, finally, traverse right-hand-side punctuation
-    @child = sort { 
-        my $aa = ($a < $root ? 1e4 - $a : ($tree->[$a]->[3] =~ /記号/ ? 2e4 + $a : $a));
-        my $bb = ($b < $root ? 1e4 - $b : ($tree->[$b]->[3] =~ /記号/ ? 2e4 + $b : $b));
-        $aa <=> $bb } @child;
-    # print "root=$root\tchild=@child\n";
-    # Build the phrase constituents
-    foreach my $c (@child) {
-        my $child_str = buildcfg($tree, $c);
-        $str = 
-            "(".$tree->[$root]->[3]."P ".
-                ($c < $root ? "$child_str $str)" : "$str $child_str)");
+    # If we want to binarize the tree
+    if($BINARIZE) {
+        # Traverse left->right for children that fall on the right hand side
+        # And then right->left for children that fall on the left hand side
+        # Then, finally, traverse right-hand-side punctuation
+        @child = sort { 
+            my $aa = ($a < $root ? 1e4 - $a : ($tree->[$a]->[3] =~ /記号/ ? 2e4 + $a : $a));
+            my $bb = ($b < $root ? 1e4 - $b : ($tree->[$b]->[3] =~ /記号/ ? 2e4 + $b : $b));
+            $aa <=> $bb } @child;
+        # print "root=$root\tchild=@child\n";
+        # Build the phrase constituents
+        foreach my $c (@child) {
+            my $child_str = buildcfg($tree, $c);
+            $str = 
+                "(".$tree->[$root]->[3]."P ".
+                    ($c < $root ? "$child_str $str)" : "$str $child_str)");
+        }
+    # Otherwise, sort
+    } else {
+        push @child, $root;
+        $str = "(".$tree->[$root]->[3]."P ".
+            join(" ", map { ($_ == $root?$str:buildcfg($tree,$_)) } sort { $a <=> $b } @child).")";
     }
     return $str;
 }
