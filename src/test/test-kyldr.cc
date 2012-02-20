@@ -7,6 +7,7 @@
 #include "test-reorderer-model.h"
 #include "test-loss-fuzzy.h"
 #include "test-loss-tau.h"
+#include "test-loss-bracket.h"
 #include "test-dictionary.h"
 #include <vector>
 
@@ -25,6 +26,7 @@ int main() {
     tests.push_back(new TestReordererModel());
     tests.push_back(new TestLossFuzzy());
     tests.push_back(new TestLossTau());
+    tests.push_back(new TestLossBracket());
     tests.push_back(new TestDictionary());
     // Run all the tests
     int number_passed = 0;

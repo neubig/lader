@@ -45,18 +45,10 @@ public:
     }
 
     // Read in the alignments
-    void ReadAlignments(const std::string & align_in) {
-        std::ifstream in(align_in.c_str());
-        if(!in) THROW_ERROR("Could not open alignment file (-align_in): "
-                                <<align_in);
-        std::string line;
-        int i = 0;
-        while(getline(in, line))
-            ranks_.push_back(
-                Ranks(CombinedAlign(SafeAccess(data_,i++)[0]->GetSequence(),
-                                    Alignment::FromString(line),
-                                    attach_, combine_, bracket_)));
-    }
+    void ReadAlignments(const std::string & align_in);
+
+    // Read in the parses
+    void ReadParses(const std::string & align_in);
 
     // Write the model to a file
     void WriteModel(const std::string & str) {
@@ -72,7 +64,8 @@ public:
 
 private:
 
-    std::vector<Ranks> ranks_; // The alignments
+    std::vector<Ranks> ranks_; // The alignments to use in training
+    std::vector<FeatureDataParse> parses_; // The parses to use in training
     std::vector<std::vector<FeatureDataBase*> > data_; // The data
     ReordererModel model_; // The model
     FeatureSet features_;  // The mapping on feature ids and which to use

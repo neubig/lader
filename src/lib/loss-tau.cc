@@ -6,7 +6,9 @@ using namespace std;
 double LossTau::AddLossToProduction(
         int src_left, int src_mid, int src_right,
         int trg_left, int trg_midleft, int trg_midright, int trg_right,
-        HyperEdge::Type type, const Ranks & ranks) {
+        HyperEdge::Type type,
+        const Ranks * ranks, const FeatureDataParse * parse) {
+    if(!ranks) THROW_ERROR("Must have ranks for Tau loss");
     int loss = 0;
     switch (type) {
         // For roots, check that both edges are contiguous
@@ -14,18 +16,18 @@ double LossTau::AddLossToProduction(
             break;
         // For straight and inverse non-terms, check inside values
         case HyperEdge::EDGE_STR:
-            loss = GetLossStraight(ranks, src_left, src_mid, src_right);
+            loss = GetLossStraight(*ranks, src_left, src_mid, src_right);
             break;
         case HyperEdge::EDGE_INV:
-            loss = GetLossInverse(ranks, src_left, src_mid, src_right);
+            loss = GetLossInverse(*ranks, src_left, src_mid, src_right);
             break;
         case HyperEdge::EDGE_FOR:
             for(int i = src_left+1; i <= src_right; i++)
-                loss += GetLossStraight(ranks, src_left, i, i);
+                loss += GetLossStraight(*ranks, src_left, i, i);
             break;
         case HyperEdge::EDGE_BAC:
             for(int i = src_left+1; i <= src_right; i++)
-                loss += GetLossInverse(ranks, src_left, i, i);
+                loss += GetLossInverse(*ranks, src_left, i, i);
             break;
         default:
             THROW_ERROR("Bad edge type in LossTau");
@@ -59,15 +61,17 @@ int LossTau::GetLoss(const Ranks & ranks, int l, int c, int r,
 
 // Calculate the accuracy of a single sentence
 std::pair<double,double> LossTau::CalculateSentenceLoss(
-        const std::vector<int> order, const Ranks & ranks) {
+        const std::vector<int> order,
+        const Ranks * ranks, const FeatureDataParse * parse) {
+    if(!ranks) THROW_ERROR("Must have ranks for Tau loss");
     std::pair<double,double> ret(0,0);
     // Calculate the actual loss
     for(int i = 0; i < (int)order.size(); i++)
         for(int j = i+1; j < (int)order.size(); j++)
-            if(ranks[order[i]] > ranks[order[j]])
+            if((*ranks)[order[i]] > (*ranks)[order[j]])
                 ret.first++;
     // Calculate the potential loss
-    vector<int> sorted = ranks.GetRanks();
+    vector<int> sorted = ranks->GetRanks();
     sort(sorted.begin(), sorted.end());
     for(int i = 0; i < (int)order.size(); i++) {
         for(int j = i+1; j < (int)order.size(); j++) {
@@ -82,8 +86,8 @@ std::pair<double,double> LossTau::CalculateSentenceLoss(
     return ret;
 }
 
-void LossTau::Initialize(const Ranks & ranks) {
-    int n = ranks.GetSrcLen();
+void LossTau::Initialize(const Ranks * ranks, const FeatureDataParse * parse) {
+    int n = ranks->GetSrcLen();
     if((int)straight_.size() < n*n*n) straight_.resize(n*n*n);
     fill(straight_.begin(), straight_.begin() + n*n*n, -1);
     if((int)inverse_.size() < n*n*n) inverse_.resize(n*n*n);

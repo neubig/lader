@@ -16,12 +16,13 @@ LossBase * LossBase::CreateNew(const string & type) {
     return NULL;
 }
 
-void LossBase::AddLossToHyperGraph(const Ranks & ranks,
+void LossBase::AddLossToHyperGraph(const Ranks * ranks,
+                                   const FeatureDataParse * parse,
                                    HyperGraph & hyper_graph) {
     // Initialize the loss
-    Initialize(ranks);
+    Initialize(ranks, parse);
     // For each span in the hypergraph
-    int n = ranks.GetSrcLen();
+    int n = ranks->GetSrcLen();
     for(int r = 0; r <= n; r++) {
         // When r == n, we want the root, so only do -1
         for(int l = (r == n ? -1 : 0); l <= (r == n ? -1 : r); l++) {
@@ -48,7 +49,7 @@ void LossBase::AddLossToHyperGraph(const Ranks & ranks,
                                                      trg_left, trg_midleft,
                                                      trg_midright, trg_right,
                                                      hyp->GetType(),
-                                                     ranks));
+                                                     ranks, parse));
                 }
             }
         }

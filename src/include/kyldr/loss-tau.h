@@ -18,14 +18,17 @@ public:
     virtual double AddLossToProduction(
         int src_left, int src_mid, int src_right,
         int trg_left, int trg_midleft, int trg_midright, int trg_right,
-        HyperEdge::Type type, const Ranks & ranks);
+        HyperEdge::Type type,
+        const Ranks * ranks, const FeatureDataParse * parse);
 
     // Calculate the accuracy of a single sentence
     virtual std::pair<double,double> CalculateSentenceLoss(
-            const std::vector<int> order, const Ranks & ranks);
+            const std::vector<int> order,
+            const Ranks * ranks, const FeatureDataParse * parse);
 
     // Initializes the loss calculator with a ranks 
-    virtual void Initialize(const Ranks & ranks);
+    virtual void Initialize(
+        const Ranks * ranks, const FeatureDataParse * parse);
 
     virtual std::string GetName() const { return "tau"; }
 

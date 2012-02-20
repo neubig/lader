@@ -23,7 +23,7 @@ public:
         al.AddAlignment(MakePair(2,2));
         al.AddAlignment(MakePair(3,1));
         ranks = Ranks(CombinedAlign(words, al));
-        lf.Initialize(ranks);
+        lf.Initialize(&ranks, NULL);
         lf.SetWeight(0.5);
     }
     ~TestLossFuzzy() { }
@@ -32,19 +32,22 @@ public:
         int ret = 1;
         // Create an equal node, loss==0
         double loss01 = lf.AddLossToProduction(0,1,1,0,0,1,1,
-                                               HyperEdge::EDGE_STR,ranks);
+                                               HyperEdge::EDGE_STR,
+                                               &ranks,NULL);
         if(loss01 != 0) {
             cerr << "loss01 "<<loss01<<" != 0"<<endl; ret = 0;
         }
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,2,2,1,1,2,2,
-                                               HyperEdge::EDGE_STR,ranks);
+                                               HyperEdge::EDGE_STR,
+                                               &ranks,NULL);
         if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a reversed node, loss==1
         double loss23 = lf.AddLossToProduction(2,3,3,2,2,3,3,
-                                               HyperEdge::EDGE_STR,ranks);
+                                               HyperEdge::EDGE_STR,
+                                               &ranks,NULL);
         if(loss23 != 0.5) {
             cerr << "loss23 "<<loss23<<" != 1"<<endl; ret = 0;
         }
@@ -55,19 +58,22 @@ public:
         int ret = 1;
         // Create an equal node, loss==0
         double loss01 = lf.AddLossToProduction(0,1,1,1,1,0,0,
-                                               HyperEdge::EDGE_INV,ranks);
+                                               HyperEdge::EDGE_INV,
+                                               &ranks,NULL);
         if(loss01 != 0) {
             cerr << "loss01 "<<loss01<<" != 0"<<endl; ret = 0;
         }
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,2,2,2,2,1,1,
-                                               HyperEdge::EDGE_INV,ranks);
+                                               HyperEdge::EDGE_INV,
+                                               &ranks,NULL);
         if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a reversed node, loss==0
         double loss23 = lf.AddLossToProduction(2,3,3,3,3,2,2,
-                                               HyperEdge::EDGE_INV,ranks);
+                                               HyperEdge::EDGE_INV,
+                                               &ranks,NULL);
         if(loss23 != 0) {
             cerr << "loss23 "<<loss23<<" != 0"<<endl; ret = 0;
         }
@@ -78,19 +84,22 @@ public:
         int ret = 1;
         // Create an equal node, loss==0
         double loss01 = lf.AddLossToProduction(0,-1,1,0,-1,-1,1,
-                                               HyperEdge::EDGE_FOR,ranks);
+                                               HyperEdge::EDGE_FOR,
+                                               &ranks,NULL);
         if(loss01 != 0) {
             cerr << "loss01 "<<loss01<<" != 0"<<endl; ret = 0;
         }
         // Create a skipped node, loss==0
         double loss12 = lf.AddLossToProduction(1,-1,2,1,-1,-1,2,
-                                               HyperEdge::EDGE_FOR,ranks);
+                                               HyperEdge::EDGE_FOR,
+                                               &ranks,NULL);
         if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a three-word, loss==2
         double loss13 = lf.AddLossToProduction(1,-1,3,1,-1,-1,3,
-                                               HyperEdge::EDGE_FOR,ranks);
+                                               HyperEdge::EDGE_FOR,
+                                               &ranks,NULL);
         if(loss13 != 1.0) {
             cerr << "loss13 "<<loss13<<" != 2"<<endl; ret = 0;
         }
@@ -101,19 +110,22 @@ public:
         int ret = 1;
         // Create an equal node, loss==0
         double loss01 = lf.AddLossToProduction(0,-1,1,1,-1,-1,0,
-                                               HyperEdge::EDGE_BAC,ranks);
+                                               HyperEdge::EDGE_BAC,
+                                               &ranks,NULL);
         if(loss01 != 0) {
             cerr << "loss01 "<<loss01<<" != 0"<<endl; ret = 0;
         }
         // Create a skipped node, loss==1
         double loss12 = lf.AddLossToProduction(1,-1,2,2,-1,-1,1,
-                                               HyperEdge::EDGE_BAC,ranks);
+                                               HyperEdge::EDGE_BAC,
+                                               &ranks,NULL);
         if(loss12 != 0.5) {
             cerr << "loss12 "<<loss12<<" != 1"<<endl; ret = 0;
         }
         // Create a three-word node, loss==1
         double loss13 = lf.AddLossToProduction(1,-1,3,3,-1,-1,1,
-                                               HyperEdge::EDGE_BAC,ranks);
+                                               HyperEdge::EDGE_BAC,
+                                               &ranks,NULL);
         if(loss13 != 0.5) {
             cerr << "loss13 "<<loss13<<" != 1"<<endl; ret = 0;
         }
@@ -124,13 +136,15 @@ public:
         int ret = 1;
         // Create an equal node, loss==0
         double loss1 = lf.AddLossToProduction(0,-1,2,1,-1,-1,2,
-                                               HyperEdge::EDGE_ROOT,ranks);
+                                               HyperEdge::EDGE_ROOT,
+                                               &ranks,NULL);
         if(loss1 != 0) {
             cerr << "loss1 "<<loss1<<" != 0"<<endl; ret = 0;
         }
         // Create a reversed node, loss==2
         double loss2 = lf.AddLossToProduction(0,-1,2,2,-1,-1,1,
-                                              HyperEdge::EDGE_ROOT,ranks);
+                                              HyperEdge::EDGE_ROOT,
+                                              &ranks,NULL);
         if(loss2 != 1.0) {
             cerr << "loss2 "<<loss2<<" != 2"<<endl; ret = 2;
         }

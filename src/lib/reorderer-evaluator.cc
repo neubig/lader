@@ -88,7 +88,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         // Score the values
         for(int i = 0; i < (int) losses.size(); i++) {
             pair<double,double> my_loss = 
-                                losses[i]->CalculateSentenceLoss(order,ranks);
+                    losses[i]->CalculateSentenceLoss(order,&ranks,NULL);
             sums[i].first += my_loss.first;
             sums[i].second += my_loss.second;
             double acc = my_loss.second == 0 ? 

@@ -8,7 +8,10 @@ using namespace std;
 void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     InitializeModel(config);
     ReadData(config.GetString("source_in"));
-    ReadAlignments(config.GetString("align_in"));
+    if(config.GetString("align_in").length())
+        ReadAlignments(config.GetString("align_in"));
+    if(config.GetString("parse_in").length())
+        ReadParses(config.GetString("parse_in"));
     int verbose = config.GetInt("verbose");
     // Temporary values
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
@@ -37,7 +40,10 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                                         true);
             // Add losses to the hypotheses in thehypergraph
             BOOST_FOREACH(LossBase * loss, losses_)
-                loss->AddLossToHyperGraph(ranks_[sent], hyper_graph);
+                loss->AddLossToHyperGraph(
+                    sent < (int)ranks_.size() ? &ranks_[sent] : NULL,
+                    sent < (int)parses_.size() ? &parses_[sent] : NULL,
+                    hyper_graph);
             // Parse the hypergraph, penalizing loss heavily (oracle)
             oracle_score = hyper_graph.Rescore(model_, -1e6);
             oracle_features = hyper_graph.AccumulateFeatures(
@@ -125,4 +131,27 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
         loss->SetWeight(dub);
         losses_.push_back(loss);
     } 
+}
+
+void ReordererTrainer::ReadAlignments(const std::string & align_in) {
+    std::ifstream in(align_in.c_str());
+    if(!in) THROW_ERROR("Could not open alignment file (-align_in): "
+                            <<align_in);
+    std::string line;
+    int i = 0;
+    while(getline(in, line))
+        ranks_.push_back(
+            Ranks(CombinedAlign(SafeAccess(data_,i++)[0]->GetSequence(),
+                                Alignment::FromString(line),
+                                attach_, combine_, bracket_)));
+}
+
+void ReordererTrainer::ReadParses(const std::string & parse_in) {
+    std::ifstream in(parse_in.c_str());
+    if(!in) THROW_ERROR("Could not open parse file (-parse_in): " << parse_in);
+    std::string line;
+    while(getline(in, line)) {
+        parses_.push_back(FeatureDataParse());
+        parses_.rbegin()->FromString(line);
+    }
 }

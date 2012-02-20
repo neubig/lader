@@ -2,6 +2,7 @@
 #define LOSS_BASE_H__
 
 #include <kyldr/ranks.h>
+#include <kyldr/feature-data-parse.h>
 #include <kyldr/hyper-graph.h>
 #include <kyldr/hyper-edge.h>
 
@@ -28,22 +29,27 @@ public:
     //  trg_right: Ditto, for ending target word of the right span
     //  type: The type of production
     //  ranks: The correct ranks of the words
+    //  parse: The correct parse
     virtual double AddLossToProduction(
         int src_left, int src_mid, int src_right,
         int trg_left, int trg_midleft, int trg_midright, int trg_right,
-        HyperEdge::Type type, const Ranks & ranks) = 0;
+        HyperEdge::Type type,
+        const Ranks * ranks, const FeatureDataParse * parse) = 0;
     
     // Calculate the accuracy of a single sentence
     virtual std::pair<double,double> CalculateSentenceLoss(
-            const std::vector<int> order, const Ranks & ranks) = 0;
+            const std::vector<int> order,
+            const Ranks * ranks, const FeatureDataParse * parse) = 0;
 
     // Initializes the loss calculator with a ranks 
-    virtual void Initialize(const Ranks & ranks) { }
+    virtual void Initialize(
+            const Ranks * ranks, const FeatureDataParse * parse) { }
 
     // Get the name of the subclass
     virtual std::string GetName() const = 0;
 
-    void AddLossToHyperGraph(const Ranks & ranks,
+    void AddLossToHyperGraph(const Ranks * ranks,
+                             const FeatureDataParse * parse,
                              HyperGraph & hyper_graph);
 
     // Create a new sub-class of a particular type
