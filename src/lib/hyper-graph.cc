@@ -136,6 +136,8 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         // Find the best hypotheses on the left and right side
         left_trg = GetTrgSpan(l, c-1, 0);
         right_trg = GetTrgSpan(c, r, 0);
+        if(left_trg == NULL) THROW_ERROR("Target l="<<l<<", c-1="<<c-1);
+        if(right_trg == NULL) THROW_ERROR("Target c="<<c<<", r="<<r);
         // Add the straight terminal
         score = GetEdgeScore(model, features, sent, 
                                 HyperEdge(l, c, r, HyperEdge::EDGE_STR));
@@ -233,7 +235,7 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
         // Move the span from l to r, building hypotheses from small to large
         for(int l = r; l >= 0; l--) {
             SetStack(l, r, ProcessOneSpan(model, features, sent, 
-                                          l, r, beam_size, save_trg));
+                                          l, r, beam_size, true));
         }
     }
     // Build the root node
