@@ -111,6 +111,7 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
                 CombinedAlign::LEAVE_BLOCKS_AS_IS;
     features_.ParseConfiguration(config.GetString("feature_profile"));
     features_.SetMaxTerm(config.GetInt("max_term"));
+    features_.SetUseReverse(config.GetBool("use_reverse"));
     model_.SetCost(config.GetDouble("cost"));
     std::vector<std::string> losses, first_last;
     algorithm::split(

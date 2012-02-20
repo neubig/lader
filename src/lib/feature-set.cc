@@ -68,7 +68,7 @@ FeatureSet * FeatureSet::FromStream(istream & in) {
     GetConfigLine(in, "max_term", config);
     ret->SetMaxTerm(atoi(config.c_str()));
     GetConfigLine(in, "use_reverse", config);
-    ret->SetUseReverse(config == "true");
+    ret->SetUseReverse(config == "true" || config == "1");
     GetlineEquals(in, "");
     return ret;
 }
