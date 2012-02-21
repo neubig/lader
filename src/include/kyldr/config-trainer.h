@@ -28,6 +28,7 @@ public:
         // AddConfigEntry("first_step", "1", "The first step (1=hypergraph, 2=loss, 3=features, 4=train)");
         // AddConfigEntry("last_step", "4", "The last step to perform");
         AddConfigEntry("align_in", "", "The input file for the alignments");
+        AddConfigEntry("parse_in", "", "The input file for the parses");
         AddConfigEntry("source_in", "", "The input file for the source sentences");
         AddConfigEntry("max_term", "0", "The maximum length of a terminal ");
         AddConfigEntry("beam", "0", "The maximum beam size");
