@@ -26,7 +26,9 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
         if(config.GetBool("shuffle"))
             random_shuffle(sent_order.begin(), sent_order.end());
         // Over all values in the corpus
+        int done = 0;
         BOOST_FOREACH(int sent, sent_order) {
+            if(++done % 1000 == 0) { cout << "."; cout.flush(); }
             HyperGraph hyper_graph;
             // If we are saving features for efficiency, recover the saved
             // features and replace them in the hypergraph
