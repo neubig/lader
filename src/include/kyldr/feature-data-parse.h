@@ -18,6 +18,8 @@ namespace kyldr {
 // easier to check to make sure that all sizes are equal
 class FeatureDataParse : public FeatureDataBase {
 public:
+    typedef std::map<std::pair<int,int>, std::string> SpanMap;
+
     FeatureDataParse() : FeatureDataBase() { }
     virtual ~FeatureDataParse() { }
 
@@ -48,10 +50,9 @@ public:
         SpanMap::const_iterator it = spans_.find(MakePair(l,r));
         return it == spans_.end() ? "X" : it->second;
     }
+    const SpanMap & GetSpans() const { return spans_; }
 
 private:
-
-    typedef std::map<std::pair<int,int>, std::string> SpanMap;
     SpanMap spans_;
 
 };

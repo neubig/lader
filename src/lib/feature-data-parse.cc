@@ -31,8 +31,7 @@ void FeatureDataParse::FromString(const std::string & str) {
             stack.pop_back();
             if(start.first == (int)sequence_.size())
                 THROW_ERROR("Empty constituent in parse: " << str);
-            spans_.insert(MakePair(MakePair(start.first, sequence_.size()-1),
-                                   start.second));
+            spans_[MakePair(start.first, (int)sequence_.size()-1)] = start.second;
             pos++;
         } else {
             int start_pos = pos;
