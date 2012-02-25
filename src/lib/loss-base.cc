@@ -1,5 +1,6 @@
 #include <kyldr/loss-fuzzy.h>
 #include <kyldr/loss-tau.h>
+#include <kyldr/loss-bracket.h>
 #include <kyldr/loss-base.h>
 
 using namespace kyldr;
@@ -11,6 +12,8 @@ LossBase * LossBase::CreateNew(const string & type) {
         return new LossFuzzy;
     else if(type == "tau")
         return new LossTau;
+    else if(type == "bracket")
+        return new LossBracket;
     else
         THROW_ERROR("Bad feature type " << type << " (must be fuzzy/tau)");
     return NULL;
