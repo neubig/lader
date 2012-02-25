@@ -35,6 +35,10 @@ bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {
             return name.length() == 2 || 
                 (name.length() == 3 && 
                     (name[2] == '#' || (name[2] >= '0' && name[2] <= '9')));
+        // For random values
+        } else if(name[1] == 'M') {
+            return name.length() == 3 && name[2] == '#';
+        // For other values
         } else if (name[1] == 'N' || name[1] == 'L' || name[1] == 'R'
                                   || name[1] == 'B' || name[1] == 'A') {
             return name.length() == 2 || (name.length() == 3 && name[2] == '#');
@@ -124,6 +128,8 @@ double FeatureSequence::GetSpanFeatureValue(const FeatureDataSequence & sent,
     switch (type) {
         case 'N':
             return r - l + 1;
+        case 'M':
+            return rand()/(double)RAND_MAX;
         case 'Q':
             return SafeAccess(dicts_,str[3]-'0')->GetFeature(
                         sent.GetRangeString(l, r), str[4]-'0');
