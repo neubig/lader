@@ -10,7 +10,8 @@ binmode STDERR, ":utf8";
 
 my $DISCOUNT = 1;
 my $BONUS = 0.5;
-my $MAX_LEN = 4;
+my $MAX_LEN = 8;
+my $BIG = 100000;
 
 # Count the number of times a source phrase would be extracted
 if(@ARGV != 3) {
@@ -18,49 +19,62 @@ if(@ARGV != 3) {
     exit 1;
 }
 
-open FFILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
-open EFILE, "<:utf8", $ARGV[1] or die "$ARGV[1]: $!\n";
+open EFILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
+open FFILE, "<:utf8", $ARGV[1] or die "$ARGV[1]: $!\n";
 open AFILE, "<:utf8", $ARGV[2] or die "$ARGV[2]: $!\n";
 
 my %counts;
 
-my ($f, $e, $al);
+my ($e, $f, $al);
 my $sent = 0;
 while(($f = <FFILE>) and ($e = <EFILE>) and ($al = <AFILE>)) {
     print STDERR "$sent\n" if(++$sent % 10000 == 0);
+    # print "$e$f$al";
     chomp $f; chomp $e; chomp $al;
-    my @fs = split(/ /, $f);
-    my @es = split(/ /, $e);
-    my @fspan = map { [scalar(@es), -1] } @fs;
-    my @espan = map { [scalar(@fs), -1] } @es;
-    my %a;
     $al =~ s/.* \|\|\| //g;
-    for(split(/ /, $al)) {
-        my ($j, $i) = split(/-/);
-        ($j >= @fs) and die "Illegal alignment $j in $_ (fs=@fs)\n";
-        ($i >= @es) and die "Illegal alignment $i in $_ (es=@es)\n";
-        $fspan[$j] = [ min($i, $fspan[$j]->[0]), max($i, $fspan[$j]->[1]) ];
-        $espan[$i] = [ min($j, $espan[$i]->[0]), max($j, $espan[$i]->[1]) ];
-    }
-    # For all starting points $j1
-    foreach my $j1 (0 .. $#fs) {
-        my $contiguous = 1;
-        # For all ending points $j2 up to a maximal length
-        foreach my $j2 ($j1+1 .. min($j1+$MAX_LEN-1, $#fs)) {
-            if(($j2 != $j1) and ($fspan[$j1]->[1] != -1) and ($fspan[$j2]->[1] != -1) and
-               (($fspan[$j1]->[1] < $fspan[$j2]->[0]-1) or ($fspan[$j2]->[1] < $fspan[$j1]->[0]-1))) {
-                $contiguous = 0;
+    my @es = split(/ /, $e);
+    my @fs = split(/ /, $f);
+    # Find @A
+    my @A = map { my @arr = split(/-/); \@arr } split(/ /, $al);
+    # Find c(j)
+    my @cj = map { 0 } (@fs, 0);
+    for(@A) { my($i, $j) = @$_; $cj[$j+1] = 1; }
+    for(2 .. $#cj) { $cj[$_] += $cj[$_-1]; }
+    pop @cj;
+    # Find A'
+    my @Aprime = map { [ $_->[0], $cj[$_->[1]] ] } @A;
+    # Find Jis
+    my @Ji = map { [] } @es;
+    for(@Aprime) { push @{$Ji[$_->[0]]}, $_->[1]; }
+    # Find psii
+    my @psii = map { @$_ ? [ min(@$_), max(@$_)+1 ] : [$BIG, -1] } @Ji;
+    # Cover phrases
+    foreach my $k (0 .. $#es - 1) {
+        my @psikl = @{$psii[$k]};
+        foreach my $l ( $k+2 .. min($k+$MAX_LEN,$#es) ) {
+            $psikl[0] = min($psikl[0], $psii[$l-1]->[0]);
+            $psikl[1] = max($psikl[1], $psii[$l-1]->[1]);
+            my $contig = ($psikl[1] != -1) ? 1 : 0;
+            for(@Aprime) {
+                last if not $contig;
+                my ($i, $j) = @$_;
+                if(($j >= $psikl[0]) and ($j < $psikl[1]) and 
+                    (($i < $k) or ($i >= $l))) {
+                    $contig = 0;
+                }
             }
-            my $str = join(" ", @fs[$j1 .. $j2]);
-            $counts{$str} = [1, 0.5] if not $counts{$str};
-            $counts{$str}->[0]++;
-            $counts{$str}->[1]++ if $contiguous;
+            my $str = join(" ", @es[$k .. $l-1]);
+            $counts{$str} = [ 0, 0 ] if not $counts{$str};
+            $counts{$str}->[0] += $contig;
+            $counts{$str}->[1] += 1;
         }
     }
 }
 
-for(sort { $counts{$a}->[1]/$counts{$a}->[0] <=> $counts{$b}->[1]/$counts{$b}->[0] } keys %counts) {
+for(sort { $counts{$b}->[1] <=> $counts{$a}->[1] } keys %counts) {
     if($counts{$_}->[0] > $DISCOUNT) {
-        print "$_ ||| ".log($counts{$_}->[1]/$counts{$_}->[0])."\n";
+        my $l0 = log($counts{$_}->[0]);
+        my $l1 = log($counts{$_}->[1]);
+        printf "%s ||| %.4f %.4f %.4f\n", $_, $l0, $l1, $l0-$l1;
     }
 }
