@@ -10,7 +10,7 @@ double LossBracket::AddLossToProduction(
         const Ranks * ranks, const FeatureDataParse * parse) {
     if(!parse) THROW_ERROR("Bracketing loss requires parse input");
     const string & label = parse->GetSpanLabel(src_left, src_right);
-    return label.length() != 1 || label[0] != (char)type ? weight_ : 0;
+    return (label.length() == 1 && label[0] != (char)type) ? weight_ : 0;
 }
 
 

@@ -229,9 +229,9 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
                                  const FeatureSet & features,
                                  const Sentence & sent,
                                  int beam_size, bool save_trg) {
-    int n = sent[0]->GetNumWords();
+    n_ = sent[0]->GetNumWords();
     // Iterate through the right side of the span
-    for(int r = 0; r < n; r++) {
+    for(int r = 0; r < n_; r++) {
         // Move the span from l to r, building hypotheses from small to large
         for(int l = r; l >= 0; l--) {
             SetStack(l, r, ProcessOneSpan(model, features, sent, 
@@ -239,11 +239,11 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
         }
     }
     // Build the root node
-    SpanStack * top = GetStack(0,n-1);
+    SpanStack * top = GetStack(0,n_-1);
     SpanStack * root_stack = new SpanStack;
     for(int i = 0; i < (int)top->size(); i++) {
-        TargetSpan * root = new TargetSpan(0, n-1, (*top)[i]->GetTrgLeft(), (*top)[i]->GetTrgRight());
-        root->AddHypothesis(Hypothesis((*top)[i]->GetScore(), 0, 0, n-1, 0, n-1,
+        TargetSpan * root = new TargetSpan(0, n_-1, (*top)[i]->GetTrgLeft(), (*top)[i]->GetTrgRight());
+        root->AddHypothesis(Hypothesis((*top)[i]->GetScore(), 0, 0, n_-1, 0, n_-1,
                                     HyperEdge::EDGE_ROOT, -1, i, -1, (*top)[i]));
         root_stack->AddSpan(root);
     }

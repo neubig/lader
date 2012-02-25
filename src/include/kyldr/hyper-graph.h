@@ -24,7 +24,7 @@ public:
     
     friend class TestHyperGraph;
 
-    HyperGraph() : features_(0) { }
+    HyperGraph() : features_(0), n_(-1) { }
 
     ~HyperGraph() {
         if(features_) {
@@ -100,6 +100,7 @@ public:
     // Clear the feature array without deleting the features themselves
     // This is useful if you want to save the features for later use
     void ClearFeatures() { features_ = NULL; }
+    int GetSrcLen() const { return n_; }
 
 protected:
     SpanStack * ProcessOneSpan(ReordererModel & model,
@@ -155,6 +156,9 @@ private:
     // And can be recovered by GetHypothesis.
     // The inner vector contains target spans in descending rank of score
     std::vector<SpanStack*> stacks_;
+
+    // The length of the sentence
+    int n_;
 
 };
 

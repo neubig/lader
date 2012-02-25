@@ -19,6 +19,7 @@ WD=`pwd`;
 [[ -e test/$LANG ]] || mkdir test/$LANG
 
 # With two sequences + CL + BA + G
+echo "time src/bin/train-kyldr -use_reverse false -cost $COST -attach_null $ATTACH -loss_profile \"$LOSS\" -feature_profile \"seq=dict=$WD/tables/$LANG-contiguous.txt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET\" -iterations 500 -beam 50 -model_out stir/$LANG/$NAME.mod -source_in data/$LANG-$DATA.$AMOUNT -parse_in data/$LANG-unlabtree.$AMOUNT &> stir/$LANG/$NAME.log"
 time src/bin/train-kyldr -use_reverse false -cost $COST -attach_null $ATTACH -loss_profile "$LOSS" -feature_profile "seq=dict=$WD/tables/$LANG-contiguous.txt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET" -iterations 500 -beam 50 -model_out stir/$LANG/$NAME.mod -source_in data/$LANG-$DATA.$AMOUNT -parse_in data/$LANG-unlabtree.$AMOUNT &> stir/$LANG/$NAME.log
 
 # # With one seq+cfg

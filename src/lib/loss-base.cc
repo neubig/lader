@@ -15,7 +15,7 @@ LossBase * LossBase::CreateNew(const string & type) {
     else if(type == "bracket")
         return new LossBracket;
     else
-        THROW_ERROR("Bad feature type " << type << " (must be fuzzy/tau)");
+        THROW_ERROR("Bad loss type " << type << " (must be fuzzy/tau)");
     return NULL;
 }
 
@@ -25,7 +25,7 @@ void LossBase::AddLossToHyperGraph(const Ranks * ranks,
     // Initialize the loss
     Initialize(ranks, parse);
     // For each span in the hypergraph
-    int n = ranks->GetSrcLen();
+    int n = hyper_graph.GetSrcLen();
     for(int r = 0; r <= n; r++) {
         // When r == n, we want the root, so only do -1
         for(int l = (r == n ? -1 : 0); l <= (r == n ? -1 : r); l++) {
