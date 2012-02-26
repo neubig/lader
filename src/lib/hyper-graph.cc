@@ -117,15 +117,17 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
     double score, viterbi_score;
     // If the length is OK, add a terminal
     if((features.GetMaxTerm() == 0) || (r-l < features.GetMaxTerm())) {
+        int tl = (save_trg ? l : -1);
+        int tr = (save_trg ? r : -1);
         // Create a hypothesis with the forward terminal
         score = GetEdgeScore(model, features, sent,
                                 HyperEdge(l, -1, r, HyperEdge::EDGE_FOR));
-        q.push(Hypothesis(score, score, l, r, l, r, HyperEdge::EDGE_FOR));
+        q.push(Hypothesis(score, score, l, r, tl, tr, HyperEdge::EDGE_FOR));
         if(features.GetUseReverse()) {
             // Create a hypothesis with the backward terminal
             score = GetEdgeScore(model, features, sent, 
                                     HyperEdge(l, -1, r, HyperEdge::EDGE_BAC));
-            q.push(Hypothesis(score, score, l, r, r, l, HyperEdge::EDGE_BAC));
+            q.push(Hypothesis(score, score, l, r, tr, tl, HyperEdge::EDGE_BAC));
         }
     }
     TargetSpan *left_trg, *right_trg, 
@@ -156,25 +158,23 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
     }
     // Get a map to store identical target spans
     map<pair<int,int>, TargetSpan*> spans;
-    TargetSpan * trg_span = (save_trg?NULL:new TargetSpan(l,r,-1,-1));
+    TargetSpan * trg_span = NULL;
     // Start beam search
     int num_processed = 0;
     while((!beam_size || num_processed < beam_size) && q.size()) {
         // Pop a hypothesis from the stack and get its target span
         Hypothesis hyp = q.top(); q.pop();
-        if(save_trg) {
-            pair<int,int> trg_idx(hyp.GetTrgLeft(), hyp.GetTrgRight());
-            map<pair<int,int>, TargetSpan*>::iterator it = spans.find(trg_idx);
-            if(it != spans.end()) {
-                trg_span = it->second;
-            } else {
-                trg_span = new TargetSpan(hyp.GetLeft(), hyp.GetRight(), 
-                                          hyp.GetTrgLeft(), hyp.GetTrgRight());
-                spans.insert(MakePair(trg_idx, trg_span));
-            }
-            // Insert the hypothesis
-            trg_span->AddHypothesis(hyp);
+        pair<int,int> trg_idx(hyp.GetTrgLeft(), hyp.GetTrgRight());
+        map<pair<int,int>, TargetSpan*>::iterator it = spans.find(trg_idx);
+        if(it != spans.end()) {
+            trg_span = it->second;
+        } else {
+            trg_span = new TargetSpan(hyp.GetLeft(), hyp.GetRight(), 
+                                      hyp.GetTrgLeft(), hyp.GetTrgRight());
+            spans.insert(MakePair(trg_idx, trg_span));
         }
+        // Insert the hypothesis
+        trg_span->AddHypothesis(hyp);
         num_processed++;
         // If the next hypothesis on the stack is equal to the current
         // hypothesis, remove it, as this just means that we added the same
@@ -235,7 +235,7 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
         // Move the span from l to r, building hypotheses from small to large
         for(int l = r; l >= 0; l--) {
             SetStack(l, r, ProcessOneSpan(model, features, sent, 
-                                          l, r, beam_size, true));
+                                          l, r, beam_size, save_trg));
         }
     }
     // Build the root node

@@ -2,6 +2,7 @@
 #define TEST_HYPER_GRAPH_H__
 
 #include "test-base.h"
+#include <climits>
 #include <kyldr/hyper-graph.h>
 #include <kyldr/alignment.h>
 #include <kyldr/reorderer-model.h>
@@ -211,6 +212,52 @@ public:
         return ret;
     }
 
+    // Test the processing of a single span
+    int TestProcessOneSpanNoSave() {
+        HyperGraph graph;
+        // Create two spans for 00 and 11, so we can process 01
+        SpanStack *stack00 = new SpanStack, *stack11 = new SpanStack;
+        stack00->push_back(new TargetSpan(0,0,-1,-1));
+        (*stack00)[0]->AddHypothesis(Hypothesis(1,1.0,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        graph.SetStack(0, 0, stack00);
+        stack11->push_back(new TargetSpan(1,1,-1,-1));
+        (*stack11)[0]->AddHypothesis(Hypothesis(2,2.0,1,1,-1,-1,HyperEdge::EDGE_FOR));
+        graph.SetStack(1, 1, stack11);
+        // Try processing 01
+        set.SetMaxTerm(0);
+        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1, 0, false);
+        // The stack should contain two target spans (1,0) and (0,1),
+        // each with two hypotheses
+        int ret = 1;
+        if(stack01->size() != 1) {
+            cerr << "stack01->size() != 1: " << stack01->size() << endl; ret = 0;
+            for(int i = 0; i < (int)stack01->size(); i++)
+                cerr << " " << i << ": " << (*stack01)[i]->GetTrgLeft() << ", " <<(*stack01)[i]->GetTrgRight() << endl;
+        } else if((*stack01)[0]->GetHypotheses().size() != 4) {
+            cerr << "(*stack01)[0].size() != 4: " << (*stack01)[0]->GetHypotheses().size() << endl; ret = 0;
+        }
+        if(!ret) return 0;
+        // Check to make sure that the scores are in order
+        vector<double> score_exp(4,0), score_act(4);
+        score_exp[0] = 3; score_exp[1] = 3;
+        score_act[0] = (*stack01)[0]->GetHypothesis(0)->GetScore();
+        score_act[1] = (*stack01)[0]->GetHypothesis(1)->GetScore();
+        score_act[2] = (*stack01)[0]->GetHypothesis(2)->GetScore();
+        score_act[3] = (*stack01)[0]->GetHypothesis(3)->GetScore();
+        ret = CheckVector(score_exp, score_act);
+        // Check to make sure that pruning works
+        set.SetMaxTerm(0);
+        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, false);
+        if(stack01pruned->size() != 1) {
+            cerr << "stack01pruned->size() != 1: " << stack01pruned->size() << endl; ret = 0;
+        } else if((*stack01pruned)[0]->GetHypotheses().size() != 3) {
+            cerr << "(*stack01pruned)[0].size() != 3: " << (*stack01pruned)[0]->GetHypotheses().size() << endl; ret = 0;
+        }
+        // delete stack00; delete stack01;
+        // delete stack11; delete stack01pruned;
+        return ret;
+    }
+
     int TestBuildHyperGraph() {
         HyperGraph graph;
         set.SetMaxTerm(0);
@@ -223,6 +270,29 @@ public:
         // The number of target spans should be 6: 0-1 1-0 0-2 2-0 1-2 2-1
         } else if (stacks[3]->size() != 6) {
             cerr << "Root node stacks[3]->size() != 6: " <<stacks[3]->size()<< endl;
+            BOOST_FOREACH(const TargetSpan *span, stacks[3]->GetSpans())
+                cerr << " " << span->GetTrgLeft() << "-" <<span->GetTrgRight() << endl;
+            ret = 0;
+        } else if (stacks[6]->GetSpans().size() != stacks[3]->size()) {
+            cerr << "Root hypotheses " << stacks[6]->GetSpans().size()
+                 << " and root spans " << stacks[3]->size() << " don't match." <<
+                 endl; ret = 0;
+        }
+        return ret;
+    }
+
+    int TestBuildHyperGraphNoSave() {
+        HyperGraph graph;
+        set.SetMaxTerm(0);
+        graph.BuildHyperGraph(model, set, datas, INT_MAX, false);
+        const std::vector<SpanStack*> & stacks = graph.GetStacks();
+        int ret = 1;
+        // The total number of stacks should be 7: 0-0 0-1 1-1 0-2 1-2 2-2 root
+        if(stacks.size() != 7) {
+            cerr << "stacks.size() != 7: " << stacks.size() << endl; ret = 0;
+        // The number of target spans should be 1: -1--1
+        } else if (stacks[3]->size() != 1) {
+            cerr << "Root node stacks[3]->size() != 1: " <<stacks[3]->size()<< endl;
             BOOST_FOREACH(const TargetSpan *span, stacks[3]->GetSpans())
                 cerr << " " << span->GetTrgLeft() << "-" <<span->GetTrgRight() << endl;
             ret = 0;
@@ -402,7 +472,9 @@ public:
         done++; cout << "TestGetTrgSpanID()" << endl; if(TestGetTrgSpanID()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestGetEdgeFeaturesAndWeights()" << endl; if(TestGetEdgeFeaturesAndWeights()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestProcessOneSpan()" << endl; if(TestProcessOneSpan()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestProcessOneSpanNoSave()" << endl; if(TestProcessOneSpanNoSave()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBuildHyperGraph()" << endl; if(TestBuildHyperGraph()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBuildHyperGraphNoSave()" << endl; if(TestBuildHyperGraphNoSave()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateLoss()" << endl; if(TestAccumulateLoss()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateFeatures()" << endl; if(TestAccumulateFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRescore()" << endl; if(TestRescore()) succeeded++; else cout << "FAILED!!!" << endl;
