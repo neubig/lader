@@ -39,7 +39,7 @@ TRG=$2
 PARSEMOD=$3
 STIRMOD=$4
 DATATYPE=$5
-ID=stir-`basename $PARSEMOD`;
+ID=stir-`basename $PARSEMOD .mod`;
 
 # Set up the constants
 KYLDR="/home/neubig/usr/arcs/local/kyldr/src/bin/kyldr"
