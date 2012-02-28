@@ -69,15 +69,15 @@ if [[ ! -e lm/kyoto-train.$TRG ]]; then
 fi
 
 # 5) reorder the data
-if [[ ! -e models/$MOD.mod ]]; then
-    echo "ERROR: could not find specified models/$MOD.mod";
+if [[ ! -e $MOD ]]; then
+    echo "ERROR: could not find specified $MOD";
     exit 1;
 fi
 [[ -e reordered ]] || mkdir reordered
 [[ -e reordered/$MOD ]] || mkdir reordered/$MOD
 if [[ ! -e reordered/$ID/kyoto-train.cln.$SRC ]]; then
     for f in kyoto-train.cln.00 kyoto-train.cln.01 kyoto-train.cln.02 kyoto-train.cln.03 kyoto-train.cln.04 kyoto-train.cln.05 kyoto-train.cln.06 kyoto-train.cln.07 kyoto-train.cln.08 kyoto-train.cln.09 kyoto-train.cln.10 kyoto-train.cln.11 kyoto-train.cln.12 kyoto-train.cln.13 kyoto-train.cln.14 kyoto-train.cln.15 kyoto-train.cln.16 kyoto-train.cln.17 kyoto-train.cln.18 kyoto-train.cln.19 kyoto-train.cln.20 kyoto-train.cln.21 kyoto-tune kyoto-dev kyoto-test; do
-        rsh arcs01 "source /home/neubig/.bashrc; cd $WD; bsub '$KYLDR -out_format parse -beam 1 -model models/$PARSEMOD.mod < data/low$DATATYPE/$f.$SRC > reordered/$ID/$f.$SRC.parse 2> reordered/$ID/$f.$SRC.parselog; script/join-features.pl data/low$DATATYPE/$f.$SRC reordered/$ID/$f.$SRC.parse > reordered/$ID/$f.$SRC.srcparse; $KYLDR -beam 1 -model models/$PARSEMOD.mod < reordered/$ID/$f.$SRC.srcparse > reordered/$ID/$f.$SRC 2> reordered/$ID/$f.$SRC.log; touch reordered/$ID/$f.$SRC.done'";
+        rsh arcs01 "source /home/neubig/.bashrc; cd $WD; bsub '$KYLDR -out_format parse -beam 1 -model $PARSEMOD < data/low$DATATYPE/$f.$SRC > reordered/$ID/$f.$SRC.parse 2> reordered/$ID/$f.$SRC.parselog; script/join-features.pl data/low$DATATYPE/$f.$SRC reordered/$ID/$f.$SRC.parse > reordered/$ID/$f.$SRC.srcparse; $KYLDR -beam 1 -model $STIRMOD < reordered/$ID/$f.$SRC.srcparse > reordered/$ID/$f.$SRC 2> reordered/$ID/$f.$SRC.log; touch reordered/$ID/$f.$SRC.done'";
     done
     for f in kyoto-train.cln.00 kyoto-train.cln.01 kyoto-train.cln.02 kyoto-train.cln.03 kyoto-train.cln.04 kyoto-train.cln.05 kyoto-train.cln.06 kyoto-train.cln.07 kyoto-train.cln.08 kyoto-train.cln.09 kyoto-train.cln.10 kyoto-train.cln.11 kyoto-train.cln.12 kyoto-train.cln.13 kyoto-train.cln.14 kyoto-train.cln.15 kyoto-train.cln.16 kyoto-train.cln.17 kyoto-train.cln.18 kyoto-train.cln.19 kyoto-train.cln.20 kyoto-train.cln.21 kyoto-tune kyoto-dev kyoto-test; do
         while [[ ! -e reordered/$ID/$f.$SRC.done ]]; do
