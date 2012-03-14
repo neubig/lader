@@ -9,26 +9,32 @@ binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
 my $BLEU = "/home/neubig/work/mosesdecoder-tuo/scripts/generic/multi-bleu.perl";
+my $RIBES = "python3 /home/neubig/usr/local/RIBES-1.02.3/RIBES.py";
+my $EVALKYLDR = "/home/neubig/work/kyldr/src/bin/evaluate-kyldr";
 $|++;
 
 # get the arguments
 my $ITER = 1000;
 my $TYPE = "bleu";
+my $ATTACH = "left";
 my $FRAC = 0.5;
 GetOptions( 
     "type=s"=>\$TYPE, # If alignments are target-source
+    "attach=s"=>\$ATTACH, # Attach alignments
     "iter=i"=>\$ITER, # The maximum length
     "frac=f"=>\$FRAC # The fraction of the data to use each time
 );
 
-if(@ARGV != 3) {
-    print STDERR "Usage: bootstrap.pl REFERENCE SYS1 SYS2\n";
+if((@ARGV < 3) or (@ARGV > 4)) {
+    print STDERR "Usage: bootstrap.pl REFERENCE SYS1 SYS2 [ALIGN]\n";
     exit 1;
 }
+die "ARGV=3 and TYPE=$TYPE" if (@ARGV == 3) and ($TYPE !~ /^(bleu|ribes)/);
+die "ARGV=4 and TYPE=$TYPE" if (@ARGV == 4) and ($TYPE !~ /^(tau|fuzzy)/);
 
 my $ID = rand();
 
-my (@ref, @sys1, @sys2);
+my (@ref, @sys1, @sys2, @al);
 open REF, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
 @ref = <REF>;
 close REF;
@@ -38,7 +44,12 @@ close SYS1;
 open SYS2, "<:utf8", $ARGV[2] or die "$ARGV[2]: $!\n";
 @sys2 = <SYS2>;
 close SYS2;
-die "sizes don't match: ref=".scalar(@ref).", sys1=".scalar(@sys1).", sys2=".scalar(@sys2)."\n" if (@ref != @sys1) or (@ref != @sys2) or (@ref == 0);
+if(@ARGV == 4) {
+    open AL, "<:utf8", $ARGV[3] or die "$ARGV[3]: $!\n";
+    @al = <AL>;
+    close AL;
+}
+die "sizes don't match: ref=".scalar(@ref).", sys1=".scalar(@sys1).", sys2=".scalar(@sys2)."\n" if (@ref != @sys1) or (@ref != @sys2) or (@ref == 0) or ((@ARGV >= 4) and (@al != @ref));
 
 my (@eval1, @eval2);
 my @wins = (0, 0, 0);
@@ -57,6 +68,11 @@ foreach my $iter (1 .. $ITER) {
     open SYS2OUT, ">:utf8", "/tmp/$ID.sys2" or die "/tmp/$ID.sys2: $!\n";
     print SYS2OUT join("", map { $sys2[$_] } @sents);
     close SYS2OUT;
+    if(@al) {
+        open ALOUT, ">:utf8", "/tmp/$ID.al" or die "/tmp/$ID.al: $!\n";
+        print ALOUT join("", map { $al[$_] } @sents);
+        close ALOUT;
+    }
     # Get the evaluation
     my ($score1, $score2);
     if($TYPE eq "bleu") {
@@ -68,11 +84,29 @@ foreach my $iter (1 .. $ITER) {
         $ret =~ /^BLEU = (\S*) / or die "Bad line $ret\n";
         $score2 = $1;
     } elsif($TYPE eq "ribes") {
-        # TODO
+        # Perform the evaluation
+        my $ret = `$RIBES -r /tmp/$ID.ref /tmp/$ID.sys1 2> /dev/null`;
+        $ret =~ /^(\S*) / or die "Bad line $ret\n";
+        $score1 = $1 * 100;
+        $ret = `$RIBES -r /tmp/$ID.ref /tmp/$ID.sys2 2> /dev/null`;
+        $ret =~ /^(\S*) / or die "Bad line $ret\n";
+        $score2 = $1 * 100;
     } elsif($TYPE eq "tau") {
-        # TODO
-    } elsif($TYPE eq "chunk") {
-        # TODO
+        # Perform the evaluation
+        my $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret =~ /tau=(\S*) / or die "Bad line $ret\n";
+        $score1 = $1 * 100;
+        $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret =~ /tau=(\S*) / or die "Bad line $ret\n";
+        $score2 = $1 * 100;
+    } elsif($TYPE eq "fuzzy") {
+        # Perform the evaluation
+        my $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret =~ /fuzzy=(\S*) / or die "Bad line $ret\n";
+        $score1 = $1 * 100;
+        $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret =~ /fuzzy=(\S*) / or die "Bad line $ret\n";
+        $score2 = $1 * 100;
     } else {
         die "Unknown evaluation type $TYPE\n";
     }
