@@ -1,6 +1,6 @@
-#include <kyldr/loss-fuzzy.h>
+#include <lader/loss-fuzzy.h>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 double LossFuzzy::AddLossToProduction(

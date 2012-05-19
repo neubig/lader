@@ -2,13 +2,13 @@
 #define TEST_FEATURE_PARSE_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/feature-data-parse.h>
-#include <kyldr/feature-set.h>
-#include <kyldr/feature-parse.h>
+#include <lader/combined-alignment.h>
+#include <lader/feature-data-parse.h>
+#include <lader/feature-set.h>
+#include <lader/feature-parse.h>
 #include <fstream>
 
-namespace kyldr {
+namespace lader {
 
 class TestFeatureParse : public TestBase {
 

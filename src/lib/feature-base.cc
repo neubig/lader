@@ -1,10 +1,10 @@
 
-#include <kyldr/feature-base.h>
-#include <kyldr/feature-sequence.h>
-#include <kyldr/feature-parse.h>
-#include <kyldr/feature-align.h>
+#include <lader/feature-base.h>
+#include <lader/feature-sequence.h>
+#include <lader/feature-parse.h>
+#include <lader/feature-align.h>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 FeatureBase * FeatureBase::CreateNew(const string & type) {

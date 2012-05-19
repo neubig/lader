@@ -2,10 +2,10 @@
 #define TEST_FEATURE_SET_H__
 
 #include "test-base.h"
-#include <kyldr/feature-sequence.h>
-#include <kyldr/feature-set.h>
+#include <lader/feature-sequence.h>
+#include <lader/feature-set.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestFeatureSet : public TestBase {
 

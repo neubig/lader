@@ -1,9 +1,9 @@
-#include <kyldr/loss-fuzzy.h>
-#include <kyldr/loss-tau.h>
-#include <kyldr/loss-bracket.h>
-#include <kyldr/loss-base.h>
+#include <lader/loss-fuzzy.h>
+#include <lader/loss-tau.h>
+#include <lader/loss-bracket.h>
+#include <lader/loss-base.h>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 LossBase * LossBase::CreateNew(const string & type) {

@@ -1,16 +1,16 @@
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-bin_PROGRAMS = train-kyldr kyldr evaluate-kyldr label-ranking
+bin_PROGRAMS = train-lader lader evaluate-lader label-ranking
 
-train_kyldr_SOURCES = train-kyldr.cc
-train_kyldr_LDADD = ../lib/libkyldr.la -lboost_regex
+train_lader_SOURCES = train-lader.cc
+train_lader_LDADD = ../lib/liblader.la -lboost_regex
 
-kyldr_SOURCES = kyldr.cc
-kyldr_LDADD = ../lib/libkyldr.la -lboost_regex
+lader_SOURCES = lader.cc
+lader_LDADD = ../lib/liblader.la -lboost_regex
 
-evaluate_kyldr_SOURCES = evaluate-kyldr.cc
-evaluate_kyldr_LDADD = ../lib/libkyldr.la -lboost_regex
+evaluate_lader_SOURCES = evaluate-lader.cc
+evaluate_lader_LDADD = ../lib/liblader.la -lboost_regex
 
 label_ranking_SOURCES = label-ranking.cc
-label_ranking_LDADD = ../lib/libkyldr.la -lboost_regex
+label_ranking_LDADD = ../lib/liblader.la -lboost_regex

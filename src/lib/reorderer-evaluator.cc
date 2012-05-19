@@ -1,12 +1,12 @@
-#include <kyldr/reorderer-evaluator.h>
-#include <kyldr/feature-data-sequence.h>
-#include <kyldr/loss-fuzzy.h>
-#include <kyldr/loss-tau.h>
-#include <kyldr/ranks.h>
+#include <lader/reorderer-evaluator.h>
+#include <lader/feature-data-sequence.h>
+#include <lader/loss-fuzzy.h>
+#include <lader/loss-tau.h>
+#include <lader/ranks.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 using namespace boost;
 

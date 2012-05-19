@@ -2,13 +2,13 @@
 #define TEST_FEATURE_SEQUENCE_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/feature-sequence.h>
-#include <kyldr/feature-data-sequence.h>
-#include <kyldr/feature-set.h>
+#include <lader/combined-alignment.h>
+#include <lader/feature-sequence.h>
+#include <lader/feature-data-sequence.h>
+#include <lader/feature-set.h>
 #include <fstream>
 
-namespace kyldr {
+namespace lader {
 
 class TestFeatureSequence : public TestBase {
 

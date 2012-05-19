@@ -2,9 +2,9 @@
 #define TEST_VECTOR_SUBTRACT_H__
 
 #include "test-base.h"
-#include <kyldr/feature-vector.h>
+#include <lader/feature-vector.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestFeatureVector : public TestBase {
 

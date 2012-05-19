@@ -10,7 +10,7 @@ binmode STDERR, ":utf8";
 
 my $BLEU = "/home/neubig/work/mosesdecoder-tuo/scripts/generic/multi-bleu.perl";
 my $RIBES = "python3 /home/neubig/usr/local/RIBES-1.02.3/RIBES.py";
-my $EVALKYLDR = "/home/neubig/work/kyldr/src/bin/evaluate-kyldr";
+my $EVALLADER = "/home/neubig/work/lader/src/bin/evaluate-lader";
 $|++;
 
 # get the arguments
@@ -93,18 +93,18 @@ foreach my $iter (1 .. $ITER) {
         $score2 = $1 * 100;
     } elsif($TYPE eq "tau") {
         # Perform the evaluation
-        my $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        my $ret = `$EVALLADER -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
         $ret =~ /tau=(\S*) / or die "Bad line $ret\n";
         $score1 = $1 * 100;
-        $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret = `$EVALLADER -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
         $ret =~ /tau=(\S*) / or die "Bad line $ret\n";
         $score2 = $1 * 100;
     } elsif($TYPE eq "fuzzy") {
         # Perform the evaluation
-        my $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        my $ret = `$EVALLADER -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys1 /tmp/$ID.al 2> /dev/null | tail -n 1`;
         $ret =~ /fuzzy=(\S*) / or die "Bad line $ret\n";
         $score1 = $1 * 100;
-        $ret = `$EVALKYLDR -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
+        $ret = `$EVALLADER -attach_null $ATTACH /tmp/$ID.ref /tmp/$ID.sys2 /tmp/$ID.al 2> /dev/null | tail -n 1`;
         $ret =~ /fuzzy=(\S*) / or die "Bad line $ret\n";
         $score2 = $1 * 100;
     } else {

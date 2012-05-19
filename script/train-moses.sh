@@ -40,7 +40,7 @@ MOD=$3
 DATATYPE=$4
 
 # Set up the constants
-KYLDR="/home/neubig/usr/arcs/local/kyldr/src/bin/kyldr"
+LADER="/home/neubig/usr/arcs/local/lader/src/bin/lader"
 
 # 0) first set the path of all variables here
 WD=`pwd`
@@ -75,8 +75,8 @@ fi
 [[ -e reordered/$MOD ]] || mkdir reordered/$MOD
 if [[ ! -e reordered/$MOD/kyoto-train.cln.$SRC ]]; then
     for f in kyoto-train.cln.00 kyoto-train.cln.01 kyoto-train.cln.02 kyoto-train.cln.03 kyoto-train.cln.04 kyoto-train.cln.05 kyoto-train.cln.06 kyoto-train.cln.07 kyoto-train.cln.08 kyoto-train.cln.09 kyoto-train.cln.10 kyoto-train.cln.11 kyoto-train.cln.12 kyoto-train.cln.13 kyoto-train.cln.14 kyoto-train.cln.15 kyoto-train.cln.16 kyoto-train.cln.17 kyoto-train.cln.18 kyoto-train.cln.19 kyoto-train.cln.20 kyoto-train.cln.21 kyoto-tune kyoto-dev kyoto-test; do
-        echo "rsh arcs01 \"source /home/neubig/.bashrc; cd $WD; bsub '$KYLDR -beam 1 -model models/$MOD.mod < data/low$DATATYPE/$f.$SRC > reordered/$MOD/$f.$SRC 2> reordered/$MOD/$f.$SRC.log; touch reordered/$MOD/$f.$SRC.done'\"";
-        rsh arcs01 "source /home/neubig/.bashrc; cd $WD; bsub '$KYLDR -beam 1 -model models/$MOD.mod < data/low$DATATYPE/$f.$SRC > reordered/$MOD/$f.$SRC 2> reordered/$MOD/$f.$SRC.log; touch reordered/$MOD/$f.$SRC.done'";
+        echo "rsh arcs01 \"source /home/neubig/.bashrc; cd $WD; bsub '$LADER -beam 1 -model models/$MOD.mod < data/low$DATATYPE/$f.$SRC > reordered/$MOD/$f.$SRC 2> reordered/$MOD/$f.$SRC.log; touch reordered/$MOD/$f.$SRC.done'\"";
+        rsh arcs01 "source /home/neubig/.bashrc; cd $WD; bsub '$LADER -beam 1 -model models/$MOD.mod < data/low$DATATYPE/$f.$SRC > reordered/$MOD/$f.$SRC 2> reordered/$MOD/$f.$SRC.log; touch reordered/$MOD/$f.$SRC.done'";
     done
     for f in kyoto-train.cln.00 kyoto-train.cln.01 kyoto-train.cln.02 kyoto-train.cln.03 kyoto-train.cln.04 kyoto-train.cln.05 kyoto-train.cln.06 kyoto-train.cln.07 kyoto-train.cln.08 kyoto-train.cln.09 kyoto-train.cln.10 kyoto-train.cln.11 kyoto-train.cln.12 kyoto-train.cln.13 kyoto-train.cln.14 kyoto-train.cln.15 kyoto-train.cln.16 kyoto-train.cln.17 kyoto-train.cln.18 kyoto-train.cln.19 kyoto-train.cln.20 kyoto-train.cln.21 kyoto-tune kyoto-dev kyoto-test; do
         while [[ ! -e reordered/$MOD/$f.$SRC.done ]]; do

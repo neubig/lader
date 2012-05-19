@@ -1,9 +1,9 @@
-#include <kyldr/dictionary.h>
+#include <lader/dictionary.h>
 #include <boost/algorithm/string.hpp>
-#include <kyldr/util.h>
+#include <lader/util.h>
 #include <boost/algorithm/string/regex.hpp>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 using namespace boost;
 

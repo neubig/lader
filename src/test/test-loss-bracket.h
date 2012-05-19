@@ -2,10 +2,10 @@
 #define TEST_LOSS_BRACKET_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/loss-bracket.h>
+#include <lader/combined-alignment.h>
+#include <lader/loss-bracket.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestLossBracket : public TestBase {
 

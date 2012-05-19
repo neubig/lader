@@ -1,7 +1,7 @@
-#include <kyldr/loss-bracket.h>
+#include <lader/loss-bracket.h>
 #include <boost/foreach.hpp>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 using namespace boost;
 

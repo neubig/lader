@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include <kyldr/alignment.h>
+#include <lader/alignment.h>
 #include <boost/algorithm/string/regex.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
@@ -8,7 +8,7 @@
 
 using namespace std;
 using namespace boost;
-using namespace kyldr;
+using namespace lader;
 
 // Convert to and from strings
 string Alignment::ToString() const {

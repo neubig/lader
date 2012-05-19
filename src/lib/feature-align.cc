@@ -1,4 +1,4 @@
-#include <kyldr/feature-align.h>
+#include <lader/feature-align.h>
 
 #include <sstream>
 #include <cfloat>
@@ -9,7 +9,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace boost;
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 // Align the comma-separated list of configuration options

@@ -2,10 +2,10 @@
 #define TEST_LOSS_FUZZY_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/loss-fuzzy.h>
+#include <lader/combined-alignment.h>
+#include <lader/loss-fuzzy.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestLossFuzzy : public TestBase {
 

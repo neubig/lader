@@ -1,7 +1,7 @@
-#include <kyldr/reorderer-trainer.h>
+#include <lader/reorderer-trainer.h>
 #include <boost/algorithm/string.hpp>
 
-using namespace kyldr;
+using namespace lader;
 using namespace boost;
 using namespace std;
 

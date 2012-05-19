@@ -2,12 +2,12 @@
 #define TEST_ALIGNMENTS_AND_RANKS_H__
 
 #include "test-base.h"
-#include <kyldr/alignment.h>
-#include <kyldr/combined-alignment.h>
-#include <kyldr/ranks.h>
+#include <lader/alignment.h>
+#include <lader/combined-alignment.h>
+#include <lader/ranks.h>
 #include <cfloat>
 
-namespace kyldr {
+namespace lader {
 
 class TestAlignmentsAndRanks : public TestBase {
 

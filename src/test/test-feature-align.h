@@ -2,13 +2,13 @@
 #define TEST_FEATURE_ALIGN_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/feature-data-align.h>
-#include <kyldr/feature-set.h>
-#include <kyldr/feature-align.h>
+#include <lader/combined-alignment.h>
+#include <lader/feature-data-align.h>
+#include <lader/feature-set.h>
+#include <lader/feature-align.h>
 #include <fstream>
 
-namespace kyldr {
+namespace lader {
 
 class TestFeatureAlign : public TestBase {
 

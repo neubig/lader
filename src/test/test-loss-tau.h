@@ -2,10 +2,10 @@
 #define TEST_LOSS_TAU_H__
 
 #include "test-base.h"
-#include <kyldr/combined-alignment.h>
-#include <kyldr/loss-tau.h>
+#include <lader/combined-alignment.h>
+#include <lader/loss-tau.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestLossTau : public TestBase {
 

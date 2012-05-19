@@ -1,4 +1,4 @@
-#include <kyldr/feature-parse.h>
+#include <lader/feature-parse.h>
 
 #include <sstream>
 #include <cfloat>
@@ -9,7 +9,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace boost;
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 bool FeatureParse::FeatureTemplateIsLegal(const string & name) {

@@ -1,10 +1,10 @@
-#ifndef TEST_KYLDR_DICTIONARY_H__
-#define TEST_KYLDR_DICTIONARY_H__
+#ifndef TEST_LADER_DICTIONARY_H__
+#define TEST_LADER_DICTIONARY_H__
 
 #include "test-base.h"
-#include <kyldr/dictionary.h>
+#include <lader/dictionary.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestDictionary : public TestBase {
 

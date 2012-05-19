@@ -1,11 +1,11 @@
-#include <kyldr/ranks.h>
-#include <kyldr/util.h>
+#include <lader/ranks.h>
+#include <lader/util.h>
 #include <boost/foreach.hpp>
 #include <map>
 #include <iostream>
 
 using namespace std;
-using namespace kyldr;
+using namespace lader;
 
 // Find the ranks of each 
 Ranks::Ranks(const CombinedAlign & combined) {

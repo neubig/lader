@@ -1,9 +1,9 @@
 
-#include <kyldr/combined-alignment.h>
+#include <lader/combined-alignment.h>
 #include <iostream>
 #include <cfloat>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std; 
 
 const char* CombinedAlign::opening_brackets_[num_brackets_] =

@@ -1,4 +1,4 @@
-#include <kyldr/feature-sequence.h>
+#include <lader/feature-sequence.h>
 
 #include <sstream>
 #include <cfloat>
@@ -9,7 +9,7 @@
 #include <boost/algorithm/string/join.hpp>
 
 using namespace boost;
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 bool FeatureSequence::FeatureTemplateIsLegal(const string & name) {

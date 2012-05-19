@@ -1,6 +1,6 @@
-#include <kyldr/loss-tau.h>
+#include <lader/loss-tau.h>
 
-using namespace kyldr;
+using namespace lader;
 using namespace std;
 
 double LossTau::AddLossToProduction(

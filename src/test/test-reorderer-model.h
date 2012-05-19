@@ -2,9 +2,9 @@
 #define TEST_REORDERER_MODEL_H__
 
 #include "test-base.h"
-#include <kyldr/reorderer-model.h>
+#include <lader/reorderer-model.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestReordererModel : public TestBase {
 

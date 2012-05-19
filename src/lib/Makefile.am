@@ -1,4 +1,4 @@
-KYLDRCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
+LADERCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
            feature-sequence.cc feature-set.cc feature-base.cc \
            feature-vector.cc reorderer-model.cc loss-fuzzy.cc \
            reorderer-trainer.cc loss-base.cc reorderer-runner.cc \
@@ -9,7 +9,7 @@ KYLDRCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
 
 AM_CPPFLAGS = -I$(srcdir)/../include
 
-lib_LTLIBRARIES = libkyldr.la
+lib_LTLIBRARIES = liblader.la
 
-libkyldr_la_SOURCES = ${KYLDRCPP}
-libkyldr_la_LDFLAGS = -version-info 0:0:0
+liblader_la_SOURCES = ${LADERCPP}
+liblader_la_LDFLAGS = -version-info 0:0:0

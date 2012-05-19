@@ -3,15 +3,15 @@
 
 #include "test-base.h"
 #include <climits>
-#include <kyldr/hyper-graph.h>
-#include <kyldr/alignment.h>
-#include <kyldr/reorderer-model.h>
-#include <kyldr/feature-data-sequence.h>
-#include <kyldr/feature-sequence.h>
-#include <kyldr/feature-set.h>
-#include <kyldr/ranks.h>
+#include <lader/hyper-graph.h>
+#include <lader/alignment.h>
+#include <lader/reorderer-model.h>
+#include <lader/feature-data-sequence.h>
+#include <lader/feature-sequence.h>
+#include <lader/feature-set.h>
+#include <lader/ranks.h>
 
-namespace kyldr {
+namespace lader {
 
 class TestHyperGraph : public TestBase {
 

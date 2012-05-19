@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.59])
-AC_INIT([kyldr], [0.0.1], [neubig@gmail.com])
-AC_CONFIG_SRCDIR(src/lib/kyldr.cc)
-AC_CONFIG_HEADERS([src/include/kyldr/config.h])
+AC_INIT([lader], [0.0.1], [neubig@gmail.com])
+AC_CONFIG_SRCDIR(src/lib/lader.cc)
+AC_CONFIG_HEADERS([src/include/lader/config.h])
 AC_CONFIG_FILES([
     Makefile
     src/Makefile

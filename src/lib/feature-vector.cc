@@ -1,9 +1,9 @@
-#include <kyldr/feature-vector.h>
+#include <lader/feature-vector.h>
 
-using namespace kyldr;
+using namespace lader;
 
 // Vector subtract
-FeatureVectorInt kyldr::VectorSubtract(const FeatureVectorInt & a, 
+FeatureVectorInt lader::VectorSubtract(const FeatureVectorInt & a, 
                                 const FeatureVectorInt & b) {
     FeatureVectorInt ret;
     int i = 0, j = 0, 
