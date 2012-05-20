@@ -24,7 +24,7 @@ Alignment::AlignmentPair Alignment::SplitAlignment(const string & str) {
     vector<string> left_right;
     algorithm::split(left_right, str, is_any_of("-"));
     if(left_right.size() != 2)
-        THROW_ERROR("Bad alignment sting " << str);
+        THROW_ERROR("Bad alignment string (must be in the format \"LENGTH ||| FPOS1-EPOS1 FPOS1-EPOS1\"" << endl << str);
     AlignmentPair ret;
     istringstream left(left_right[0]); left >> ret.first;
     istringstream right(left_right[1]); right >> ret.second;
@@ -34,7 +34,7 @@ Alignment Alignment::FromString(const string & str) {
     vector<string> length_and_align;
     algorithm::split_regex(length_and_align, str, regex(" \\|\\|\\| "));
     if(length_and_align.size() != 2)
-        THROW_ERROR("Bad alignment sting " << str);
+        THROW_ERROR("Bad alignment string (must be in the format \"LENGTH ||| FPOS1-EPOS1 FPOS1-EPOS1\"" << endl << str);
     Alignment ret(SplitAlignment(length_and_align[0]));
     tokenizer<char_separator<char> > 
                     aligns(length_and_align[1], char_separator<char>(" "));

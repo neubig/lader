@@ -6,6 +6,7 @@
 #include <lader/reorderer-model.h>
 #include <lader/target-span.h>
 #include <lader/util.h>
+#include <tr1/unordered_map>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 
@@ -40,16 +41,17 @@ const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
 
 // Score a span
 double HyperGraph::Score(const ReordererModel & model,
-                         double loss_multiplier,
-                         TargetSpan* span) {
-    double max_score = span->GetScore();
-    if(max_score == -DBL_MAX) {
+                       double loss_multiplier,
+                       TargetSpan* span) {
+    if(span->GetScore() == -DBL_MAX) {
         std::vector<Hypothesis*> & hyps = span->GetHypotheses();
-        BOOST_FOREACH(Hypothesis *hyp, hyps)
-            max_score = max(max_score, Score(model, loss_multiplier, hyp));
-        sort(hyps.begin(), hyps.end(), DescendingScore<Hypothesis>());
+        for(int i = 0; i < (int)hyps.size(); i++) {
+            Score(model, loss_multiplier, hyps[i]);
+            if(hyps[i]->GetScore() > hyps[0]->GetScore())
+                swap(hyps[i], hyps[0]);
+        }
     }
-    return max_score;
+    return span->GetScore();
 }
 
 // Score a hypothesis
@@ -88,10 +90,10 @@ double HyperGraph::Rescore(const ReordererModel & model, double loss_multiplier)
     // Recursively score all edges from the root
     BOOST_FOREACH(TargetSpan * trg, (*stacks_.rbegin())->GetSpans())
         Score(model, loss_multiplier, trg);
-    // Sort to make sure that the spans are all in the right order 
-    BOOST_FOREACH(SpanStack * stack, stacks_)
-        sort(stack->GetSpans().begin(), stack->GetSpans().end(), 
-                                            DescendingScore<TargetSpan>()); 
+    // // Sort to make sure that the spans are all in the right order 
+    // BOOST_FOREACH(SpanStack * stack, stacks_)
+    //     sort(stack->GetSpans().begin(), stack->GetSpans().end(), 
+    //                                     DescendingScore<TargetSpan>()); 
     TargetSpan* best = (*stacks_.rbegin())->GetSpanOfRank(0);
     return best->GetScore();
 }
@@ -157,15 +159,16 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
 
     }
     // Get a map to store identical target spans
-    map<pair<int,int>, TargetSpan*> spans;
+    tr1::unordered_map<int, TargetSpan*> spans;
+    int r_max = r+1;
     TargetSpan * trg_span = NULL;
     // Start beam search
     int num_processed = 0;
     while((!beam_size || num_processed < beam_size) && q.size()) {
         // Pop a hypothesis from the stack and get its target span
         Hypothesis hyp = q.top(); q.pop();
-        pair<int,int> trg_idx(hyp.GetTrgLeft(), hyp.GetTrgRight());
-        map<pair<int,int>, TargetSpan*>::iterator it = spans.find(trg_idx);
+        int trg_idx = hyp.GetTrgLeft()*r_max+hyp.GetTrgRight();
+        tr1::unordered_map<int, TargetSpan*>::iterator it = spans.find(trg_idx);
         if(it != spans.end()) {
             trg_span = it->second;
         } else {
@@ -187,6 +190,9 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         if(new_left_trg) {
             old_left_trg = GetTrgSpan(l,hyp.GetCenter()-1,hyp.GetLeftRank());
             Hypothesis new_hyp(hyp);
+            // // DEBUG
+            // if(old_left_trg->GetScore() < new_left_trg->GetScore())
+            //     THROW_ERROR("Score increase in cube pruning");
             new_hyp.SetScore(hyp.GetScore() 
                         - old_left_trg->GetScore() + new_left_trg->GetScore());
             new_hyp.SetLeftRank(hyp.GetLeftRank()+1);
@@ -202,6 +208,9 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         new_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank()+1);
         if(new_right_trg) {
             old_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank());
+            // // DEBUG
+            // if(old_right_trg->GetScore() < new_right_trg->GetScore())
+            //     THROW_ERROR("Score increase in cube pruning");
             Hypothesis new_hyp(hyp);
             new_hyp.SetScore(hyp.GetScore() 
                     - old_right_trg->GetScore() + new_right_trg->GetScore());
@@ -216,11 +225,10 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         }
     }
     SpanStack * ret = new SpanStack;
-    typedef pair<pair<int,int>, TargetSpan*> MapPair;
+    typedef pair<int, TargetSpan*> MapPair;
     BOOST_FOREACH(const MapPair & map_pair, spans)
         ret->AddSpan(map_pair.second);
-    sort(ret->GetSpans().begin(), ret->GetSpans().end(), 
-                                DescendingScore<TargetSpan>());
+    sort(ret->GetSpans().begin(), ret->GetSpans().end(), DescendingScore<TargetSpan>());
     return ret;
 }
 
