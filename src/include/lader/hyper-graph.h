@@ -1,7 +1,6 @@
 #ifndef HYPER_GRAPH_H__ 
 #define HYPER_GRAPH_H__
 
-#include <map>
 #include <iostream>
 #include <lader/target-span.h>
 #include <lader/span-stack.h>
@@ -9,15 +8,15 @@
 #include <lader/feature-data-base.h>
 #include <lader/hyper-edge.h>
 #include <lader/util.h>
+#include <tr1/unordered_map>
 
 namespace lader {
 
 class ReordererModel;
 class FeatureSet;
 
-typedef std::map<HyperEdge, FeatureVectorInt*> EdgeFeatureMap;
+typedef std::tr1::unordered_map<HyperEdge, FeatureVectorInt*, HyperEdgeHash> EdgeFeatureMap;
 typedef std::pair<HyperEdge, FeatureVectorInt*> EdgeFeaturePair;
-
 
 class HyperGraph {
 public:
@@ -93,7 +92,7 @@ public:
     FeatureVectorInt AccumulateFeatures(const TargetSpan* span);
 
     void AccumulateFeatures(const TargetSpan* span, 
-                            std::map<int,double> & feat_map);
+                            std::tr1::unordered_map<int,double> & feat_map);
 
     void SetFeatures(EdgeFeatureMap * features) { features_ = features;}
     EdgeFeatureMap * GetFeatures() { return features_; }

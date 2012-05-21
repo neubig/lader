@@ -268,7 +268,7 @@ double HyperGraph::AccumulateLoss(const TargetSpan* span) {
 }
 
 FeatureVectorInt HyperGraph::AccumulateFeatures(const TargetSpan* span) {
-    std::map<int,double> feat_map;
+    std::tr1::unordered_map<int,double> feat_map;
     AccumulateFeatures(span, feat_map);
     FeatureVectorInt ret;
     BOOST_FOREACH(FeaturePairInt feat_pair, feat_map)
@@ -277,7 +277,7 @@ FeatureVectorInt HyperGraph::AccumulateFeatures(const TargetSpan* span) {
 }
 
 void HyperGraph::AccumulateFeatures(const TargetSpan* span, 
-                        std::map<int,double> & feat_map) {
+                        std::tr1::unordered_map<int,double> & feat_map) {
     const Hypothesis * hyp = span->GetHypothesis(0);
     int l = hyp->GetLeft(), c = hyp->GetCenter(), r = hyp->GetRight();
     HyperEdge::Type t = hyp->GetType();

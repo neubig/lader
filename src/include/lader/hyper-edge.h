@@ -1,7 +1,13 @@
 #ifndef HYPER_EDGE_H__ 
 #define HYPER_EDGE_H__
 
+#include <string>
+
 namespace lader {
+
+#define HYPEREDGE_CMULT 255
+#define HYPEREDGE_LMULT 65535
+#define HYPEREDGE_TMULT 16777215
 
 class HyperEdge {
 public:
@@ -30,6 +36,9 @@ public:
     bool operator== (const HyperEdge & rhs) const {
         return l_ == rhs.l_ && c_ == rhs.c_ && r_ == rhs.r_ && t_ == rhs.t_;
     }
+    size_t hash() const {
+        return t_*HYPEREDGE_TMULT+l_*HYPEREDGE_LMULT+c_*HYPEREDGE_CMULT+r_;
+    }
 
     // Accessors
     int GetLeft() const { return l_; }
@@ -45,8 +54,13 @@ private:
     // The type of the edge
     Type t_;
 
-
 };
+
+typedef struct {
+    size_t operator() (const HyperEdge & edge) const {
+        return edge.hash();
+    }
+} HyperEdgeHash;
 
 }
 

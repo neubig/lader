@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <lader/config.h>
 
 #define LADER_SAFE
 
@@ -30,10 +31,10 @@
     }
     template <class T>
     class StringMap : public __gnu_cxx::hash_map<std::string,T> { };
-#else
-#   include <map>
-    template <class T>
-    class StringMap : public std::map<std::string,T> { };
+// #else
+// #   include <map>
+//     template <class T>
+//     class StringMap : public std::map<std::string,T> { };
 #endif
 
 namespace std {
