@@ -74,19 +74,20 @@ public:
         FeatureParse feat;
         feat.ParseConfiguration("L%LP,R%RP,S%SP");
         // These features apply to only non-terminals
-        FeatureVectorString edge00exp, edge02exp, edge13exp;
-        edge00exp.push_back(MakePair(string("S||N"), 1));
-        edge02exp.push_back(MakePair(string("L||N"), 1));
-        edge02exp.push_back(MakePair(string("R||X"), 1));
-        edge02exp.push_back(MakePair(string("S||X"), 1));
-        edge13exp.push_back(MakePair(string("L||V"), 1));
-        edge13exp.push_back(MakePair(string("R||NP"), 1));
-        edge13exp.push_back(MakePair(string("S||VP"), 1));
+        SymbolSet<int> syms;
+        FeatureVectorInt edge00exp, edge02exp, edge13exp;
+        edge00exp.push_back(MakePair(syms.GetId("S||N" , true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("L||N" , true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("R||X" , true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("S||X" , true), 1));
+        edge13exp.push_back(MakePair(syms.GetId("L||V" , true), 1));
+        edge13exp.push_back(MakePair(syms.GetId("R||NP", true), 1));
+        edge13exp.push_back(MakePair(syms.GetId("S||VP", true), 1));
         // Create vectors
-        FeatureVectorString edge00act, edge02act, edge13act; 
-        feat.GenerateEdgeFeatures(fdp, edge00, edge00act);
-        feat.GenerateEdgeFeatures(fdp, edge02, edge02act);
-        feat.GenerateEdgeFeatures(fdp, edge13, edge13act);
+        FeatureVectorInt edge00act, edge02act, edge13act; 
+        feat.GenerateEdgeFeatures(fdp, edge00, syms, true, edge00act);
+        feat.GenerateEdgeFeatures(fdp, edge02, syms, true, edge02act);
+        feat.GenerateEdgeFeatures(fdp, edge13, syms, true, edge13act);
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge00exp, edge00act);

@@ -8,12 +8,15 @@ using namespace boost;
 
 
 // Generates the features that can be factored over a node
-FeatureVectorString * FeatureSet::MakeEdgeFeatures(
-        const vector<FeatureDataBase*> & sent, const HyperEdge & edge) const {
+FeatureVectorInt * FeatureSet::MakeEdgeFeatures(
+        const vector<FeatureDataBase*> & sent,
+        const HyperEdge & edge,
+        SymbolSet<int> & feature_ids,
+        bool add) const {
     // Otherwise generate the features
-    FeatureVectorString * feats = new FeatureVectorString;
+    FeatureVectorInt * feats = new FeatureVectorInt;
     for(int i = 0; i < (int)sent.size(); i++)
-        feature_gens_[i]->GenerateEdgeFeatures(*sent[i], edge, *feats);
+        feature_gens_[i]->GenerateEdgeFeatures(*sent[i], edge, feature_ids, add, *feats);
     return feats;
 }
 

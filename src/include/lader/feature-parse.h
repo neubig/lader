@@ -51,7 +51,9 @@ public:
     virtual void GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
                                 const HyperEdge & edge,
-                                FeatureVectorString & feats);
+                                SymbolSet<int> & feature_ids,
+                                bool add,
+                                FeatureVectorInt & feats);
 
     // Get the type of this feature generator
     virtual std::string GetType() const { return "seq"; }

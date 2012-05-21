@@ -29,9 +29,7 @@ const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
     if(features_ == NULL) features_ = new EdgeFeatureMap;
     EdgeFeatureMap::const_iterator it = features_->find(edge);
     if(it == features_->end()) {
-        FeatureVectorString * str = feature_gen.MakeEdgeFeatures(sent, edge);
-        ret = model.IndexFeatureVector(*str);
-        delete str;
+        ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
         features_->insert(MakePair(edge, ret));
     } else {
         ret = it->second;

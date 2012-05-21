@@ -28,15 +28,16 @@ public:
         string str = "this is a test ||| 4-3 ||| 0-0 1-2 2-1 3-1";
         FeatureDataBase * fda = feat.ParseData(str);
         // These features apply to only non-terminals
-        FeatureVectorString edge00exp, edge02exp, edge13exp;
-        edge00exp.push_back(MakePair(string("TAU"), 0));
-        edge02exp.push_back(MakePair(string("TAU"), 2));
-        edge13exp.push_back(MakePair(string("TAU"), 2));
+        SymbolSet<int> syms;
+        FeatureVectorInt edge00exp, edge02exp, edge13exp;
+        edge00exp.push_back(MakePair(syms.GetId("TAU", true), 0));
+        edge02exp.push_back(MakePair(syms.GetId("TAU", true), 2));
+        edge13exp.push_back(MakePair(syms.GetId("TAU", true), 2));
         // Create vectors
-        FeatureVectorString edge00act, edge02act, edge13act; 
-        feat.GenerateEdgeFeatures(*fda, edge00, edge00act);
-        feat.GenerateEdgeFeatures(*fda, edge02, edge02act);
-        feat.GenerateEdgeFeatures(*fda, edge13, edge13act);
+        FeatureVectorInt edge00act, edge02act, edge13act; 
+        feat.GenerateEdgeFeatures(*fda, edge00, syms, true, edge00act);
+        feat.GenerateEdgeFeatures(*fda, edge02, syms, true, edge02act);
+        feat.GenerateEdgeFeatures(*fda, edge13, syms, true, edge13act);
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge00exp, edge00act);

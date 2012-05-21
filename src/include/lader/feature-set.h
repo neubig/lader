@@ -29,8 +29,11 @@ public:
     }
 
     // Generates the features that can be factored over a node
-    FeatureVectorString * MakeEdgeFeatures(
-        const Sentence & sent, const HyperEdge & edge) const;
+    FeatureVectorInt * MakeEdgeFeatures(
+        const Sentence & sent,
+        const HyperEdge & edge,
+        SymbolSet<int> & feature_ids,
+        bool add_features) const;
     
     // Change an integer-indexed feature vector into a string-indexed vector
     FeatureVectorString StringifyFeatureIndices(const FeatureVectorInt & vec);

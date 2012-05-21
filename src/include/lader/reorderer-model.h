@@ -32,6 +32,14 @@ public:
     // Perform one round of Pegasos
     void AdjustWeights(const FeatureVectorInt & feats);
 
+    // Get the feature IDs
+    SymbolSet<int> & GetFeatureIds() {
+        return feature_ids_;
+    }
+    const SymbolSet<int> & GetFeatureIds() const {
+        return feature_ids_;
+    }
+
     // Get an indexed feature vector from a string feature vector
     FeatureVectorInt * IndexFeatureVector(const FeatureVectorString & str) {
         FeatureVectorInt * ret = new FeatureVectorInt(str.size());
@@ -96,6 +104,7 @@ public:
     }
     void SetCost(double cost) { lambda_ = cost; }
     void SetAdd(bool add) { add_features_ = add; }
+    bool GetAdd() const { return add_features_; }
 
 private:
     // Weights over features and weights over losses

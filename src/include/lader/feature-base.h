@@ -7,6 +7,7 @@
 #include <lader/feature-data-base.h>
 #include <lader/hyper-edge.h>
 #include <lader/dictionary.h>
+#include <lader/symbol-set.h>
 
 namespace lader {
 
@@ -38,7 +39,9 @@ public:
     virtual void GenerateEdgeFeatures(
                                 const FeatureDataBase & sentence,
                                 const HyperEdge & edge,
-                                FeatureVectorString & feats) = 0;
+                                SymbolSet<int> & feature_ids,
+                                bool add,
+                                FeatureVectorInt & feats) = 0;
 
     // Get the type string of this particular value
     virtual std::string GetType() const = 0;

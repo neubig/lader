@@ -143,7 +143,9 @@ double FeatureParse::GetEdgeFeatureValue(const FeatureDataParse & sent,
 void FeatureParse::GenerateEdgeFeatures(
                             const FeatureDataBase & sent,
                             const HyperEdge & edge,
-                            FeatureVectorString & feat) {
+                            SymbolSet<int> & feature_ids,
+                            bool add,
+                            FeatureVectorInt & feat) {
     const FeatureDataParse & sent_seq = (const FeatureDataParse &)sent;
     bool is_nonterm = (edge.GetType() == HyperEdge::EDGE_INV || 
                        edge.GetType() == HyperEdge::EDGE_STR);
@@ -180,7 +182,10 @@ void FeatureParse::GenerateEdgeFeatures(
                 }
             }
             if(feat_val)
-                feat.push_back(MakePair(algorithm::join(values,"||"),feat_val));
+                feat.push_back(
+                    MakePair(
+                        feature_ids.GetId(algorithm::join(values,"||"), add),
+                                          feat_val));
         }
     }
 }

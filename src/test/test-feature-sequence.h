@@ -81,34 +81,35 @@ public:
         featr.ParseConfiguration("L%RL,R%RR,S%RS,B%RB,A%RA,N%RN");
         feata.ParseConfiguration("A%SS%LS%RS,S%SS1");
         // These features apply to only non-terminals
-        FeatureVectorString edge00l, edge02l;
-        edge02l.push_back(MakePair(string("L||he"), 1));
-        edge02l.push_back(MakePair(string("R||he"), 1));
-        edge02l.push_back(MakePair(string("S||he"), 1));
-        edge02l.push_back(MakePair(string("B||<s>"), 1));
-        edge02l.push_back(MakePair(string("A||ate"), 1));
-        edge02l.push_back(MakePair(string("N||1"), 1));
-        FeatureVectorString edge00r, edge02r;
-        edge02r.push_back(MakePair(string("L||ate"), 1));
-        edge02r.push_back(MakePair(string("R||rice"), 1));
-        edge02r.push_back(MakePair(string("S||ate rice"), 1));
-        edge02r.push_back(MakePair(string("B||he"), 1));
-        edge02r.push_back(MakePair(string("A||<s>"), 1));
-        edge02r.push_back(MakePair(string("N||2"), 1));
-        FeatureVectorString edge00a, edge02a;
-        edge00a.push_back(MakePair(string("S||he"), 1));
+        SymbolSet<int> syms;
+        FeatureVectorInt edge00l, edge02l;
+        edge02l.push_back(MakePair(syms.GetId("L||he" , true), 1));
+        edge02l.push_back(MakePair(syms.GetId("R||he" , true), 1));
+        edge02l.push_back(MakePair(syms.GetId("S||he" , true), 1));
+        edge02l.push_back(MakePair(syms.GetId("B||<s>", true), 1));
+        edge02l.push_back(MakePair(syms.GetId("A||ate", true), 1));
+        edge02l.push_back(MakePair(syms.GetId("N||1"  , true), 1));
+        FeatureVectorInt edge00r, edge02r;
+        edge02r.push_back(MakePair(syms.GetId("L||ate"     , true), 1));
+        edge02r.push_back(MakePair(syms.GetId("R||rice"    , true), 1));
+        edge02r.push_back(MakePair(syms.GetId("S||ate rice", true), 1));
+        edge02r.push_back(MakePair(syms.GetId("B||he"      , true), 1));
+        edge02r.push_back(MakePair(syms.GetId("A||<s>"     , true), 1));
+        edge02r.push_back(MakePair(syms.GetId("N||2"       , true), 1));
+        FeatureVectorInt edge00a, edge02a;
+        edge00a.push_back(MakePair(syms.GetId("S||he"      , true), 1));
         edge02a.push_back(
-            MakePair(string("A||he ate rice||he||ate rice"), 1));
-        edge02a.push_back(MakePair(string("S||"), 1));
+            MakePair(syms.GetId("A||he ate rice||he||ate rice", true), 1));
+        edge02a.push_back(MakePair(syms.GetId("S||", true), 1));
         // Create vectors
-        FeatureVectorString edge00lact, edge02lact, edge00ract, 
+        FeatureVectorInt edge00lact, edge02lact, edge00ract, 
                             edge02ract, edge00aact, edge02aact;
-        featl.GenerateEdgeFeatures(sent, edge00, edge00lact);
-        featl.GenerateEdgeFeatures(sent, edge02, edge02lact);
-        featr.GenerateEdgeFeatures(sent, edge00, edge00ract);
-        featr.GenerateEdgeFeatures(sent, edge02, edge02ract);
-        feata.GenerateEdgeFeatures(sent, edge00, edge00aact);
-        feata.GenerateEdgeFeatures(sent, edge02, edge02aact);
+        featl.GenerateEdgeFeatures(sent, edge00, syms, true, edge00lact);
+        featl.GenerateEdgeFeatures(sent, edge02, syms, true, edge02lact);
+        featr.GenerateEdgeFeatures(sent, edge00, syms, true, edge00ract);
+        featr.GenerateEdgeFeatures(sent, edge02, syms, true, edge02ract);
+        feata.GenerateEdgeFeatures(sent, edge00, syms, true, edge00aact);
+        feata.GenerateEdgeFeatures(sent, edge02, syms, true, edge02aact);
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge00l, edge00lact);
@@ -134,14 +135,15 @@ public:
         FeatureSequence feat;
         feat.ParseConfiguration("dict=/tmp/dict.txt,QE%SN%SQE0,Q1%SN%SQ#01");
         // Test for the span
-        FeatureVectorString feat00, feat02;
-        feat00.push_back(MakePair(string("QE||1||+"), 1));
-        feat00.push_back(MakePair(string("Q1||1"), 0.2));
-        feat02.push_back(MakePair(string("QE||3||-"), 1));
+        SymbolSet<int> syms;
+        FeatureVectorInt feat00, feat02;
+        feat00.push_back(MakePair(syms.GetId("QE||1||+", true), 1));
+        feat00.push_back(MakePair(syms.GetId("Q1||1", true), 0.2));
+        feat02.push_back(MakePair(syms.GetId("QE||3||-", true), 1));
         // Create the actual features
-        FeatureVectorString edge00act, edge02act;
-        feat.GenerateEdgeFeatures(sent, edge00, edge00act);
-        feat.GenerateEdgeFeatures(sent, edge02, edge02act);
+        FeatureVectorInt edge00act, edge02act;
+        feat.GenerateEdgeFeatures(sent, edge00, syms, true, edge00act);
+        feat.GenerateEdgeFeatures(sent, edge02, syms, true, edge02act);
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(feat00, edge00act);
@@ -153,23 +155,24 @@ public:
         FeatureSequence feat;
         feat.ParseConfiguration("D%CD,B%CB,L%CL,D#%CD#,B#%CB#,T%ET");
         // These features apply to non-terminals
-        FeatureVectorString edge00exp, edge12exp, edge02exp;
-        edge00exp.push_back(MakePair(string("T||F"), 1));
-        edge12exp.push_back(MakePair(string("D||0"), 1));
-        edge12exp.push_back(MakePair(string("B||0"), 1));
-        edge12exp.push_back(MakePair(string("L||E"), 1));
-        edge12exp.push_back(MakePair(string("T||I"), 1));
-        edge02exp.push_back(MakePair(string("D||1"), 1));
-        edge02exp.push_back(MakePair(string("B||1"), 1));
-        edge02exp.push_back(MakePair(string("L||R"), 1));
-        edge02exp.push_back(MakePair(string("D#"), 1));
-        edge02exp.push_back(MakePair(string("B#"), 1));
-        edge02exp.push_back(MakePair(string("T||S"), 1));
+        SymbolSet<int> syms;
+        FeatureVectorInt edge00exp, edge12exp, edge02exp;
+        edge00exp.push_back(MakePair(syms.GetId("T||F", true), 1));
+        edge12exp.push_back(MakePair(syms.GetId("D||0", true), 1));
+        edge12exp.push_back(MakePair(syms.GetId("B||0", true), 1));
+        edge12exp.push_back(MakePair(syms.GetId("L||E", true), 1));
+        edge12exp.push_back(MakePair(syms.GetId("T||I", true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("D||1", true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("B||1", true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("L||R", true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("D#"  , true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("B#"  , true), 1));
+        edge02exp.push_back(MakePair(syms.GetId("T||S", true), 1));
         // Create the actual features
-        FeatureVectorString edge00act, edge12ntact, edge02act;
-        feat.GenerateEdgeFeatures(sent, edge00, edge00act);
-        feat.GenerateEdgeFeatures(sent, edge12nt, edge12ntact);
-        feat.GenerateEdgeFeatures(sent, edge02, edge02act);
+        FeatureVectorInt edge00act, edge12ntact, edge02act;
+        feat.GenerateEdgeFeatures(sent, edge00,   syms, true, edge00act);
+        feat.GenerateEdgeFeatures(sent, edge12nt, syms, true, edge12ntact);
+        feat.GenerateEdgeFeatures(sent, edge02,   syms, true, edge02act);
         // Test the features
         int ret = 1;
         ret *= CheckVector(edge00exp, edge00act);

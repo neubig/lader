@@ -36,9 +36,11 @@ FeatureDataBase * FeatureAlign::ParseData(const string & str) {
 void FeatureAlign::GenerateEdgeFeatures(
                             const FeatureDataBase & sent,
                             const HyperEdge & edge,
-                            FeatureVectorString & feat) {
+                            SymbolSet<int> & feature_ids,
+                            bool add,
+                            FeatureVectorInt & feat) {
     const FeatureDataAlign & align_data = (const FeatureDataAlign &)sent;
-    feat.push_back(MakePair(string("TAU"),
+    feat.push_back(MakePair(feature_ids.GetId("TAU", add),
         loss_.AddLossToProduction(
             edge.GetLeft(), edge.GetCenter(), edge.GetRight(),
             -1, -1, -1 ,-1, edge.GetType(), align_data.GetRanks(), NULL)));
