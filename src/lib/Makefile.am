@@ -1,4 +1,4 @@
-LADERCPP = hyper-graph.cc combined-alignment.cc alignment.cc \
+LADERCPP = lader.cc hyper-graph.cc combined-alignment.cc alignment.cc \
            feature-sequence.cc feature-set.cc feature-base.cc \
            feature-vector.cc reorderer-model.cc loss-fuzzy.cc \
            reorderer-trainer.cc loss-base.cc reorderer-runner.cc \

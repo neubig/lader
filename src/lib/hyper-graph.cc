@@ -188,9 +188,6 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         if(new_left_trg) {
             old_left_trg = GetTrgSpan(l,hyp.GetCenter()-1,hyp.GetLeftRank());
             Hypothesis new_hyp(hyp);
-            // // DEBUG
-            // if(old_left_trg->GetScore() < new_left_trg->GetScore())
-            //     THROW_ERROR("Score increase in cube pruning");
             new_hyp.SetScore(hyp.GetScore() 
                         - old_left_trg->GetScore() + new_left_trg->GetScore());
             new_hyp.SetLeftRank(hyp.GetLeftRank()+1);
@@ -206,9 +203,6 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         new_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank()+1);
         if(new_right_trg) {
             old_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank());
-            // // DEBUG
-            // if(old_right_trg->GetScore() < new_right_trg->GetScore())
-            //     THROW_ERROR("Score increase in cube pruning");
             Hypothesis new_hyp(hyp);
             new_hyp.SetScore(hyp.GetScore() 
                     - old_right_trg->GetScore() + new_right_trg->GetScore());

@@ -7,7 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-#include <lader/config.h>
+#include "lader/config.h"
 
 #define LADER_SAFE
 

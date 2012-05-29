@@ -7,7 +7,7 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 binmode STDERR, ":utf8";
 
-my $BINARIZE = 0;
+my $BINARIZE = 1;
 
 sub makesafe {
     $_ = shift;
