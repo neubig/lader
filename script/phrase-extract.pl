@@ -10,6 +10,10 @@ binmode STDERR, ":utf8";
 
 my $DISCOUNT = 1;
 my $MAX_LEN = 10;
+GetOptions(
+    "discount=i" => \$DISCOUNT,
+    "max-len=i" => \$MAX_LEN,
+);
 
 # Count the number of times a source phrase would be extracted
 if(@ARGV != 3) {

@@ -24,9 +24,9 @@ vector<FeatureDataBase*> FeatureSet::ParseInput(const string & line) const {
     vector<string> columns;
     algorithm::split(columns, line, is_any_of("\t"));
     if(feature_gens_.size() != columns.size()) {
-        THROW_ERROR("Number of columns ("<<columns.size()<<
-                    ") didn't equal number of columns ("<<columns.size()<<
-                    ")"<<endl<<line);
+        THROW_ERROR("Number of columns in feature file ("<<columns.size()<<
+                    ") didn't equal feature profile ("<<feature_gens_.size()<<
+                    ") at"<<endl<<line<<endl);
     }
     vector<FeatureDataBase*> ret(columns.size());
     for(int i = 0; i < (int)columns.size(); i++) {

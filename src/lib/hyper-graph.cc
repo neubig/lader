@@ -88,10 +88,10 @@ double HyperGraph::Rescore(const ReordererModel & model, double loss_multiplier)
     // Recursively score all edges from the root
     BOOST_FOREACH(TargetSpan * trg, (*stacks_.rbegin())->GetSpans())
         Score(model, loss_multiplier, trg);
-    // // Sort to make sure that the spans are all in the right order 
-    // BOOST_FOREACH(SpanStack * stack, stacks_)
-    //     sort(stack->GetSpans().begin(), stack->GetSpans().end(), 
-    //                                     DescendingScore<TargetSpan>()); 
+    // Sort to make sure that the spans are all in the right order 
+    BOOST_FOREACH(SpanStack * stack, stacks_)
+        sort(stack->GetSpans().begin(), stack->GetSpans().end(), 
+                                        DescendingScore<TargetSpan>()); 
     TargetSpan* best = (*stacks_.rbegin())->GetSpanOfRank(0);
     return best->GetScore();
 }

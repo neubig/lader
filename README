@@ -1,1 +1,35 @@
-This is the Kyoto loss-driven reorderer.
+###########################################################################
+# lader - Latent Derivation Reorderer                                     #
+#   by Graham Neubig                                                      #
+#   http://www.phontron.com/lader                                         #
+###########################################################################
+
+This is a parser/reorderer for machine translation.
+It works by reordering source language sentences to target language order, which
+allows for standard phrase-based statistical machine translation techniques
+to work with only local reordering, greatly improving results.
+For more information on the technique, you can reference the following paper:
+
+Graham Neubig, Taro Watanabe, Shinsuke Mori
+Inducing a Discriminative Parser to Optimize Machine Translation Reordering
+EMNLP 2012
+TODO
+
+*** Installing ***
+
+lader requires that you have boost installed to work properly.
+Once your environment is set up, you can use the following standard commands:
+
+$ autoreconf -i
+$ ./configure [--prefix=/my/favorite/dir]
+$ make
+$ make install
+
+*** Training/Running ***
+
+You can find more information about training or running models on the lader
+web site, or by following the scripts in the "example" directory.
+
+*** Acknowledgement ***
+
+This software was partly developed while the author was an intern at NICT.
