@@ -53,7 +53,8 @@ public:
                              HyperGraph & hyper_graph);
 
     // Create a new sub-class of a particular type
-    //  type=fuzzy --> LossFuzzy
+    //  type=chunk --> LossChunk
+    //  type=tau --> LossTau
     static LossBase* CreateNew(const std::string & type);
 
     // Accessors
