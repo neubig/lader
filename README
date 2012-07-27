@@ -13,7 +13,7 @@ For more information on the technique, you can reference the following paper:
 Graham Neubig, Taro Watanabe, Shinsuke Mori
 Inducing a Discriminative Parser to Optimize Machine Translation Reordering
 EMNLP 2012
-TODO
+http://aclweb.org/anthology-new/D/D12/D12-1077.pdf
 
 *** Installing ***
 
@@ -30,6 +30,7 @@ $ make install
 You can find more information about training or running models on the lader
 web site, or by following the scripts in the "example" directory.
 
-*** Acknowledgement ***
+*** Details/Acknowledgement ***
+This software was partly developed while the author was an intern at NICT, Japan, and the author is grateful for being allowed the opportunity to make the code open-source.
 
-This software was partly developed while the author was an intern at NICT.
+This software is Copyright (C) by Graham Neubig <neubig@gmail.com> and National Institute of Information and Communications Technology, and is licensed under the terms of the Eclipse Public License, Version 1.0 or (at your option) any subsequent version.
