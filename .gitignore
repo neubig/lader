@@ -10,7 +10,10 @@ autom4te.cache
 config.guess
 config.log
 config.status
+config.sub
+configure
 depcomp
+install-sh
 libtool
 ltmain.sh
 m4
