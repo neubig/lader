@@ -7,6 +7,8 @@ set -e
 # This is just a toy example, but there is also a full working example
 # for the Kyoto Free Translation task at http://www.phontron.com/kftt
 
+[[ -e output ]] || mkdir output
+
 #############################################################################
 # 1. Creating annotations
 #  First, if we want to use features that reference word classes, pos tags,
