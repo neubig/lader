@@ -10,7 +10,11 @@ set -e
 #############################################################################
 # 1. Creating annotations
 #  First, if we want to use features that reference word classes, pos tags,
-#  parse trees, or phrase tables, we will need to create these appropriately
+#  parse trees, or phrase tables, we will need to create them in the appropriate
+#  format. Note that all of these are optional, but all have a chance to improve
+#  accuracy. Particularly word classes are calculated during alignment with
+#  GIZA++, and phrase tables can be calculated trivially with the included
+#  script, so you might as well use them.
 #
 #  a) Word classes
 #   If we have a word class file in the form
@@ -20,7 +24,8 @@ set -e
 #   classes. For example, the following command will create a file with the
 #   words in data/train.en annotated with their classes in data/classes.en
 
-../script/add-classes.pl data/classes.en < data/train.en > model/train.en.class
+echo "../script/add-classes.pl data/classes.en < data/train.en > output/train.en.class"
+../script/add-classes.pl data/classes.en < data/train.en > output/train.en.class
 
 #  b) POS tags
 #   You can also add POS tags in a similar fashion using your favorite tagger.
@@ -37,7 +42,8 @@ set -e
 #   only extracts phrases that appear more than once, which can be changed with
 #   the -discount option.)
 
-../script/contiguous-extract.pl data/train.en data/train.ja data/train.en-ja.align > model/train.en-ja.pt
+echo "../script/contiguous-extract.pl data/train.en data/train.ja data/train.en-ja.align > output/train.en-ja.pt"
+../script/contiguous-extract.pl data/train.en data/train.ja data/train.en-ja.align > output/train.en-ja.pt
 
 #############################################################################
 # 2. Combining annotations
@@ -47,7 +53,8 @@ set -e
 # that this, of course, does not apply to the phrase table. We will add this
 # later.
 
-paste data/train.en model/train.en.class data/train.en.pos data/train.en.parse > model/train.en.annot
+echo "paste data/train.en output/train.en.class data/train.en.pos data/train.en.parse > output/train.en.annot"
+paste data/train.en output/train.en.class data/train.en.pos data/train.en.parse > output/train.en.annot
 
 #############################################################################
 # 3. Training
@@ -59,7 +66,7 @@ paste data/train.en model/train.en.class data/train.en.pos data/train.en.parse >
 # order of your annotations:
 #
 # ***** for the actual sentence *****
-# seq=dict=model/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET
+# seq=dict=output/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET
 #
 # Note that here we are using the phrase table in "dict". Change this path into
 # an absolute path if you want to use the model from any other directory than
@@ -86,4 +93,8 @@ paste data/train.en model/train.en.class data/train.en.pos data/train.en.parse >
 # -save_features ... (default is true which uses more memory but runs slower.
 #                     if you are using large data, this should be set to false)
 
-../src/bin/train-lader -cost 1e-3 -attach_null left -feature_profile "seq=dict=model/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|cfg=LP%LP%ET,RP%RP%ET,SP%SP%ET,TP%SP%LP%RP%ET" -iterations 500 -model_out model/train.mod -source_in model/train.en.annot -align_in data/train.en-ja.align
+echo "../src/bin/train-lader -cost 1e-3 -attach_null left -feature_profile \"seq=dict=output/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|cfg=LP%LP%ET,RP%RP%ET,SP%SP%ET,TP%SP%LP%RP%ET\" -iterations 500 -model_out output/train.mod -source_in output/train.en.annot -align_in data/train.en-ja.align"
+../src/bin/train-lader -cost 1e-3 -attach_null left -feature_profile "seq=dict=output/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%LR%RL%ET,Q%SQE0%ET,Q0%SQ#00%ET,Q1%SQ#01%ET,Q2%SQ#02%ET,CL%CL%ET,B%SB%ET,A%SA%ET,N%SN%ET,BIAS%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET|cfg=LP%LP%ET,RP%RP%ET,SP%SP%ET,TP%SP%LP%RP%ET" -iterations 500 -model_out output/train.mod -source_in output/train.en.annot -align_in data/train.en-ja.align
+
+# Once training finishes, a reordering model will be placed in output/train.mod.
+# This can be used in reordering, as described in run-reordering.sh

@@ -15,15 +15,15 @@ class ConfigEvaluator : public ConfigBase {
 public:
 
     ConfigEvaluator() : ConfigBase() {
-        minArgs_ = 2;
+        minArgs_ = 3;
         maxArgs_ = 4;
 
         SetUsage(
-"~~~ lader-evaluate ~~~\n"
+"~~~ evaluate-lader ~~~\n"
 "  by Graham Neubig\n"
 "\n"
 "Evaluates the reordering accuracy of a particluar reordering for a sentence.\n"
-"  Usage: lader-evaluate GOLDEN_ALIGNMENT DATA [SRC] [TRG]\n"
+"  Usage: evaluate-lader GOLDEN_ALIGNMENT DATA SRC [TRG]\n"
 "\n"
 "  GOLDEN_ALIGNMENT: [SRC_LEN]-[TRG_LEN] ||| f1-e1 f2-e2 f3-e3\n"
 "  INPUT: a1 a2 a3 a4 a5 where a1 is the reordered position of source word 1\n"
@@ -31,7 +31,7 @@ public:
 "  TRG: Target sentence\n"
 );
 
-        AddConfigEntry("attach_null", "left", "Whether to attach null alignments to the left or right");
+        AddConfigEntry("attach_null", "right", "Whether to attach null alignments to the left or right");
         AddConfigEntry("combine_blocks", "true", "Whether to attach the blocks together");
 
     }
