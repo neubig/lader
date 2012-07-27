@@ -1,5 +1,5 @@
-#ifndef LOSS_FUZZY_H__
-#define LOSS_FUZZY_H__
+#ifndef LOSS_CHUNK_H__
+#define LOSS_CHUNK_H__
 
 #include <lader/loss-base.h>
 
@@ -8,10 +8,11 @@ namespace lader {
 // Loss similar to the "fuzzy reordering score" of
 //  A Lightweight Evaluation Framework for Machine Translation Reordering
 //  David Talbot et al., WMT 2011
+// (called "chunk fragmentation" in METEOR and lader papers)
 //
 // This essentially measures the total number of words on the target side
 // that are not contiguous after reordering
-class LossFuzzy : public LossBase {
+class LossChunk : public LossBase {
 public:
 
     virtual double AddLossToProduction(
@@ -25,7 +26,7 @@ public:
             const std::vector<int> order,
             const Ranks * ranks, const FeatureDataParse * parse);
 
-    virtual std::string GetName() const { return "fuzzy"; }
+    virtual std::string GetName() const { return "chunk"; }
 
 
 private:

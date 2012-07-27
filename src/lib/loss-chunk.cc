@@ -1,14 +1,14 @@
-#include <lader/loss-fuzzy.h>
+#include <lader/loss-chunk.h>
 
 using namespace lader;
 using namespace std;
 
-double LossFuzzy::AddLossToProduction(
+double LossChunk::AddLossToProduction(
         int src_left, int src_mid, int src_right,
         int trg_left, int trg_midleft, int trg_midright, int trg_right,
         HyperEdge::Type type,
         const Ranks * ranks, const FeatureDataParse * parse) {
-    if(!ranks) THROW_ERROR("Fuzzy loss requires alignment input");
+    if(!ranks) THROW_ERROR("Chunk loss requires alignment input");
     int loss = 0;
     switch (type) {
         // For roots, check that both edges are contiguous
@@ -35,17 +35,17 @@ double LossFuzzy::AddLossToProduction(
                     loss++;
             break;
         default:
-            THROW_ERROR("Bad edge type in LossFuzzy");
+            THROW_ERROR("Bad edge type in LossChunk");
     }
     return loss*weight_;
 }
 
 
 // Calculate the accuracy of a single sentence
-std::pair<double,double> LossFuzzy::CalculateSentenceLoss(
+std::pair<double,double> LossChunk::CalculateSentenceLoss(
         const std::vector<int> order,
         const Ranks * ranks, const FeatureDataParse * parse) {
-    if(!ranks) THROW_ERROR("Fuzzy loss requires alignment input");
+    if(!ranks) THROW_ERROR("Chunk loss requires alignment input");
     std::pair<double,double> ret(0,0);
     // If the maximum rank is zero, there is no way to mess up the loss,
     // so we just return zero

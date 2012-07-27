@@ -1,17 +1,17 @@
-#ifndef TEST_LOSS_FUZZY_H__
-#define TEST_LOSS_FUZZY_H__
+#ifndef TEST_LOSS_CHUNK_H__
+#define TEST_LOSS_CHUNK_H__
 
 #include "test-base.h"
 #include <lader/combined-alignment.h>
-#include <lader/loss-fuzzy.h>
+#include <lader/loss-chunk.h>
 
 namespace lader {
 
-class TestLossFuzzy : public TestBase {
+class TestLossChunk : public TestBase {
 
 public:
 
-    TestLossFuzzy() {
+    TestLossChunk() {
         // Create an alignment that looks like this
         // xx..
         // ...x
@@ -26,7 +26,7 @@ public:
         lf.Initialize(&ranks, NULL);
         lf.SetWeight(0.5);
     }
-    ~TestLossFuzzy() { }
+    ~TestLossChunk() { }
 
     int TestStraightNonterminal() {
         int ret = 1;
@@ -158,13 +158,13 @@ public:
         done++; cout << "TestStraightTerminal()" << endl; if(TestStraightTerminal()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestInvertedTerminal()" << endl; if(TestInvertedTerminal()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestRoot()" << endl; if(TestRoot()) succeeded++; else cout << "FAILED!!!" << endl;
-        cout << "#### TestLossFuzzy Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
+        cout << "#### TestLossChunk Finished with "<<succeeded<<"/"<<done<<" tests succeeding ####"<<endl;
         return done == succeeded;
     }
 
 private:
     Ranks ranks;
-    LossFuzzy lf;
+    LossChunk lf;
 
 };
 

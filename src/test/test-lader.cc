@@ -6,7 +6,7 @@
 #include "test-feature-set.h"
 #include "test-feature-vector.h"
 #include "test-reorderer-model.h"
-#include "test-loss-fuzzy.h"
+#include "test-loss-chunk.h"
 #include "test-loss-tau.h"
 #include "test-loss-bracket.h"
 #include "test-dictionary.h"
@@ -26,7 +26,7 @@ int main() {
     tests.push_back(new TestFeatureSet());
     tests.push_back(new TestFeatureVector());
     tests.push_back(new TestReordererModel());
-    tests.push_back(new TestLossFuzzy());
+    tests.push_back(new TestLossChunk());
     tests.push_back(new TestLossTau());
     tests.push_back(new TestLossBracket());
     tests.push_back(new TestDictionary());

@@ -1,6 +1,6 @@
 #include <lader/reorderer-evaluator.h>
 #include <lader/feature-data-sequence.h>
-#include <lader/loss-fuzzy.h>
+#include <lader/loss-chunk.h>
 #include <lader/loss-tau.h>
 #include <lader/ranks.h>
 #include <boost/algorithm/string.hpp>
@@ -20,7 +20,7 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
                 CombinedAlign::LEAVE_BLOCKS_AS_IS;
     // Set up the losses
     vector<LossBase*> losses;
-    losses.push_back(new LossFuzzy());
+    losses.push_back(new LossChunk());
     losses.push_back(new LossTau());
     // Set up the pairs to store the counts
     vector<pair<double,double> > sums(losses.size(), pair<double,double>(0,0));
