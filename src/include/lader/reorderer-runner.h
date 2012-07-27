@@ -7,6 +7,8 @@
 #include <lader/reorderer-model.h>
 #include <lader/feature-set.h>
 #include <lader/loss-base.h>
+#include <lader/thread-pool.h>
+#include <lader/output-collector.h>
 
 namespace lader {
 
@@ -49,6 +51,26 @@ private:
     FeatureSet * features_;  // The mapping on feature ids and which to use
     std::vector<OutputType> outputs_;
 
+};
+
+// A task
+class ReordererTask : public Task {
+public:
+    ReordererTask(int id, const std::string & line,
+                  ReordererModel * model, FeatureSet * features,
+                  std::vector<ReordererRunner::OutputType> * outputs,
+                  int beam, OutputCollector * collector) :
+        id_(id), line_(line), model_(model), features_(features), 
+        outputs_(outputs), beam_(beam), collector_(collector) { }
+    void Run();
+protected:
+    int id_;
+    std::string line_;
+    ReordererModel * model_; // The model
+    FeatureSet * features_;  // The mapping on feature ids and which to use
+    std::vector<ReordererRunner::OutputType> * outputs_;
+    int beam_;
+    OutputCollector * collector_;
 };
 
 }

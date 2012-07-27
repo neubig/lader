@@ -18,10 +18,10 @@ libtool
 ltmain.sh
 m4
 missing
-evaluate-lader
-label-ranking
-lader
-train-lader
+src/bin/evaluate-lader
+src/bin/label-ranking
+src/bin/lader
+src/bin/train-lader
 config.h.in
 stamp-h1
 test-lader

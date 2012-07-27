@@ -28,6 +28,7 @@ public:
         AddConfigEntry("out_format", "string", "A comma seperated list of outputs (string/parse/order)");
         AddConfigEntry("model", "", "A model to be used in reordering");
         AddConfigEntry("beam", "1", "The maximum beam size");
+        AddConfigEntry("threads", "1", "The number of threads to use");
 
     }
 	
