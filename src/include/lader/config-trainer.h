@@ -43,6 +43,7 @@ public:
         AddConfigEntry("cost", "1e-3", "The rate at which to learn\n");
         AddConfigEntry("shuffle", "true", "Whether to shuffle the input");
         AddConfigEntry("model_out", "", "An output file for the model");
+        AddConfigEntry("write_every_iter", "false", "Write the model out every time during training.");
 
     }
 	

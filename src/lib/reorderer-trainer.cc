@@ -20,6 +20,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     for(int i = 0 ; i < (int)sent_order.size(); i++)
         sent_order[i] = i;
     // Perform an iteration
+    cerr << "(\".\" == 100 sentences)" << endl;
     for(int iter = 0; iter < config.GetInt("iterations"); iter++) {
         double iter_model_loss = 0, iter_oracle_loss = 0;
         // Shuffle
@@ -99,7 +100,8 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             }
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;
-        WriteModel(config.GetString("model_out"));
+        if(config.GetBool("write_every_iter") || iter == config.GetInt("iterations") - 1)
+            WriteModel(config.GetString("model_out"));
         if(iter_model_loss == iter_oracle_loss) 
             break;
     }
