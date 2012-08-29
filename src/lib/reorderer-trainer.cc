@@ -100,10 +100,13 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             }
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;
-        if(config.GetBool("write_every_iter") || iter == config.GetInt("iterations") - 1)
+        bool last_iter = (iter_model_loss == iter_oracle_loss ||
+                          iter == config.GetInt("iterations") - 1);
+        if(config.GetBool("write_every_iter") || last_iter) {
             WriteModel(config.GetString("model_out"));
-        if(iter_model_loss == iter_oracle_loss) 
-            break;
+            if(last_iter)
+                break;
+        }
     }
 }
 
