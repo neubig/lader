@@ -14,6 +14,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
         ReadParses(config.GetString("parse_in"));
     int verbose = config.GetInt("verbose");
     // Temporary values
+    bool loss_aug = config.GetBool("loss_augmented_inference");
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
     FeatureVectorInt model_features, oracle_features;
     vector<int> sent_order(data_.size());
@@ -54,8 +55,9 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             oracle_loss     = hyper_graph.AccumulateLoss(
                                                     hyper_graph.GetRoot());
             oracle_score   -= oracle_loss * -1e6;
-            // Parse the hypergraph, slightly boosting loss by 1.0
-            model_score = hyper_graph.Rescore(model_, 1.0);
+            // Parse the hypergraph, slightly boosting loss by 1.0 if we are
+            // using loss-augmented inference
+            model_score = hyper_graph.Rescore(model_, (loss_aug ? 1.0 : 0.0));
             model_loss  = hyper_graph.AccumulateLoss(
                                                 hyper_graph.GetRoot());
             model_score -= model_loss * 1;

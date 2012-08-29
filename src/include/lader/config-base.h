@@ -43,8 +43,11 @@ public:
         for(std::vector<std::string>::const_iterator it = argOrder_.begin(); 
                         it != argOrder_.end(); it++) {
             ConfigMap::const_iterator oit = optArgs_.find(*it);
-            if(oit->second.second.length() != 0)
+            if(oit->second.second.length() != 0) {
                 std::cerr << " -"<<oit->first<<" \t"<<oit->second.second<<std::endl;
+                std::cerr << "   (default: \""<<oit->second.first<<"\")"<<std::endl;
+
+            }
         }
         std::cerr << std::endl << str << std::endl;
         exit(1);
