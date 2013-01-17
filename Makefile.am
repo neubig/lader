@@ -1,2 +1,2 @@
 SUBDIRS = src
-EXTRA_DIST = example
+EXTRA_DIST = example script

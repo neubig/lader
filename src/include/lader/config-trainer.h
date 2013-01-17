@@ -39,7 +39,7 @@ public:
         AddConfigEntry("max_term", "5", "The maximum length of a terminal ");
         AddConfigEntry("model_out", "", "An output file for the model");
         AddConfigEntry("parse_in", "", "The input file for the parses");
-        AddConfigEntry("save_features", "true", "Save the features in memory after generating them once (more memory, more speed)");
+        AddConfigEntry("save_features", "false", "Save the features in memory after generating them once (more memory, more speed)");
         AddConfigEntry("shuffle", "true", "Whether to shuffle the input");
         AddConfigEntry("source_in", "", "The input file for the source sentences");
         AddConfigEntry("use_reverse", "false", "Whether to use reverse terminals ");
