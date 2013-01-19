@@ -5,4 +5,4 @@ AM_CPPFLAGS = -I$(srcdir)/../include -DPKGDATADIR='"$(pkgdatadir)"'
 bin_PROGRAMS = test-lader
 
 test_lader_SOURCES = test-lader.cc ${LADERTH}
-test_lader_LDADD = ../lib/liblader.la -lboost_regex -lboost_thread
+test_lader_LDADD = ../lib/liblader.la -lboost_regex-mt -lboost_thread-mt
