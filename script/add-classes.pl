@@ -14,7 +14,7 @@ if(@ARGV != 1) {
 }
 
 open FILE, "<:utf8", $ARGV[0] or die "$ARGV[0]: $!\n";
-my %word2class = map { chomp; my ($w,$c) = split(/\t/); $w => $c } <FILE>;
+my %word2class = map { chomp; my ($w,$c) = split(/[\t ]/); $w => $c } <FILE>;
 close FILE;
 
 while(<STDIN>) {
