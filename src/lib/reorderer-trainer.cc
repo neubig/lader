@@ -37,8 +37,8 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             if(config.GetBool("save_features") && iter != 0)
                 hyper_graph.SetFeatures(SafeAccess(saved_feats_, sent));
             // Make the hypergraph using cube pruning
-            hyper_graph.BuildHyperGraph(model_,
-                                        features_,
+            hyper_graph.BuildHyperGraph(*model_,
+                                        *features_,
                                         data_[sent],
                                         config.GetInt("beam"),
                                         true);
@@ -49,7 +49,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                     sent < (int)parses_.size() ? &parses_[sent] : NULL,
                     hyper_graph);
             // Parse the hypergraph, penalizing loss heavily (oracle)
-            oracle_score = hyper_graph.Rescore(model_, -1e6);
+            oracle_score = hyper_graph.Rescore(*model_, -1e6);
             oracle_features = hyper_graph.AccumulateFeatures(
                                                     hyper_graph.GetRoot());
             oracle_loss     = hyper_graph.AccumulateLoss(
@@ -57,7 +57,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             oracle_score   -= oracle_loss * -1e6;
             // Parse the hypergraph, slightly boosting loss by 1.0 if we are
             // using loss-augmented inference
-            model_score = hyper_graph.Rescore(model_, (loss_aug ? 1.0 : 0.0));
+            model_score = hyper_graph.Rescore(*model_, (loss_aug ? 1.0 : 0.0));
             model_loss  = hyper_graph.AccumulateLoss(
                                                 hyper_graph.GetRoot());
             model_score -= model_loss * 1;
@@ -89,7 +89,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                                                 hyper_graph.GetRoot());
             // Add the difference between the vectors if there is at least
             //  some loss
-            model_.AdjustWeights(
+            model_->AdjustWeights(
                 model_loss == oracle_loss ?
                 FeatureVectorInt() :
                 VectorSubtract(oracle_features, model_features));
@@ -118,16 +118,28 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
     if(!model_out)
         THROW_ERROR("Must specify a valid model output with -model_out ('"
                         <<config.GetString("model_out")<<"')");
+    // Load the model from  a file if it exists, otherwise note features
+    if(config.GetString("model_in").length() != 0) {
+        std::ifstream in(config.GetString("model_in").c_str());
+        if(!in) THROW_ERROR("Couldn't read model from file (-model_in '"
+                            << config.GetString("model_in") << "')");
+        features_ = FeatureSet::FromStream(in);
+        model_ = ReordererModel::FromStream(in);
+    } else {
+        model_ = new ReordererModel;
+        features_ = new FeatureSet;
+        features_->ParseConfiguration(config.GetString("feature_profile"));
+        features_->SetMaxTerm(config.GetInt("max_term"));
+        features_->SetUseReverse(config.GetBool("use_reverse"));
+    }
+    // Load the other config
     attach_ = config.GetString("attach_null") == "left" ? 
                 CombinedAlign::ATTACH_NULL_LEFT :
                 CombinedAlign::ATTACH_NULL_RIGHT;
     combine_ = config.GetBool("combine_blocks") ? 
                 CombinedAlign::COMBINE_BLOCKS :
                 CombinedAlign::LEAVE_BLOCKS_AS_IS;
-    features_.ParseConfiguration(config.GetString("feature_profile"));
-    features_.SetMaxTerm(config.GetInt("max_term"));
-    features_.SetUseReverse(config.GetBool("use_reverse"));
-    model_.SetCost(config.GetDouble("cost"));
+    model_->SetCost(config.GetDouble("cost"));
     std::vector<std::string> losses, first_last;
     algorithm::split(
         losses, config.GetString("loss_profile"), is_any_of("|"));
@@ -140,7 +152,7 @@ void ReordererTrainer::InitializeModel(const ConfigTrainer & config) {
         iss >> dub;
         loss->SetWeight(dub);
         losses_.push_back(loss);
-    } 
+    }
 }
 
 void ReordererTrainer::ReadAlignments(const std::string & align_in) {

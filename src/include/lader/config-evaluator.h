@@ -22,12 +22,12 @@ public:
 "~~~ evaluate-lader ~~~\n"
 "  by Graham Neubig\n"
 "\n"
-"Evaluates the reordering accuracy of a particluar reordering for a sentence.\n"
+"Evaluates the reordering accuracy of a particular reordering for a sentence.\n"
 "  Usage: evaluate-lader GOLDEN_ALIGNMENT DATA SRC [TRG]\n"
 "\n"
 "  GOLDEN_ALIGNMENT: [SRC_LEN]-[TRG_LEN] ||| f1-e1 f2-e2 f3-e3\n"
-"  INPUT: a1 a2 a3 a4 a5 where a1 is the reordered position of source word 1\n"
-"  TRG: Sentence in the original source order\n"
+"  DATA: lader output \"a1 a2 ...\" where a1 is the reordered position of source word 1\n"
+"  SRC: Sentence in the original source order\n"
 "  TRG: Target sentence\n"
 );
 

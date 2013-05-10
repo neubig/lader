@@ -37,6 +37,7 @@ public:
         AddConfigEntry("loss_profile", "chunk=1", "Which loss functions to use");
         AddConfigEntry("loss_augmented_inference", "true", "Whether to use loss-augmented inference");
         AddConfigEntry("max_term", "5", "The maximum length of a terminal ");
+        AddConfigEntry("model_in", "", "Can read in a model and use it as the starting point for training");
         AddConfigEntry("model_out", "", "An output file for the model");
         AddConfigEntry("parse_in", "", "The input file for the parses");
         AddConfigEntry("save_features", "false", "Save the features in memory after generating them once (more memory, more speed)");
