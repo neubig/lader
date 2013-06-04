@@ -1,0 +1,20 @@
+Training Lader in Parallel using a SGE Cluster
+
+Jeremy Gwinnup (jeremy@gwinnup.org)
+
+Quick start to train Lader in parallel using a SGE cluster
+
+1. Partition annotation and alignment files using split
+(results in 1000 line pieces)
+
+> split -a 3 -l 1000 -d <fileprefix> 
+
+2. Make sure qsub is on your path
+
+3. run trainLaderParallel.pl
+
+> ./trainLaderParallel.pl -i <iterations> -n <num partitions> -b <base annotation filename> -a <base alignment filename> -p <phrase table name>
+
+This script creates a SGE job script, runs it, then calls mergeLaderModels.pl
+to combine the result before using the newly combined model for the next
+iteration.
