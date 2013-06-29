@@ -89,10 +89,18 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
                                                 hyper_graph.GetRoot());
             // Add the difference between the vectors if there is at least
             //  some loss
-            model_->AdjustWeights(
-                model_loss == oracle_loss ?
-                FeatureVectorInt() :
-                VectorSubtract(oracle_features, model_features));
+            if(config.GetString("learner") == "pegasos") {
+                model_->AdjustWeightsPegasos(
+                    model_loss == oracle_loss ?
+                    FeatureVectorInt() :
+                    VectorSubtract(oracle_features, model_features));
+            } else if(config.GetString("learner") == "perceptron") {
+                if(model_loss != oracle_loss)
+                    model_->AdjustWeightsPerceptron(
+                        VectorSubtract(oracle_features, model_features));
+            } else {
+                THROW_ERROR("Bad learner: " << config.GetString("learner"));
+            }
             // If we are saving features
             if(config.GetBool("save_features")) {
                 if((int)saved_feats_.size() <= sent)

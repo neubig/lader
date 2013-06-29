@@ -52,7 +52,7 @@ public:
         fvi1.push_back(MakePair(1,1));
         fvi1.push_back(MakePair(2,2));
         fvi1.push_back(MakePair(4,-2));
-        mod.AdjustWeights(fvi1);
+        mod.AdjustWeightsPegasos(fvi1);
         // Make the expected model
         // This is the first iteration:
         //  nu = 1/lambda*t = 1/0.01 = 100
@@ -71,7 +71,7 @@ public:
         fvi2.push_back(MakePair(0,2));
         fvi2.push_back(MakePair(3,1));
         fvi2.push_back(MakePair(5,-2));
-        mod.AdjustWeights(fvi2);
+        mod.AdjustWeightsPegasos(fvi2);
         //  nu = 1/lambda*t = 1/0.01/2 = 50
         //  w += nu*x
         //  w_{t+1/2} = 0:100 1:50/30 2:100/30 3:50 4:-100 5:-100/30

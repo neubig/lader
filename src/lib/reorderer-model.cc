@@ -9,10 +9,19 @@ using namespace boost;
 // If the norm gets larger than this, explicitly scale to prevent overflow
 #define OVERFLOW_BOUNDARY 1e100
 
+// adjust weights according to the perceptron
+void ReordererModel::AdjustWeightsPerceptron(const FeatureVectorInt & feats) {
+    BOOST_FOREACH(FeaturePairInt feat, feats) {
+        if((int)v_.size() <= feat.first)
+            v_.resize(feat.first+1, 0);
+        v_[feat.first] += feat.second;
+    }
+}
+
 // Adjust the v according to the algorithm
 //   Pegasos: primal estimated sub gradient solver for SVM
 //   (Figure 1)
-void ReordererModel::AdjustWeights(const FeatureVectorInt & feats) {
+void ReordererModel::AdjustWeightsPegasos(const FeatureVectorInt & feats) {
     // Set the learning rate nu given the cost lambda and the iteration t
     double nu = 1.0/lambda_/t_;
     // w_t -> w_{t+1/2}:
