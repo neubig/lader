@@ -4,6 +4,7 @@
 #include <lader/loss-tau.h>
 #include <lader/ranks.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <sstream>
 
 using namespace lader;
@@ -46,8 +47,12 @@ void ReordererEvaluator::Evaluate(const ConfigEvaluator & config) {
         std::vector<string> datas;
         algorithm::split(datas, data, is_any_of("\t"));
         istringstream iss(datas[0]);
-        std::vector<int> order; int ival;
-        while(iss >> ival) order.push_back(ival);
+        std::vector<int> order; string ival;
+        try {
+            while(iss >> ival) order.push_back(lexical_cast<int>(ival));
+        } catch(std::exception e) {
+            THROW_ERROR("Expecting a string of integers in the lader reordering file, but got" << endl << datas[0]);
+        }
         // Get the source file
         getline(*src_in, src);
         vector<string> srcs;
