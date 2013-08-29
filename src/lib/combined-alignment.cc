@@ -1,10 +1,12 @@
 
 #include <lader/combined-alignment.h>
+#include <boost/algorithm/string/join.hpp>
 #include <iostream>
 #include <cfloat>
 
 using namespace lader;
 using namespace std; 
+using namespace boost;
 
 const char* CombinedAlign::opening_brackets_[num_brackets_] =
                  { "(", "[", "\"", "（", "「", "『", "【" };
@@ -84,6 +86,11 @@ void CombinedAlign::BuildFromAlignment(
         CombinedAlign::NullHandler null_hand,
         CombinedAlign::BlockHandler block_hand,
         CombinedAlign::BracketHandler bracket_hand) {
+    // Check to make sure that the source length is equal
+    if(align.GetSrcLen() != words.size())
+        THROW_ERROR("In sentence" << endl << 
+                    algorithm::join(words, " ") << endl <<
+                    "Length of source sentence in alignments (" << align.GetSrcLen() << ") != length of source sentence in text file (" << words.size() << ")" << endl);
     // Create the new alignment vector
     const vector<pair<int,int> > & vec = align.GetAlignmentVector();
     spans_ = vector<pair<double,double> >(align.GetSrcLen(), MakePair(-1,-1));
