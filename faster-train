@@ -1,0 +1,7 @@
+This is an implementation of "A Discriminative Reordering Parser for IWSLT2013"
+
+Three methods are implemented.
+
+* Apply Cube Growing with cell-level CYK parallelization
+* Generate features in parallel
+* Save the generated features on disk
