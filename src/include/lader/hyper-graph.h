@@ -52,7 +52,7 @@ public:
     HyperGraph(bool cube_growing = false) : 
         save_features_(false), n_(-1), threads_(1), cube_growing_(cube_growing) { }
 
-    virtual void ClearStacks() {
+    virtual void Clear() {
 		BOOST_FOREACH(SpanStack * stack, stacks_)
 			delete stack;
 		stacks_.clear();
@@ -60,7 +60,7 @@ public:
 
     virtual ~HyperGraph()
     {
-        ClearStacks();
+        Clear();
     }
 
     virtual HyperGraph * Clone(){
@@ -83,10 +83,6 @@ public:
     const std::vector<SpanStack*> & GetStacks() const { return stacks_; }
     std::vector<SpanStack*> & GetStacks() { return stacks_; }
 
-
-    // Get a loss-augmented score for under a hypothesis
-    // Do not change the single/viterbi scores of the hypothesis
-    double Score(double loss_multiplier, const Hypothesis* hyp) const;
 
     // Scoring functions
     double Score(const ReordererModel & model, double loss_multiplier,
@@ -111,8 +107,6 @@ public:
 
     // Rescore the hypergraph using the given model and a loss multiplier
     double Rescore(const ReordererModel & model, double loss_multiplier);
-    // Rescore the hypergraph using the given model and a loss multiplier
-    double Rescore(double loss_multiplier);
 
     const TargetSpan * GetRoot() const {
         return SafeAccess(stacks_, stacks_.size()-1)->GetSpanOfRank(0);
@@ -240,7 +234,8 @@ protected:
         int idx = HyperGraph::GetTrgSpanID(l,r);
         if((int)stacks_.size() <= idx)
             stacks_.resize(idx+1, NULL);
-        if(stacks_[idx]) delete stacks_[idx];
+        if(stacks_[idx]) //delete stacks_[idx];
+	        THROW_ERROR("Stack exist [l="<<l<<", r="<<r<<"]"<<std::endl)
         stacks_[idx] = stack;
     }
 

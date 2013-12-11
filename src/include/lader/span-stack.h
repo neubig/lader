@@ -21,9 +21,8 @@ public:
 	}
 
 	void Clear() {
-        typedef pair<int, TargetSpan*> MapPair;
-        BOOST_FOREACH(const MapPair & map_pair, span_map)
-        	map_pair.second->Clear();
+		BOOST_FOREACH(TargetSpan * span, spans_)
+			 delete span;
         span_map.clear();
         spans_.clear();
         while(!cands_.empty()){
@@ -32,9 +31,7 @@ public:
         }
 	}
     virtual ~SpanStack() {
-    	Clear();
-        BOOST_FOREACH(TargetSpan *span, spans_)
-            delete span;
+        Clear();
         BOOST_FOREACH(FeatureVectorInt* fvi, straight)
 			if (fvi)
 				delete fvi;

@@ -44,39 +44,6 @@ const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
 }
 
 // Score a span
-double HyperGraph::Score(double loss_multiplier, const Hypothesis* hyp) const {
-    double score = hyp->GetLoss()*loss_multiplier;
-    if(hyp->GetEdgeType() != HyperEdge::EDGE_ROOT) {
-    	score += hyp->GetSingleScore();
-    }
-    if(hyp->GetLeftChild())
-		score += Score(loss_multiplier, hyp->GetLeftHyp());
-	if(hyp->GetRightChild())
-		score += Score(loss_multiplier, hyp->GetRightHyp());
-	return score;
-}
-
-double HyperGraph::Rescore(double loss_multiplier) {
-    // Score all root hypotheses, and place the best hyp at hyps[0].
-	// Note that it does not modify the rest of hypotheses under the root.
-    // Therefore, this keep the forest structure by BuildHyperGraph
-	BOOST_FOREACH(TargetSpan * trg, GetRootStack()->GetSpans()){
-		std::vector<Hypothesis*> & hyps = trg->GetHypotheses();
-		for(int i = 0; i < (int)hyps.size(); i++) {
-			hyps[i]->SetScore(Score(loss_multiplier, hyps[i]));
-			if(hyps[i]->GetScore() > hyps[0]->GetScore())
-				swap(hyps[i], hyps[0]);
-		}
-	}
-	// Sort to make sure that the spans are all in the right order
-	BOOST_FOREACH(SpanStack * stack, stacks_)
-		sort(stack->GetSpans().begin(), stack->GetSpans().end(),
-										DescendingScore<TargetSpan>());
-	TargetSpan* best = (*stacks_.rbegin())->GetSpanOfRank(0);
-	return best->GetScore();
-}
-
-// Score a span
 double HyperGraph::Score(const ReordererModel & model,
                        double loss_multiplier,
                        TargetSpan* span) {
@@ -486,9 +453,6 @@ void HyperGraph::AccumulateFeatures(std::tr1::unordered_map<int,double> & feat_m
 		const FeatureVectorInt * fvi = GetEdgeFeatures(model, features, sent, *hyp->GetEdge());
 		BOOST_FOREACH(FeaturePairInt feat_pair, *fvi)
 			feat_map[feat_pair.first] += feat_pair.second;
-//		// if fvi is not stored, delete
-//		if (!save_features_)
-//			delete fvi;
 	}
     if(hyp->GetLeftChild()) AccumulateFeatures(feat_map, model, features, sent, hyp->GetLeftChild());
     if(hyp->GetRightChild())AccumulateFeatures(feat_map, model, features, sent, hyp->GetRightChild());

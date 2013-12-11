@@ -49,7 +49,7 @@ class SaveFeaturesTask : public Task {
 				ofstream out(GetFeaturePath(config_, sent_num_).c_str());
 				graph_->FeaturesToStream(out);
 				out.close();
-				graph_->ClearStacks();
+				graph_->Clear();
 			}
     	}
     private:
@@ -97,21 +97,18 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
             random_shuffle(sent_order.begin(), sent_order.end());
         // Over all values in the corpus
     	struct timespec save = {0,0};
-    	bool generated = false;
 		// Over all values in the corpus
         // parallize the feature generation at sentence level
         if(config.GetBool("save_features")){
         	int done = 0;
         	ThreadPool pool(config.GetInt("threads"), 1000);
         	struct timespec save = {0,0};
-        	bool generated = false;
         	clock_gettime(CLOCK_MONOTONIC, &tstart);
         	BOOST_FOREACH(int sent, sent_order) {
-        		if(++done % 100 == 0) cerr << ".";
-        		if(done % (100*10) == 0) cerr << done << endl;
         		if (saved_graphs_[sent])
         			continue;
-        		generated = true;
+        		if(++done % 100 == 0) cerr << ".";
+        		if(done % (100*10) == 0) cerr << done << endl;
         		saved_graphs_[sent] = graph.Clone();
         		SaveFeaturesTask * task = new SaveFeaturesTask(
 								saved_graphs_[sent], *model_, *features_,
@@ -122,7 +119,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
         	clock_gettime(CLOCK_MONOTONIC, &tend);
         	save.tv_sec += tend.tv_sec - tstart.tv_sec;
         	save.tv_nsec += tend.tv_nsec - tstart.tv_nsec;
-        	if (verbose > 0 && generated)
+        	if (verbose > 0 && done > 0)
         		cout << "save " << ((double)save.tv_sec + 1.0e-9*save.tv_nsec) << "s" << endl;
         }
         int done = 0;
@@ -244,7 +241,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
 			adjust.tv_nsec += tend.tv_nsec - tstart.tv_nsec;
 			// because features are stored in stack, clear stack if not saved in memory
 			if(!config.GetBool("save_features") || !config.GetString("features_dir").empty())
-            	ptr_graph->ClearStacks();
+            	ptr_graph->Clear();
         }
         cout << "Finished iteration " << iter << " with loss " << iter_model_loss << " (oracle: " << iter_oracle_loss << ")" << endl;
         if (verbose > 0)
