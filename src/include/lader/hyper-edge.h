@@ -2,6 +2,8 @@
 #define HYPER_EDGE_H__
 
 #include <string>
+#include <sstream>
+#include <iostream>
 
 namespace lader {
 
@@ -25,6 +27,13 @@ public:
     // Constructor
     HyperEdge(int l, int c, int r, Type t) : l_(l), c_(c), r_(r), t_(t) { }
 
+    // virtual desctuctor
+    virtual ~HyperEdge(){}
+
+    // Clone this object
+    virtual HyperEdge * Clone() const{
+    	return new HyperEdge(l_, c_, r_, t_);
+    }
     // Comparators
     bool operator< (const HyperEdge & rhs) const {
         return 
@@ -36,6 +45,11 @@ public:
     bool operator== (const HyperEdge & rhs) const {
         return l_ == rhs.l_ && c_ == rhs.c_ && r_ == rhs.r_ && t_ == rhs.t_;
     }
+    
+    bool operator!= (const HyperEdge & rhs) const {
+    	return !(*this == rhs);
+    }
+    // TODO: l < c <= r or c = -1, can we use this property?
     size_t hash() const {
         return t_*HYPEREDGE_TMULT+l_*HYPEREDGE_LMULT+c_*HYPEREDGE_CMULT+r_;
     }
@@ -45,6 +59,7 @@ public:
     int GetRight() const { return r_; }
     int GetCenter() const { return c_; }
     Type GetType() const { return t_; }
+    void SetType(Type t) { t_ = t; } // only for testing
 
 private:
     // The left, center, and right words of the span
@@ -56,13 +71,17 @@ private:
 
 };
 
-typedef struct {
-    size_t operator() (const HyperEdge & edge) const {
-        return edge.hash();
-    }
-} HyperEdgeHash;
-
 }
 
+namespace std {
+// Output function
+inline std::ostream& operator << ( std::ostream& out,
+                                   const lader::HyperEdge & rhs )
+{
+    out << " l=" << rhs.GetLeft() << ", c=" << rhs.GetCenter() << ", r=" << rhs.GetRight()
+    	<< " : " << (char)rhs.GetType();
+    return out;
+}
+}
 #endif
 

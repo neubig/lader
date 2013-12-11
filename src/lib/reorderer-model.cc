@@ -54,6 +54,8 @@ void ReordererModel::AdjustWeightsPegasos(const FeatureVectorInt & feats) {
 
 // IO Functions
 void ReordererModel::ToStream(std::ostream & out) {
+    out << "max_term " << max_term_ << endl;
+    out << "use_reverse " << use_reverse_ << endl;
     out << "reorderer_model" << std::endl;
     const vector<double> & weights = GetWeights();
     for(int i = 0; i < (int)weights.size(); i++)
@@ -63,8 +65,12 @@ void ReordererModel::ToStream(std::ostream & out) {
 }
 ReordererModel * ReordererModel::FromStream(std::istream & in) {
     std::string line;
-    GetlineEquals(in, "reorderer_model");
     ReordererModel * ret = new ReordererModel;
+    GetConfigLine(in, "max_term", line);
+	ret->SetMaxTerm(atoi(line.c_str()));
+	GetConfigLine(in, "use_reverse", line);
+	ret->SetUseReverse(line == "true" || line == "1");
+    GetlineEquals(in, "reorderer_model");
     while(std::getline(in, line) && line.length()) {
         vector<string> columns;
         algorithm::split(columns, line, is_any_of("\t"));

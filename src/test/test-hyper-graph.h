@@ -10,6 +10,9 @@
 #include <lader/feature-sequence.h>
 #include <lader/feature-set.h>
 #include <lader/ranks.h>
+#include <lader/hyper-graph.h>
+#include <fstream>
+#include <time.h>
 
 namespace lader {
 
@@ -62,13 +65,22 @@ public:
         ts11 = new TargetSpan(1,1,1,1);
         tsr = new TargetSpan(0,1,0,1);
         // Add the hypotheses
-        ts00->AddHypothesis(Hypothesis(1,1,0,0,0,0,HyperEdge::EDGE_FOR));
-        ts11->AddHypothesis(Hypothesis(2,2,1,1,1,1,HyperEdge::EDGE_FOR));
-        ts01f->AddHypothesis(Hypothesis(4,4,0,1,0,1,HyperEdge::EDGE_FOR));
-        ts01f->AddHypothesis(Hypothesis(3,3,0,1,0,1,HyperEdge::EDGE_STR,1,0,0,ts00,ts11));
-        ts01b->AddHypothesis(Hypothesis(5,5,0,1,1,0,HyperEdge::EDGE_INV,1,0,0,ts00,ts11));
-        tsr->AddHypothesis(Hypothesis(6,6,1,0,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01b));
-        tsr->AddHypothesis(Hypothesis(6,6,0,1,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01f));
+        ts00->AddHypothesis(new Hypothesis(1,1,0,0,0,0,HyperEdge::EDGE_FOR));
+        ts11->AddHypothesis(new Hypothesis(2,2,1,1,1,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(new Hypothesis(4,4,0,1,0,1,HyperEdge::EDGE_FOR));
+        ts01f->AddHypothesis(new Hypothesis(3,3,0,1,0,1,HyperEdge::EDGE_STR,1,0,0,ts00,ts11));
+        ts01b->AddHypothesis(new Hypothesis(5,5,0,1,1,0,HyperEdge::EDGE_INV,1,0,0,ts00,ts11));
+        tsr->AddHypothesis(new Hypothesis(6,6,1,0,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01b));
+        tsr->AddHypothesis(new Hypothesis(6,6,0,1,-1,2,HyperEdge::EDGE_ROOT,-1,0,-1,ts01f));
+        // Make the stacks
+        SpanStack *stack00 = new SpanStack(0,0), *stack01 = new SpanStack(0,1),
+                  *stack11 = new SpanStack(0,1), *stackr = new SpanStack(0,2);
+        stack00->AddSpan(ts00); stack01->AddSpan(ts01f); stack01->AddSpan(ts01b);
+        stack11->AddSpan(ts11); stackr->AddSpan(tsr);
+        my_hg.SetStack(0,0,stack00);
+        my_hg.SetStack(0,1,stack01);
+        my_hg.SetStack(1,1,stack11);
+        my_hg.SetStack(0,2,stackr); // Abusing SetStack to set the root
         // Add the features
         FeatureVectorInt 
             *fv00 = new FeatureVectorInt(1, MakePair(1,1)),
@@ -81,20 +93,13 @@ public:
         fv01f->push_back(MakePair(10,1));
         fv01s->push_back(MakePair(10,1));
         fv01b->push_back(MakePair(10,1));
-        my_hg.SetEdgeFeatures(HyperEdge(0,-1,0,HyperEdge::EDGE_FOR), fv00);
-        my_hg.SetEdgeFeatures(HyperEdge(1,-1,1,HyperEdge::EDGE_FOR), fv11);
-        my_hg.SetEdgeFeatures(HyperEdge(0,-1,1,HyperEdge::EDGE_FOR), fv01f);
-        my_hg.SetEdgeFeatures(HyperEdge(0,1,1,HyperEdge::EDGE_STR), fv01s);
-        my_hg.SetEdgeFeatures(HyperEdge(0,1,1,HyperEdge::EDGE_INV), fv01b);
-        // Make the stacks
-        SpanStack *stack00 = new SpanStack, *stack01 = new SpanStack, 
-                  *stack11 = new SpanStack, *stackr = new SpanStack;
-        stack00->AddSpan(ts00); stack01->AddSpan(ts01f); stack01->AddSpan(ts01b);
-        stack11->AddSpan(ts11); stackr->AddSpan(tsr);
-        my_hg.SetStack(0,0,stack00);
-        my_hg.SetStack(0,1,stack01);
-        my_hg.SetStack(1,1,stack11);
-        my_hg.SetStack(0,2,stackr); // Abusing SetStack to set the root
+        stack00->SaveStraightFeautures(-1, fv00);
+        stack11->SaveStraightFeautures(-1, fv11);
+        stack01->SaveStraightFeautures(-1, fv01f);
+        stack01->SaveStraightFeautures(1, fv01s);
+        stack01->SaveInvertedFeautures(1, fv01b);
+        // features are saved in stack
+        my_hg.SetSaveFeatures(true);
         // Add the loss
         ts00->GetHypothesis(0)->SetLoss(1);
         ts11->GetHypothesis(0)->SetLoss(2);
@@ -132,11 +137,13 @@ public:
         FeatureVectorString edge02exp;
         edge02exp.push_back(MakePair(string("SW||he||ate rice"), 1));
         edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
-        FeatureVectorInt edge02intexp;
-        edge02intexp.push_back(MakePair(0, 1));
-        edge02intexp.push_back(MakePair(1, 1));
         // Make the hypergraph and get the features
         HyperGraph hyper_graph;
+        // -save_features
+        hyper_graph.SetSaveFeatures(true);
+        // for Save{Striaght,Inverted}Features
+        SpanStack * stack02 = new SpanStack(0, 2);
+        hyper_graph.SetStack(0, 2, stack02);
         // Generate the features
         const FeatureVectorInt * edge02int = 
                         hyper_graph.GetEdgeFeatures(mod, set, datas, edge02);
@@ -145,6 +152,10 @@ public:
         // Do the parsing and checking
         int ret = 1;
         ret *= CheckVector(edge02exp, *edge02act);
+
+        FeatureVectorInt edge02intexp;
+        edge02intexp.push_back(MakePair(mod.GetFeatureIds().GetId("SW||he||ate rice"), 1));
+        edge02intexp.push_back(MakePair(mod.GetFeatureIds().GetId("SP||PRP||VBD NN"), 1));
         ret *= CheckVector(edge02intexp, *edge02int);
         // Generate the features again
         const FeatureVectorInt * edge02int2 = 
@@ -154,10 +165,12 @@ public:
             cerr << "Edge pointers are not equal." << endl;
             ret = 0;
         }
+        mod.SetWeight("SW||he||ate rice", 1);
+        mod.SetWeight("SP||PRP||VBD NN", 2);
         // Check to make sure that the weights are Ok
-        double weight_act = hyper_graph.GetEdgeScore(model, set, 
+        double weight_act = hyper_graph.GetEdgeScore(mod, set,
                                                      datas, edge02);
-        if(weight_act != 3) {
+        if(weight_act != 1+2) {
             cerr << "Weight is not the expected 3: "<<weight_act<<endl;
             ret = 0;
         }
@@ -167,26 +180,30 @@ public:
     // Test the processing of a single span
     int TestProcessOneSpan() {
         HyperGraph graph;
+        ReordererModel model;
+        model.SetMaxTerm(0);
+    	model.SetUseReverse(true);
         // Create two spans for 00 and 11, so we can process 01
-        SpanStack *stack00 = new SpanStack, *stack11 = new SpanStack;
+        SpanStack *stack00 = new SpanStack(0,0), *stack11 = new SpanStack(1,1);
         stack00->push_back(new TargetSpan(0,0,0,0));
-        (*stack00)[0]->AddHypothesis(Hypothesis(1,1.0,0,0,0,0,HyperEdge::EDGE_FOR));
+        (*stack00)[0]->AddHypothesis(new Hypothesis(1,1.0,0,0,0,0,HyperEdge::EDGE_FOR));
         graph.SetStack(0, 0, stack00);
         stack11->push_back(new TargetSpan(1,1,1,1));
-        (*stack11)[0]->AddHypothesis(Hypothesis(2,2.0,1,1,1,1,HyperEdge::EDGE_FOR));
+        (*stack11)[0]->AddHypothesis(new Hypothesis(2,2.0,1,1,1,1,HyperEdge::EDGE_FOR));
         graph.SetStack(1, 1, stack11);
         // Try processing 01
-        set.SetMaxTerm(0);
-        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1);
-        // The stack should contain two target spans (1,0) and (0,1),
+        SpanStack *stack01 = new SpanStack(0, 1);
+    	graph.SetStack(0, 1, stack01);
+        graph.ProcessOneSpan(model, set, datas, 0, 1);
+        // The stack should contain two target spans I(1,0) and S(0,1),
         // each with two hypotheses
         int ret = 1;
         if(stack01->size() != 2) {
             cerr << "stack01->size() != 2: " << stack01->size() << endl; ret = 0;
-        } else if((*stack01)[0]->GetHypotheses().size() != 2) {
-            cerr << "(*stack01)[0].size() != 2: " << (*stack01)[0]->GetHypotheses().size() << endl; ret = 0;
-        } else if((*stack01)[1]->GetHypotheses().size() != 2) {
-            cerr << "(*stack01)[1].size() != 2: " << (*stack01)[1]->GetHypotheses().size() << endl; ret = 0;
+        } else if((*stack01)[0]->size() != 2) {
+            cerr << "(*stack01)[0].size() != 2: " << (*stack01)[0]->size() << endl; ret = 0;
+        } else if((*stack01)[1]->size() != 2) {
+            cerr << "(*stack01)[1].size() != 2: " << (*stack01)[1]->size() << endl; ret = 0;
         }
         if(!ret) return 0;
         // Check to make sure that the scores are in order
@@ -198,34 +215,37 @@ public:
         score_act[3] = (*stack01)[1]->GetHypothesis(1)->GetScore();
         ret = CheckVector(score_exp, score_act);
         // Check to make sure that pruning works
-        set.SetMaxTerm(0);
-        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3);
-        if(stack01pruned->size() != 2) {
-            cerr << "stack01pruned->size() != 2: " << stack01pruned->size() << endl; ret = 0;
-        } else if((*stack01pruned)[0]->GetHypotheses().size() != 1) {
-            cerr << "(*stack01pruned)[0].size() != 1: " << (*stack01pruned)[0]->GetHypotheses().size() << endl; ret = 0;
-        } else if((*stack01pruned)[1]->GetHypotheses().size() != 2) {
-            cerr << "(*stack01pruned)[1].size() != 2: " << (*stack01pruned)[1]->GetHypotheses().size() << endl; ret = 0;
+        stack01->Clear();
+		graph.ProcessOneSpan(model, set, datas, 0, 1, 3);
+        if(stack01->size() != 2) {
+            cerr << "stack01pruned->size() != 2: " << stack01->size() << endl; ret = 0;
+        } else if((*stack01)[0]->size() != 2) {
+            cerr << "(*stack01pruned)[0].size() != 2: " << (*stack01)[0]->size() << endl; ret = 0;
+        } else if((*stack01)[1]->size() != 1) {
+            cerr << "(*stack01pruned)[1].size() != 1: " << (*stack01)[1]->size() << endl; ret = 0;
         }
-        // delete stack00; delete stack01;
-        // delete stack11; delete stack01pruned;
         return ret;
     }
 
     // Test the processing of a single span
     int TestProcessOneSpanNoSave() {
         HyperGraph graph;
+        ReordererModel model;
+        model.SetMaxTerm(0);
+    	model.SetUseReverse(true);
         // Create two spans for 00 and 11, so we can process 01
-        SpanStack *stack00 = new SpanStack, *stack11 = new SpanStack;
+        SpanStack *stack00 = new SpanStack(0,0), *stack11 = new SpanStack(1,1);
         stack00->push_back(new TargetSpan(0,0,-1,-1));
-        (*stack00)[0]->AddHypothesis(Hypothesis(1,1.0,0,0,-1,-1,HyperEdge::EDGE_FOR));
+        (*stack00)[0]->AddHypothesis(new Hypothesis(1,1.0,0,0,-1,-1,HyperEdge::EDGE_FOR));
         graph.SetStack(0, 0, stack00);
         stack11->push_back(new TargetSpan(1,1,-1,-1));
-        (*stack11)[0]->AddHypothesis(Hypothesis(2,2.0,1,1,-1,-1,HyperEdge::EDGE_FOR));
+        (*stack11)[0]->AddHypothesis(new Hypothesis(2,2.0,1,1,-1,-1,HyperEdge::EDGE_FOR));
         graph.SetStack(1, 1, stack11);
         // Try processing 01
-        set.SetMaxTerm(0);
-        SpanStack *stack01 = graph.ProcessOneSpan(model, set, datas, 0, 1, 0, false);
+
+        SpanStack *stack01 = new SpanStack(0, 1);
+        graph.SetStack(0, 1, stack01);
+        graph.ProcessOneSpan(model, set, datas, 0, 1, 0, false);
         // The stack should contain two target spans (1,0) and (0,1),
         // each with two hypotheses
         int ret = 1;
@@ -246,12 +266,13 @@ public:
         score_act[3] = (*stack01)[0]->GetHypothesis(3)->GetScore();
         ret = CheckVector(score_exp, score_act);
         // Check to make sure that pruning works
-        set.SetMaxTerm(0);
-        SpanStack *stack01pruned = graph.ProcessOneSpan(model, set, datas, 0, 1, 3, false);
-        if(stack01pruned->size() != 1) {
-            cerr << "stack01pruned->size() != 1: " << stack01pruned->size() << endl; ret = 0;
-        } else if((*stack01pruned)[0]->GetHypotheses().size() != 3) {
-            cerr << "(*stack01pruned)[0].size() != 3: " << (*stack01pruned)[0]->GetHypotheses().size() << endl; ret = 0;
+
+        stack01->Clear();
+        graph.ProcessOneSpan(model, set, datas, 0, 1, 3, false);
+        if(stack01->size() != 1) {
+            cerr << "stack01pruned->size() != 1: " << stack01->size() << endl; ret = 0;
+        } else if((*stack01)[0]->GetHypotheses().size() != 3) {
+            cerr << "(*stack01pruned)[0].size() != 3: " << (*stack01)[0]->GetHypotheses().size() << endl; ret = 0;
         }
         // delete stack00; delete stack01;
         // delete stack11; delete stack01pruned;
@@ -260,7 +281,9 @@ public:
 
     int TestBuildHyperGraph() {
         HyperGraph graph;
-        set.SetMaxTerm(0);
+        ReordererModel model;
+        model.SetMaxTerm(0);
+        model.SetUseReverse(false);
         graph.BuildHyperGraph(model, set, datas);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;
@@ -283,8 +306,10 @@ public:
 
     int TestBuildHyperGraphNoSave() {
         HyperGraph graph;
-        set.SetMaxTerm(0);
-        graph.BuildHyperGraph(model, set, datas, INT_MAX, false);
+        ReordererModel model;
+        model.SetMaxTerm(0);
+        model.SetUseReverse(false);
+        graph.BuildHyperGraph(model, set, datas, false);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;
         // The total number of stacks should be 7: 0-0 0-1 1-1 0-2 1-2 2-2 root
@@ -304,12 +329,38 @@ public:
         return ret;
     }
 
+    int TestBuildHyperGraphCubeGrowing() {
+        HyperGraph graph(true);
+        ReordererModel model;
+        model.SetMaxTerm(0);
+        model.SetUseReverse(false);
+        graph.BuildHyperGraph(model, set, datas);
+        const std::vector<SpanStack*> & stacks = graph.GetStacks();
+        int ret = 1;
+        // The total number of stacks should be 7: 0-0 0-1 1-1 0-2 1-2 2-2 root
+        if(stacks.size() != 7) {
+            cerr << "stacks.size() != 7: " << stacks.size() << endl; ret = 0;
+		// The number of target spans should be 3*2: 0-1 1-0 0-2 2-0 1-2 2-1
+        } else if (stacks[3]->size() != 6) {
+            cerr << "Root node stacks[3]->size() != 6: " <<stacks[3]->size()<< endl;
+            BOOST_FOREACH(const TargetSpan *span, stacks[3]->GetSpans()){
+            	cerr << " " << span->GetTrgLeft() << "-" <<span->GetTrgRight() << endl;
+            }
+            ret = 0;
+        } else if (stacks[6]->size() != stacks[3]->size()) {
+            cerr << "Root hypotheses " << stacks[6]->size()
+                 << " and root spans " << stacks[3]->size() << " don't match." <<
+                 endl; ret = 0;
+        }
+        return ret;
+    }
+    
     int TestAccumulateLoss() {
         // The value of the loss should be 1+2+5+6 = 14 (3 and 4 are not best)
         double val = my_hg.AccumulateLoss(tsr);
         int ret = 1;
         if(val != 14) {
-            cerr << "my_hg.AccumulateLoss() != 14: " << 
+            cerr << "my_hg.AccumulateLoss() != 14: " <<
                      my_hg.AccumulateLoss(tsr) << endl; ret = 0;
         }
         // Test the rescoring
@@ -317,8 +368,11 @@ public:
     }
 
     int TestAccumulateFeatures() {
-        // The value of the loss should be 1:1, 2:1, 5:1, 10:4
-        FeatureVectorInt act = my_hg.AccumulateFeatures(tsr);
+        // The value of the loss should be 1:1, 2:1, 5:1, 10:3
+        FeatureVectorInt act;
+        std::tr1::unordered_map<int, double> feat_map;
+        my_hg.AccumulateFeatures(feat_map, model, set, datas, tsr);
+        ClearAndSet(act, feat_map);
         FeatureVectorInt exp;
         exp.push_back(MakePair(1,1));
         exp.push_back(MakePair(2,1));
@@ -365,10 +419,10 @@ public:
                    *span01 = new TargetSpan(0,1,-1,-1),
                    *span11 = new TargetSpan(1,1,-1,-1),
                    *spanr = new TargetSpan(0,1,-1,-1);
-        span00->AddHypothesis(Hypothesis(1,1,0,0,-1,-1,HyperEdge::EDGE_FOR));
-        span11->AddHypothesis(Hypothesis(1,1,1,1,-1,-1,HyperEdge::EDGE_FOR));
-        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_FOR));
-        spanr->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        span00->AddHypothesis(new Hypothesis(1,1, 0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(new Hypothesis(1,1, 1,1,-1,-1,HyperEdge::EDGE_FOR));
+        span01->AddHypothesis(new Hypothesis(1,1, 0,1,-1,-1,HyperEdge::EDGE_FOR));
+        spanr->AddHypothesis(new Hypothesis(1,1, 0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
         // Get the reordering for forward
         int ret = 1;
         vector<int> for_reorder; spanr->GetReordering(for_reorder);
@@ -407,10 +461,10 @@ public:
                    *span01 = new TargetSpan(0,1,-1,-1),
                    *span11 = new TargetSpan(1,1,-1,-1),
                    *spanr = new TargetSpan(0,1,-1,-1);
-        span00->AddHypothesis(Hypothesis(1,1,0,0,-1,-1,HyperEdge::EDGE_FOR));
-        span11->AddHypothesis(Hypothesis(1,1,1,1,-1,-1,HyperEdge::EDGE_BAC));
-        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_INV,-1,1,-1,span00,span11));
-        spanr->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
+        span00->AddHypothesis(new Hypothesis(1,1, 0,0,-1,-1,HyperEdge::EDGE_FOR));
+        span11->AddHypothesis(new Hypothesis(1,1, 1,1,-1,-1,HyperEdge::EDGE_BAC));
+        span01->AddHypothesis(new Hypothesis(1,1, 0,1,-1,-1,HyperEdge::EDGE_INV,-1,1,-1,span00,span11));
+        spanr->AddHypothesis(new Hypothesis(1,1, 0,1,-1,-1,HyperEdge::EDGE_ROOT,-1,0,-1,span01));
         // Get the reordering for forward
         int ret = 1;
         span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_FOR);
@@ -444,10 +498,10 @@ public:
             span01->GetHypothesis(0)->GetRuleString(str01, 'F', 'B')));
         // Create a hypergraph
         HyperGraph hg;
-        SpanStack * stack00 = new SpanStack; stack00->push_back(span00); hg.SetStack(0, 0, stack00);
-        SpanStack * stack11 = new SpanStack; stack11->push_back(span11); hg.SetStack(1, 1, stack11);
-        SpanStack * stack01 = new SpanStack; stack01->push_back(span01); hg.SetStack(0, 1, stack01);
-        SpanStack * stackr  = new SpanStack; stackr->push_back(spanr); hg.SetStack(0, 2, stackr);
+        SpanStack * stack00 = new SpanStack(0,0); stack00->push_back(span00); hg.SetStack(0, 0, stack00);
+        SpanStack * stack11 = new SpanStack(1,1); stack11->push_back(span11); hg.SetStack(1, 1, stack11);
+        SpanStack * stack01 = new SpanStack(0,1); stack01->push_back(span01); hg.SetStack(0, 1, stack01);
+        SpanStack * stackr  = new SpanStack(0,2); stackr->push_back(spanr); hg.SetStack(0, 2, stackr);
         // Check that the trimmed hypergraph only contains rules that should be there
         span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_FOR);
         span01->GetHypothesis(0)->SetLeftChild(NULL);
@@ -459,7 +513,7 @@ public:
         span01->GetHypothesis(0)->SetType(HyperEdge::EDGE_INV);
         span01->GetHypothesis(0)->SetLeftChild(span00);
         span01->GetHypothesis(0)->SetRightChild(span11);
-        span01->AddHypothesis(Hypothesis(1,1,0,1,-1,-1,HyperEdge::EDGE_STR,-1,1,-1,span00,span11));
+        span01->AddHypothesis(new Hypothesis(1,1, 0,1,-1,-1,HyperEdge::EDGE_STR,-1,1,-1,span00,span11));
         // Print again
         ostringstream graph_stream;
         hg.PrintHyperGraph(str01, graph_stream);
@@ -474,6 +528,7 @@ public:
         done++; cout << "TestProcessOneSpan()" << endl; if(TestProcessOneSpan()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestProcessOneSpanNoSave()" << endl; if(TestProcessOneSpanNoSave()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestBuildHyperGraph()" << endl; if(TestBuildHyperGraph()) succeeded++; else cout << "FAILED!!!" << endl;
+        done++; cout << "TestBuildHyperGraphCubeGrowing()" << endl; if(TestBuildHyperGraphCubeGrowing()) succeeded++; else cout << "FAILED!!!" << endl;        
         done++; cout << "TestBuildHyperGraphNoSave()" << endl; if(TestBuildHyperGraphNoSave()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateLoss()" << endl; if(TestAccumulateLoss()) succeeded++; else cout << "FAILED!!!" << endl;
         done++; cout << "TestAccumulateFeatures()" << endl; if(TestAccumulateFeatures()) succeeded++; else cout << "FAILED!!!" << endl;
@@ -492,7 +547,7 @@ private:
     ReordererModel model;
     std::vector<double> weights;
     FeatureSet set;
-    vector<FeatureDataBase*> datas;
+    Sentence datas;
     FeatureSequence *featw, *featp;
     TargetSpan *ts00, *ts01f, *ts01b, *ts11, *tsr;
     HyperGraph my_hg;

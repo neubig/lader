@@ -9,6 +9,8 @@
 #include <lader/loss-base.h>
 #include <lader/thread-pool.h>
 #include <lader/output-collector.h>
+#include <lader/hyper-graph.h>
+using namespace std;
 
 namespace lader {
 
@@ -24,7 +26,7 @@ public:
         OUTPUT_ORDER
     } OutputType;
 
-    ReordererRunner() { }
+    ReordererRunner(): model_(NULL), features_(NULL){ }
     ~ReordererRunner() {
         if(model_) delete model_;
         if(features_) delete features_;
@@ -37,8 +39,8 @@ public:
     void Run(const ConfigRunner & config);
 
     // Write the model to a file
-    void ReadModel(const std::string & str) {
-        std::ifstream in(str.c_str());
+    void ReadModel(const string & str) {
+        ifstream in(str.c_str());
         if(!in) THROW_ERROR("Couldn't read model from file (-model_in '"
                             << str << "')");
         features_ = FeatureSet::FromStream(in);
@@ -49,28 +51,30 @@ private:
 
     ReordererModel * model_; // The model
     FeatureSet * features_;  // The mapping on feature ids and which to use
-    std::vector<OutputType> outputs_;
+    vector<OutputType> outputs_;
 
 };
 
 // A task
 class ReordererTask : public Task {
 public:
-    ReordererTask(int id, const std::string & line,
+    ReordererTask(int id, const string & line,
                   ReordererModel * model, FeatureSet * features,
-                  std::vector<ReordererRunner::OutputType> * outputs,
-                  int beam, OutputCollector * collector) :
+                  vector<ReordererRunner::OutputType> * outputs,
+                  const ConfigRunner& config, HyperGraph * hyper_graph,
+                  OutputCollector * collector) :
         id_(id), line_(line), model_(model), features_(features), 
-        outputs_(outputs), beam_(beam), collector_(collector) { }
+        outputs_(outputs), collector_(collector), config_(config), graph_(hyper_graph) { }
     void Run();
 protected:
     int id_;
-    std::string line_;
+    string line_;
     ReordererModel * model_; // The model
     FeatureSet * features_;  // The mapping on feature ids and which to use
-    std::vector<ReordererRunner::OutputType> * outputs_;
-    int beam_;
+    vector<ReordererRunner::OutputType> * outputs_;
     OutputCollector * collector_;
+    const ConfigRunner& config_;
+    HyperGraph * graph_;
 };
 
 }

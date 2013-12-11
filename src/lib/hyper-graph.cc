@@ -1,10 +1,4 @@
-#include <lader/hyper-edge.h>
 #include <lader/hyper-graph.h>
-#include <lader/hypothesis-queue.h>
-#include <lader/feature-vector.h>
-#include <lader/feature-set.h>
-#include <lader/reorderer-model.h>
-#include <lader/target-span.h>
 #include <lader/util.h>
 #include <tr1/unordered_map>
 #include <boost/algorithm/string.hpp>
@@ -14,27 +8,76 @@ using namespace lader;
 using namespace std;
 using namespace boost;
 
-template <class T>
-struct DescendingScore {
-  bool operator ()(T *lhs, T *rhs) { return rhs->GetScore() < lhs->GetScore(); }
-};
-
 // Return the edge feature vector
+// if -save_features, edge features are stored in a stack.
+// thus, this is thread safe without lock.
 const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
                                 ReordererModel & model,
                                 const FeatureSet & feature_gen,
                                 const Sentence & sent,
                                 const HyperEdge & edge) {
-    FeatureVectorInt * ret;
-    if(features_ == NULL) features_ = new EdgeFeatureMap;
-    EdgeFeatureMap::const_iterator it = features_->find(edge);
-    if(it == features_->end()) {
-        ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
-        features_->insert(MakePair(edge, ret));
-    } else {
-        ret = it->second;
-    }
+	FeatureVectorInt * ret = NULL;
+//    if (save_features_) {
+    	SpanStack * stack = GetStack(edge.GetLeft(), edge.GetRight());
+    	switch (edge.GetType()){
+    	case HyperEdge::EDGE_FOR:
+    	case HyperEdge::EDGE_STR:
+    		ret = stack->GetStraightFeautures(edge.GetCenter() - edge.GetLeft());
+    		if (ret == NULL){
+    			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
+    			stack->SaveStraightFeautures(edge.GetCenter() - edge.GetLeft(), ret);
+    		}
+    		break;
+    	case HyperEdge::EDGE_BAC:
+    	case HyperEdge::EDGE_INV:
+    		ret = stack->GetInvertedFeautures(edge.GetCenter() - edge.GetLeft());
+    		if (ret == NULL){
+    			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
+    			stack->SaveInvertedFeautures(edge.GetCenter() - edge.GetLeft(), ret);
+    		}
+    		break;
+    	case HyperEdge::EDGE_ROOT:
+    	default:
+    		THROW_ERROR("Invalid hyper edge for GetEdgeFeatures: " << edge);
+    		break;
+    	}
+//    } else {
+//    	ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
+//    }
     return ret;
+}
+
+// Score a span
+double HyperGraph::Score(double loss_multiplier, const Hypothesis* hyp) const {
+    double score = hyp->GetLoss()*loss_multiplier;
+    if(hyp->GetEdgeType() != HyperEdge::EDGE_ROOT) {
+    	score += hyp->GetSingleScore();
+    }
+    if(hyp->GetLeftChild())
+		score += Score(loss_multiplier, hyp->GetLeftHyp());
+	if(hyp->GetRightChild())
+		score += Score(loss_multiplier, hyp->GetRightHyp());
+	return score;
+}
+
+double HyperGraph::Rescore(double loss_multiplier) {
+    // Score all root hypotheses, and place the best hyp at hyps[0].
+	// Note that it does not modify the rest of hypotheses under the root.
+    // Therefore, this keep the forest structure by BuildHyperGraph
+	BOOST_FOREACH(TargetSpan * trg, GetRootStack()->GetSpans()){
+		std::vector<Hypothesis*> & hyps = trg->GetHypotheses();
+		for(int i = 0; i < (int)hyps.size(); i++) {
+			hyps[i]->SetScore(Score(loss_multiplier, hyps[i]));
+			if(hyps[i]->GetScore() > hyps[0]->GetScore())
+				swap(hyps[i], hyps[0]);
+		}
+	}
+	// Sort to make sure that the spans are all in the right order
+	BOOST_FOREACH(SpanStack * stack, stacks_)
+		sort(stack->GetSpans().begin(), stack->GetSpans().end(),
+										DescendingScore<TargetSpan>());
+	TargetSpan* best = (*stacks_.rbegin())->GetSpanOfRank(0);
+	return best->GetScore();
 }
 
 // Score a span
@@ -57,22 +100,31 @@ double HyperGraph::Score(const ReordererModel & model,
                          double loss_multiplier,
                          Hypothesis* hyp) {
     double score = hyp->GetScore();
-    if(score == -DBL_MAX) { 
+    if(score == -DBL_MAX) {
         score = hyp->GetLoss()*loss_multiplier;
         int l = hyp->GetLeft(), c = hyp->GetCenter(), r = hyp->GetRight();
-        HyperEdge::Type t = hyp->GetType();
+        HyperEdge::Type t = hyp->GetEdgeType();
         if(t != HyperEdge::EDGE_ROOT) {
-            EdgeFeatureMap::const_iterator fit = 
-                                        features_->find(HyperEdge(l,c,r,t));
-            if(fit == features_->end())
-                THROW_ERROR("No features found in Score for l="
-                                        <<l<<", c="<<c<<", r="<<r<<", t="<<(char)t);
-            score += model.ScoreFeatureVector(*fit->second);
+        	SpanStack * stack = GetStack(hyp->GetLeft(), hyp->GetRight());
+        	FeatureVectorInt * fvi = NULL;
+        	switch(hyp->GetEdgeType()){
+        	case HyperEdge::EDGE_FOR:
+        	case HyperEdge::EDGE_STR:
+        		fvi = stack->GetStraightFeautures(hyp->GetCenter() - hyp->GetLeft());
+        		break;
+        	case HyperEdge::EDGE_BAC:
+        	case HyperEdge::EDGE_INV:
+        		fvi = stack->GetInvertedFeautures(hyp->GetCenter() - hyp->GetLeft());
+        		break;
+        	}
+            if(!fvi)
+                THROW_ERROR("No features found in Score for " << *hyp << endl);
+            score += model.ScoreFeatureVector(*fvi);
         }
         hyp->SetSingleScore(score);
-        if(hyp->GetLeftChild()) 
+        if(hyp->GetLeftChild())
             score += Score(model, loss_multiplier, hyp->GetLeftChild());
-        if(hyp->GetRightChild()) 
+        if(hyp->GetRightChild())
             score += Score(model, loss_multiplier, hyp->GetRightChild());
         hyp->SetScore(score);
     }
@@ -88,10 +140,10 @@ double HyperGraph::Rescore(const ReordererModel & model, double loss_multiplier)
     // Recursively score all edges from the root
     BOOST_FOREACH(TargetSpan * trg, (*stacks_.rbegin())->GetSpans())
         Score(model, loss_multiplier, trg);
-    // Sort to make sure that the spans are all in the right order 
+    // Sort to make sure that the spans are all in the right order
     BOOST_FOREACH(SpanStack * stack, stacks_)
-        sort(stack->GetSpans().begin(), stack->GetSpans().end(), 
-                                        DescendingScore<TargetSpan>()); 
+        sort(stack->GetSpans().begin(), stack->GetSpans().end(),
+                                        DescendingScore<TargetSpan>());
     TargetSpan* best = (*stacks_.rbegin())->GetSpanOfRank(0);
     return best->GetScore();
 }
@@ -103,36 +155,166 @@ double HyperGraph::GetEdgeScore(ReordererModel & model,
                                 const HyperEdge & edge) {
     const FeatureVectorInt * vec = 
                 GetEdgeFeatures(model, feature_gen, sent, edge);
-    return model.ScoreFeatureVector(SafeReference(vec));
+    double score = model.ScoreFeatureVector(SafeReference(vec));
+//    // features are not stored, thus delete
+//    if (!save_features_)
+//    	delete vec;
+    return score;
+}
+
+// If the length is OK, add a terminal
+void HyperGraph::AddTerminals(int l, int r, const FeatureSet & features,
+		ReordererModel & model, const Sentence & sent, HypothesisQueue * q,
+		bool save_trg)
+{
+    // If the length is OK, add a terminal
+    if((model.GetMaxTerm() == 0) || (r-l < model.GetMaxTerm())){
+        int tl = (save_trg ? l : -1);
+        int tr = (save_trg ? r : -1);
+        double score;
+        // Create a hypothesis with the forward terminal
+        HyperEdge *edge = new HyperEdge(l, -1, r, HyperEdge::EDGE_FOR);
+        score = GetEdgeScore(model, features, sent, *edge);
+        q->push(new Hypothesis(score, score, edge, tl, tr));
+        if(model.GetUseReverse()){
+            edge = new HyperEdge(l, -1, r, HyperEdge::EDGE_BAC);
+            score = GetEdgeScore(model, features, sent, *edge);
+            q->push(new Hypothesis(score, score, edge, tr, tl));
+        }
+    }
+}
+
+
+// Increment the left side if there is still a hypothesis left
+void HyperGraph::IncrementLeft(const Hypothesis *old_hyp, TargetSpan *new_left,
+		HypothesisQueue & q, int & pop_count)
+{
+   Hypothesis * old_left  = old_hyp->GetLeftHyp();
+   Hypothesis * old_right = old_hyp->GetRightHyp();
+   if (!old_left || !old_right)
+	   THROW_ERROR("Fail to IncrementLeft for " << *old_hyp << endl)
+	// Clone this hypothesis
+	Hypothesis * new_hyp = old_hyp->Clone();
+	new_hyp->SetScore(old_hyp->GetScore()
+			- old_left->GetScore() + new_left->GetScore());
+	new_hyp->SetLeftRank(old_hyp->GetLeftRank()+1);
+	new_hyp->SetLeftChild(new_left);
+	if(new_hyp->GetEdgeType() == HyperEdge::EDGE_STR)
+		new_hyp->SetTrgLeft(new_left->GetTrgLeft());
+	else
+		new_hyp->SetTrgRight(new_left->GetTrgRight());
+	if (new_hyp->GetTrgLeft() < new_hyp->GetLeft()
+	|| new_hyp->GetTrgRight() < new_hyp->GetLeft()
+	|| new_hyp->GetRight() < new_hyp->GetTrgLeft()
+	|| new_hyp->GetRight() < new_hyp->GetTrgRight()) {
+		new_hyp->PrintParse(cerr);
+		THROW_ERROR("Malformed hypothesis in IncrementLeft " << *new_hyp << endl)
+	}
+	q.push(new_hyp);
+}
+
+// Increment the right side if there is still a hypothesis right
+void HyperGraph::IncrementRight(const Hypothesis *old_hyp, TargetSpan *new_right,
+		HypothesisQueue & q, int & pop_count)
+{
+	Hypothesis * old_left  = old_hyp->GetLeftHyp();
+	Hypothesis * old_right = old_hyp->GetRightHyp();
+	if (!old_left || !old_right)
+		THROW_ERROR("Fail to IncrementRight for " << *old_hyp << endl)
+	// Clone this hypothesis
+	Hypothesis * new_hyp = old_hyp->Clone();
+	double non_local_score = 0.0;
+	new_hyp->SetScore(old_hyp->GetScore()
+			- old_right->GetScore() + new_right->GetScore());
+	new_hyp->SetRightRank(old_hyp->GetRightRank()+1);
+	new_hyp->SetRightChild(new_right);
+	if(new_hyp->GetEdgeType() == HyperEdge::EDGE_STR)
+		new_hyp->SetTrgRight(new_right->GetTrgRight());
+	else
+		new_hyp->SetTrgLeft(new_right->GetTrgLeft());
+	if (new_hyp->GetTrgLeft() < new_hyp->GetLeft()
+	|| new_hyp->GetTrgRight() < new_hyp->GetLeft()
+	|| new_hyp->GetRight() < new_hyp->GetTrgLeft()
+	|| new_hyp->GetRight() < new_hyp->GetTrgRight()) {
+		new_hyp->PrintParse(cerr);
+		THROW_ERROR("Malformed hypothesis in IncrementRight " << *new_hyp << endl)
+	}
+	q.push(new_hyp);
+}
+
+// For cube growing
+void HyperGraph::LazyNext(HypothesisQueue & q, const Hypothesis * hyp,
+		int & pop_count) {
+	TargetSpan * new_left = NULL, *new_right = NULL;
+
+	// Skip terminals
+	if(hyp->GetCenter() == -1) return;
+	RUN(cerr << "LazyNext from " << *hyp << endl);
+	RUN(cerr << "Before increment: " << q.size() << " candidates" << endl);
+	SpanStack *left_stack = GetStack(hyp->GetLeft(), hyp->GetCenter()-1);
+	new_left = LazyKthBest(left_stack, hyp->GetLeftRank() + 1, pop_count);
+	if (new_left)
+		IncrementLeft(hyp, new_left, q, pop_count);
+
+	SpanStack *right_span = GetStack(hyp->GetCenter(), hyp->GetRight());
+	new_right = LazyKthBest(right_span, hyp->GetRightRank() + 1, pop_count);
+	if (new_right)
+		IncrementRight(hyp, new_right, q, pop_count);
+	RUN(cerr << "After increment: " << q.size() << " candidates" << endl);
+}
+
+// For cube growing
+TargetSpan * HyperGraph::LazyKthBest(SpanStack * stack, int k, int & pop_count) {
+	TargetSpan * trg_span = NULL;
+	while (((!beam_size_ && stack->size() < k + 1)
+			|| stack->size() < std::min(k + 1, beam_size_))
+			&& stack->CandSize() > 0) {
+		HypothesisQueue * q = &stack->GetCands();
+		Hypothesis * hyp = q->top(); q->pop();
+		trg_span = stack->GetTargetSpan(hyp);
+		// Insert the hypothesis
+//		RUN(cerr << "Insert " << k << "th hypothesis " << *hyp);
+//		RUN(hyp->PrintChildren(cerr));
+		trg_span->AddHypothesis(hyp);
+		LazyNext(*q, hyp, pop_count);
+        // If the next hypothesis on the stack is equal to the current
+        // hypothesis, remove it, as this just means that we added the same
+        // hypothesis
+        while(q->size() && q->top() == hyp) {
+        	delete q->top();
+        	q->pop();
+        }
+		if (pop_limit_ && ++pop_count > pop_limit_)
+			break;
+	}
+	return stack->GetSpanOfRank(k);
 }
 
 // Build a hypergraph using beam search and cube pruning
-SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
+void HyperGraph::ProcessOneSpan(ReordererModel & model,
                                        const FeatureSet & features,
-                                       const Sentence & sent,
+                                       const Sentence & source,
                                        int l, int r,
                                        int beam_size, bool save_trg) {
-    // Create the temporary data members for this span
-    HypothesisQueue q;
+    // Get a map to store identical target spans
+    SpanStack * ret = GetStack(l, r);
+    if (!ret)
+    	THROW_ERROR("SetStack is required: [" << l << ", " << r << "]")
+	ret->Clear();
+    HypothesisQueue * q;
+	if (cube_growing_)
+		q = &ret->GetCands();
+    else
+        // Create the temporary data members for this span
+    	q = new HypothesisQueue;
+
     double score, viterbi_score;
     // If the length is OK, add a terminal
-    if((features.GetMaxTerm() == 0) || (r-l < features.GetMaxTerm())) {
-        int tl = (save_trg ? l : -1);
-        int tr = (save_trg ? r : -1);
-        // Create a hypothesis with the forward terminal
-        score = GetEdgeScore(model, features, sent,
-                                HyperEdge(l, -1, r, HyperEdge::EDGE_FOR));
-        q.push(Hypothesis(score, score, l, r, tl, tr, HyperEdge::EDGE_FOR));
-        if(features.GetUseReverse()) {
-            // Create a hypothesis with the backward terminal
-            score = GetEdgeScore(model, features, sent, 
-                                    HyperEdge(l, -1, r, HyperEdge::EDGE_BAC));
-            q.push(Hypothesis(score, score, l, r, tr, tl, HyperEdge::EDGE_BAC));
-        }
-    }
-    TargetSpan *left_trg, *right_trg, 
-               *new_left_trg, *old_left_trg,
-               *new_right_trg, *old_right_trg;
+    AddTerminals(l, r, features, model, source, q, save_trg);
+
+    TargetSpan *left_trg, *right_trg;
+    Hypothesis *new_left_hyp, *old_left_hyp,
+               *new_right_hyp, *old_right_hyp;
     // Add the best hypotheses for each non-terminal to the queue
     for(int c = l+1; c <= r; c++) {
         // Find the best hypotheses on the left and right side
@@ -140,114 +322,132 @@ SpanStack * HyperGraph::ProcessOneSpan(ReordererModel & model,
         right_trg = GetTrgSpan(c, r, 0);
         if(left_trg == NULL) THROW_ERROR("Target l="<<l<<", c-1="<<c-1);
         if(right_trg == NULL) THROW_ERROR("Target c="<<c<<", r="<<r);
+        Hypothesis * left, *right;
+       	left = left_trg->GetHypothesis(0);
+       	right = right_trg->GetHypothesis(0);
         // Add the straight terminal
-        score = GetEdgeScore(model, features, sent, 
-                                HyperEdge(l, c, r, HyperEdge::EDGE_STR));
-        viterbi_score = score + left_trg->GetScore() + right_trg->GetScore();
-        q.push(Hypothesis(viterbi_score, score, l, r,
-                         left_trg->GetTrgLeft(), right_trg->GetTrgRight(),
-                         HyperEdge::EDGE_STR, c, 0, 0, left_trg, right_trg));
+        HyperEdge * edge = new HyperEdge(l, c, r, HyperEdge::EDGE_STR);
+        score = GetEdgeScore(model, features, source, *edge);
+    	viterbi_score = score + left->GetScore() + right->GetScore();
+    	q->push(new Hypothesis(viterbi_score, score, edge,
+                         left->GetTrgLeft(),
+                         right->GetTrgRight(),
+                         0, 0, left_trg, right_trg));
         // Add the inverted terminal
-        score = GetEdgeScore(model, features, sent, 
-                                HyperEdge(l, c, r, HyperEdge::EDGE_INV));
-        viterbi_score = score + left_trg->GetScore() + right_trg->GetScore();
-        q.push(Hypothesis(viterbi_score, score, l, r,
-                         right_trg->GetTrgLeft(), left_trg->GetTrgRight(),
-                         HyperEdge::EDGE_INV, c, 0, 0, left_trg, right_trg));
+        edge = new HyperEdge(l, c, r, HyperEdge::EDGE_INV);
+        score = GetEdgeScore(model, features, source, *edge);
+    	viterbi_score = score + left->GetScore() + right->GetScore();
+    	q->push(new Hypothesis(viterbi_score, score, edge,
+						 right->GetTrgLeft(),
+						 left->GetTrgRight(),
+                         0, 0, left_trg, right_trg));
 
     }
-    // Get a map to store identical target spans
-    tr1::unordered_map<int, TargetSpan*> spans;
-    int r_max = r+1;
+    // For cube growing, search is lazy
+    if (cube_growing_)
+    	return;
+
     TargetSpan * trg_span = NULL;
     // Start beam search
     int num_processed = 0;
-    while((!beam_size || num_processed < beam_size) && q.size()) {
+    int pop_count = 0;
+    TargetSpan *new_left_trg, *new_right_trg;
+    while((!beam_size || num_processed < beam_size) && q->size()) {
         // Pop a hypothesis from the stack and get its target span
-        Hypothesis hyp = q.top(); q.pop();
-        int trg_idx = hyp.GetTrgLeft()*r_max+hyp.GetTrgRight();
-        tr1::unordered_map<int, TargetSpan*>::iterator it = spans.find(trg_idx);
-        if(it != spans.end()) {
-            trg_span = it->second;
-        } else {
-            trg_span = new TargetSpan(hyp.GetLeft(), hyp.GetRight(), 
-                                      hyp.GetTrgLeft(), hyp.GetTrgRight());
-            spans.insert(MakePair(trg_idx, trg_span));
-        }
+        Hypothesis * hyp = q->top(); q->pop();
+        trg_span = ret->GetTargetSpan(hyp);
+
         // Insert the hypothesis
+//		RUN(cerr << "Insert " << ret->HypSize() << "th hypothesis " << *hyp);
+//		RUN(hyp->PrintChildren(cerr));
         trg_span->AddHypothesis(hyp);
         num_processed++;
         // If the next hypothesis on the stack is equal to the current
         // hypothesis, remove it, as this just means that we added the same
         // hypothesis
-        while(q.size() && q.top() == hyp) q.pop();
+        while(q->size() && q->top() == hyp) {
+        	delete q->top();
+        	q->pop();
+        }
         // Skip terminals
-        if(hyp.GetCenter() == -1) continue;
+        if(hyp->GetCenter() == -1) continue;
+
+    	Hypothesis * new_left = NULL, *new_right = NULL;
+
         // Increment the left side if there is still a hypothesis left
-        new_left_trg = GetTrgSpan(l, hyp.GetCenter()-1, hyp.GetLeftRank()+1);
-        if(new_left_trg) {
-            old_left_trg = GetTrgSpan(l,hyp.GetCenter()-1,hyp.GetLeftRank());
-            Hypothesis new_hyp(hyp);
-            new_hyp.SetScore(hyp.GetScore() 
-                        - old_left_trg->GetScore() + new_left_trg->GetScore());
-            new_hyp.SetLeftRank(hyp.GetLeftRank()+1);
-            new_hyp.SetLeftChild(new_left_trg);
-            if(new_hyp.GetType() == HyperEdge::EDGE_STR) {
-                new_hyp.SetTrgLeft(new_left_trg->GetTrgLeft());
-            } else {
-                new_hyp.SetTrgRight(new_left_trg->GetTrgRight());
-            }
-            q.push(new_hyp);
-        }
+        new_left_trg = GetTrgSpan(l, hyp->GetCenter()-1, hyp->GetLeftRank()+1);
+        if (new_left_trg)
+        	IncrementLeft(hyp, new_left_trg, *q, pop_count);
         // Increment the right side if there is still a hypothesis right
-        new_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank()+1);
-        if(new_right_trg) {
-            old_right_trg = GetTrgSpan(hyp.GetCenter(),r,hyp.GetRightRank());
-            Hypothesis new_hyp(hyp);
-            new_hyp.SetScore(hyp.GetScore() 
-                    - old_right_trg->GetScore() + new_right_trg->GetScore());
-            new_hyp.SetRightRank(hyp.GetRightRank()+1);
-            new_hyp.SetRightChild(new_right_trg);
-            if(new_hyp.GetType() == HyperEdge::EDGE_STR) {
-                new_hyp.SetTrgRight(new_right_trg->GetTrgRight());
-            } else {
-                new_hyp.SetTrgLeft(new_right_trg->GetTrgLeft());
-            }
-            q.push(new_hyp);
-        }
+        new_right_trg = GetTrgSpan(hyp->GetCenter(),r,hyp->GetRightRank()+1);
+        if(new_right_trg)
+        	IncrementRight(hyp, new_right_trg, *q, pop_count);
     }
-    SpanStack * ret = new SpanStack;
-    typedef pair<int, TargetSpan*> MapPair;
-    BOOST_FOREACH(const MapPair & map_pair, spans)
-        ret->AddSpan(map_pair.second);
-    sort(ret->GetSpans().begin(), ret->GetSpans().end(), DescendingScore<TargetSpan>());
-    return ret;
+    while(!q->empty()){
+        delete q->top();
+        q->pop();
+    }
+    delete q;
 }
 
-// Build a hypergraph using beam search and cube pruning
+// for cube growing, trigger the best hypothesis
+void HyperGraph::Trigger(int l, int r) {
+	int pop_count = 0;
+	RUN(cerr << "Trigger the best hypothesis " << *HyperGraph::GetStack(l, r) << endl);
+	TargetSpan * best = LazyKthBest(GetStack(l, r), 0, pop_count);
+	if (!best)
+		THROW_ERROR("Fail to produce hypotheses " << *GetStack(l, r) << endl);
+}
+
+// Build a hypergraph using beam search and cube pruning/growing
 void HyperGraph::BuildHyperGraph(ReordererModel & model,
-                                 const FeatureSet & features,
-                                 const Sentence & sent,
-                                 int beam_size, bool save_trg) {
-    n_ = sent[0]->GetNumWords();
-    // Iterate through the right side of the span
-    for(int r = 0; r < n_; r++) {
+        const FeatureSet & features,
+        const Sentence & source, bool save_trg) {
+    SetNumWords(source[0]->GetNumWords());
+    // if -save_features=true, reuse the stacks storing edge features
+    if (!save_features_)
+    	SetAllStacks();
+    // Iterate through the left side of the span
+    for(int L = 1; L <= n_; L++) {
         // Move the span from l to r, building hypotheses from small to large
-        for(int l = r; l >= 0; l--) {
-            SetStack(l, r, ProcessOneSpan(model, features, sent, 
-                                          l, r, beam_size, save_trg));
-        }
+    	for(int l = 0; l <= n_-L; l++){
+    		int r = l+L-1;
+    		ProcessOneSpan(model, features,
+    		    						source, l, r, beam_size_, save_trg);
+    	}
+    	// for cube growing, trigger the best hypothesis
+    	if (cube_growing_)
+    		for(int l = 0; l <= n_-L; l++)
+    			Trigger(l, l+L-1);
     }
     // Build the root node
     SpanStack * top = GetStack(0,n_-1);
-    SpanStack * root_stack = new SpanStack;
-    for(int i = 0; i < (int)top->size(); i++) {
-        TargetSpan * root = new TargetSpan(0, n_-1, (*top)[i]->GetTrgLeft(), (*top)[i]->GetTrgRight());
-        root->AddHypothesis(Hypothesis((*top)[i]->GetScore(), 0, 0, n_-1, 0, n_-1,
-                                    HyperEdge::EDGE_ROOT, -1, i, -1, (*top)[i]));
+    SpanStack * root_stack = GetStack(0,n_);
+    if (!root_stack)
+    	THROW_ERROR("Either -save_features=false or InitStacks first")
+    root_stack->Clear();
+    for(int i = 0; !beam_size_ || i < beam_size_; i++){
+    	TargetSpan * best = NULL;
+    	if (cube_growing_){
+    		int pop_count = 0;
+    		best = LazyKthBest(top, i, pop_count);
+    	}
+    	else if (i < (int)(top->size()))
+            best = (*top)[i];
+
+		if(!best)
+			break;
+
+        // each hypothesis in a different target span
+        TargetSpan * root = new TargetSpan(0, n_-1, best->GetTrgLeft(), best->GetTrgRight());
+        root->AddHypothesis(new Hypothesis(
+        		best->GetScore() , 0,
+        		new HyperEdge(0, -1, n_-1, HyperEdge::EDGE_ROOT),
+        		best->GetTrgLeft(), best->GetTrgRight(),
+                i, -1,
+                best, NULL));
         root_stack->AddSpan(root);
     }
-    stacks_.push_back(root_stack);
 }
 
 // Add up the loss over an entire subtree defined by span
@@ -259,33 +459,49 @@ double HyperGraph::AccumulateLoss(const TargetSpan* span) {
     return score;
 }
 
-FeatureVectorInt HyperGraph::AccumulateFeatures(const TargetSpan* span) {
-    std::tr1::unordered_map<int,double> feat_map;
-    AccumulateFeatures(span, feat_map);
-    FeatureVectorInt ret;
-    BOOST_FOREACH(FeaturePairInt feat_pair, feat_map)
-        ret.push_back(feat_pair);
-    return ret;
+void HyperGraph::AddLoss(LossBase* loss,
+		const Ranks * ranks, const FeatureDataParse * parse) {
+    // Initialize the loss
+    loss->Initialize(ranks, parse);
+    // For each span in the hypergraph
+    int n = n_;
+    for(int r = 0; r <= n; r++) {
+        // When r == n, we want the root, so only do -1
+        for(int l = (r == n ? -1 : 0); l <= (r == n ? -1 : r); l++) {
+            // DEBUG cerr << "l=" << l << ", r=" << r << ", n=" << n << endl;
+        	BOOST_FOREACH(TargetSpan* span, GetStack(l,r)->GetSpans()) {
+        		BOOST_FOREACH(Hypothesis* hyp, span->GetHypotheses())  {
+        			// DEBUG cerr << "GetLoss = " <<hyp->GetLoss()<<endl;
+        			hyp->SetLoss(hyp->GetLoss() +
+        					loss->AddLossToProduction(hyp, ranks, parse));
+        		}
+            }
+        }
+    }
 }
 
-void HyperGraph::AccumulateFeatures(const TargetSpan* span, 
-                        std::tr1::unordered_map<int,double> & feat_map) {
-    const Hypothesis * hyp = span->GetHypothesis(0);
-    int l = hyp->GetLeft(), c = hyp->GetCenter(), r = hyp->GetRight();
-    HyperEdge::Type t = hyp->GetType();
-    // Find the features
-    if(hyp->GetType() != HyperEdge::EDGE_ROOT) {
-        EdgeFeatureMap::const_iterator fit = 
-                                    features_->find(HyperEdge(l,c,r,t));
-        if(fit == features_->end())
-            THROW_ERROR("No features found in Accumulate for l="
-                                    <<l<<", c="<<c<<", r="<<r<<", t="<<t);
-        BOOST_FOREACH(FeaturePairInt feat_pair, *(fit->second))
-            feat_map[feat_pair.first] += feat_pair.second;
-    }
-    if(hyp->GetLeftChild()) AccumulateFeatures(hyp->GetLeftChild(), feat_map);
-    if(hyp->GetRightChild())AccumulateFeatures(hyp->GetRightChild(),feat_map);
+
+// Accumulate edge features under a hyper-edge
+void HyperGraph::AccumulateFeatures(std::tr1::unordered_map<int,double> & feat_map,
+										ReordererModel & model,
+		                                const FeatureSet & features,
+		                                const Sentence & sent,
+		                                const TargetSpan * span){
+	const Hypothesis * hyp = span->GetHypothesis(0);
+	// root has no edge feature
+	if (hyp->GetEdgeType() != HyperEdge::EDGE_ROOT){
+		// accumulate edge features
+		const FeatureVectorInt * fvi = GetEdgeFeatures(model, features, sent, *hyp->GetEdge());
+		BOOST_FOREACH(FeaturePairInt feat_pair, *fvi)
+			feat_map[feat_pair.first] += feat_pair.second;
+//		// if fvi is not stored, delete
+//		if (!save_features_)
+//			delete fvi;
+	}
+    if(hyp->GetLeftChild()) AccumulateFeatures(feat_map, model, features, sent, hyp->GetLeftChild());
+    if(hyp->GetRightChild())AccumulateFeatures(feat_map, model, features, sent, hyp->GetRightChild());
 }
+
 
 template <class T>
 inline string GetNodeString(char type, const T * hyp) {
@@ -320,8 +536,8 @@ void HyperGraph::PrintHyperGraph(const std::vector<std::string> & strs,
                     continue;
                 // For each hypothesis
                 BOOST_FOREACH(const Hypothesis * hyp, span->GetHypotheses()) {
-                    span->SetHasType(hyp->GetType());
-                    int top_id = nodes.GetId(GetNodeString(hyp->GetType(), hyp),true);
+                    span->SetHasType(hyp->GetEdgeType());
+                    int top_id = nodes.GetId(GetNodeString(hyp->GetEdgeType(), hyp),true);
                     if((int)node_strings.size() <= top_id)
                         node_strings.resize(top_id+1);
                     TargetSpan *left_child = hyp->GetLeftChild();

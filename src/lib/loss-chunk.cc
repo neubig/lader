@@ -1,7 +1,30 @@
 #include <lader/loss-chunk.h>
+#include <lader/target-span.h>
 
 using namespace lader;
 using namespace std;
+
+double LossChunk::AddLossToProduction(Hypothesis * hyp,
+        const Ranks * ranks, const FeatureDataParse * parse) {
+	int trg_left = hyp->GetTrgLeft(),
+		trg_right = hyp->GetTrgRight();
+    int trg_midleft, trg_midright;
+    if(hyp->GetEdgeType() == HyperEdge::EDGE_STR) {
+    	trg_midleft = hyp->GetLeftHyp()->GetTrgRight();
+    	trg_midright = hyp->GetRightHyp()->GetTrgLeft();
+    } else if(hyp->GetEdgeType() == HyperEdge::EDGE_INV) {
+    	trg_midleft = hyp->GetRightHyp()->GetTrgRight();
+    	trg_midright = hyp->GetLeftHyp()->GetTrgLeft();
+    }
+	return AddLossToProduction(hyp->GetLeft(), hyp->GetCenter(), hyp->GetRight(),
+			trg_left, trg_midleft, trg_midright, trg_right, hyp->GetEdgeType(), ranks, parse);
+}
+
+bool LossChunk::IsStraight(const Ranks * ranks, int trg_midleft, int trg_midright)
+{
+    return Ranks::IsStepOneUp((*ranks)[trg_midleft], (*ranks)[trg_midright]) ||
+    		((*ranks)[trg_midleft] == (*ranks)[trg_midright] && trg_midleft + 1 == trg_midright);
+}
 
 double LossChunk::AddLossToProduction(
         int src_left, int src_mid, int src_right,

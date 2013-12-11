@@ -1,48 +1,58 @@
 #ifndef HYPER_GRAPH_H__ 
 #define HYPER_GRAPH_H__
 
+#ifdef DEBUG
+#define LOG(args...) fprintf (stderr, args)
+#define RUN(statement) statement
+#else
+#define LOG(args...)
+#define RUN(statement)
+#endif
+
 #include <iostream>
-#include <lader/target-span.h>
-#include <lader/span-stack.h>
-#include <lader/feature-vector.h>
+#include <lader/loss-base.h>
 #include <lader/feature-data-base.h>
-#include <lader/hyper-edge.h>
+#include <lader/reorderer-model.h>
+#include <lader/span-stack.h>
 #include <lader/util.h>
 #include <tr1/unordered_map>
 
 namespace lader {
 
-class ReordererModel;
-class FeatureSet;
-
-typedef std::tr1::unordered_map<HyperEdge, FeatureVectorInt*, HyperEdgeHash> EdgeFeatureMap;
-typedef std::pair<HyperEdge, FeatureVectorInt*> EdgeFeaturePair;
+template <class T>
+struct DescendingScore {
+  bool operator ()(T *lhs, T *rhs) { return rhs->GetScore() < lhs->GetScore(); }
+};
 
 class HyperGraph {
 public:
     
     friend class TestHyperGraph;
 
-    HyperGraph() : features_(0), n_(-1) { }
+    HyperGraph(bool cube_growing = false) : 
+        save_features_(false), n_(-1), threads_(1), cube_growing_(cube_growing) { }
 
-    ~HyperGraph() {
-        if(features_) {
-            BOOST_FOREACH(EdgeFeaturePair efp, *features_)
-                delete efp.second;
-            delete features_;
-        }
-        BOOST_FOREACH(SpanStack * stack, stacks_)
-            delete stack;
+    virtual void ClearStacks() {
+		BOOST_FOREACH(SpanStack * stack, stacks_)
+			delete stack;
+		stacks_.clear();
+	}
+
+    virtual ~HyperGraph()
+    {
+        ClearStacks();
     }
-    
+
+    virtual HyperGraph * Clone(){
+    	HyperGraph * cloned = new HyperGraph(*this);
+    	cloned->cloned_ = true;
+    	return cloned;
+    }
+
     // Build the hypergraph using the specified model, features and sentence
-    //  beam_size: the pop limit for cube pruning
-    //  save_trg: whether to save the target side for use in calculating loss
     void BuildHyperGraph(ReordererModel & model,
                          const FeatureSet & features,
-                         const Sentence & sent,
-                         int beam_size = 0,
-                         bool save_trg = true);
+                         const Sentence & sent, bool save_trg = true);
 
     const SpanStack * GetStack(int l, int r) const {
         return SafeAccess(stacks_, GetTrgSpanID(l,r));
@@ -54,12 +64,15 @@ public:
     std::vector<SpanStack*> & GetStacks() { return stacks_; }
 
 
+    // Get a loss-augmented score for under a hypothesis
+    // Do not change the single/viterbi scores of the hypothesis
+    double Score(double loss_multiplier, const Hypothesis* hyp) const;
+
     // Scoring functions
     double Score(const ReordererModel & model, double loss_multiplier,
                  TargetSpan* span);
     double Score(const ReordererModel & model, double loss_multiplier,
                  Hypothesis* hyp);
-
     TargetSpan * GetTrgSpan(int l, int r, int rank) {
 #ifdef LADER_SAFE
         if(l < 0 || r < 0 || rank < 0)
@@ -78,6 +91,8 @@ public:
 
     // Rescore the hypergraph using the given model and a loss multiplier
     double Rescore(const ReordererModel & model, double loss_multiplier);
+    // Rescore the hypergraph using the given model and a loss multiplier
+    double Rescore(double loss_multiplier);
 
     const TargetSpan * GetRoot() const {
         return SafeAccess(stacks_, stacks_.size()-1)->GetSpanOfRank(0);
@@ -85,41 +100,106 @@ public:
     TargetSpan * GetRoot() {
         return SafeAccess(stacks_, stacks_.size()-1)->GetSpanOfRank(0);
     }
+    SpanStack * GetRootStack() {
+            return SafeAccess(stacks_, stacks_.size()-1);
+    }
+    Hypothesis * GetBest() {
+		if (stacks_.empty() || !GetRoot())
+			return NULL;
+		return GetRoot()->GetHypothesis(0);
+	}
+    // Add up the loss over an entire sentence
+    virtual void AddLoss(
+    		LossBase* loss,
+    		const Ranks * ranks,
+            const FeatureDataParse * parse) ;
 
     // Add up the loss over an entire subtree defined by span
     double AccumulateLoss(const TargetSpan* span);
 
-    FeatureVectorInt AccumulateFeatures(const TargetSpan* span);
+    void SetSaveFeatures(bool save_features) {
+    	save_features_ = save_features;
+    }
+	virtual void AccumulateFeatures(std::tr1::unordered_map<int, double> & feat_map,
+			ReordererModel & model, const FeatureSet & features,
+			const Sentence & sent,
+			const TargetSpan * span);
 
-    void AccumulateFeatures(const TargetSpan* span, 
-                            std::tr1::unordered_map<int,double> & feat_map);
+	int GetSrcLen() const { return n_; }
 
-    void SetFeatures(EdgeFeatureMap * features) { features_ = features;}
-    EdgeFeatureMap * GetFeatures() { return features_; }
-    // Clear the feature array without deleting the features themselves
-    // This is useful if you want to save the features for later use
-    void ClearFeatures() { features_ = NULL; }
-    int GetSrcLen() const { return n_; }
+	void SetThreads(int threads) { threads_ = threads; }
+    void SetBeamSize(int beam_size) { beam_size_ = beam_size; }
+    void SetPopLimit(int pop_limit) { pop_limit_ = pop_limit; }
+    void SetNumWords(int n){ n_ = n;}
+    
+   	// IO Functions for stored features
+	virtual void FeaturesToStream(std::ostream & out){
+		BOOST_FOREACH(SpanStack * stack, stacks_)
+			stack->FeaturesToStream(out);
+	}
+	virtual void FeaturesFromStream(std::istream & in){
+		BOOST_FOREACH(SpanStack * stack, stacks_)
+			stack->FeaturesFromStream(in);
+	}
 
+	void SetAllStacks(){
+		stacks_.resize(n_ * (n_+1) / 2 + 1, NULL); // resize stacks in advance
+		for(int L = 1; L <= n_; L++)
+			for(int l = 0; l <= n_-L; l++)
+				SetStacks(l, l+L-1, true);
+		// Set root stack at the end of the list
+		SpanStack * root_stack = new SpanStack(0,n_);
+		stacks_[n_ * (n_+1) / 2] = root_stack;
+	}
+
+	void SaveAllEdgeFeatures(ReordererModel & model, const FeatureSet & features,
+			const Sentence & source) {
+		for(int L = 1; L <= n_; L++)
+			for(int l = 0; l <= n_-L; l++)
+				SaveEdgeFeatures(l, l+L-1, model, features, source);
+	}
+	
 protected:
-    SpanStack * ProcessOneSpan(ReordererModel & model,
-                               const FeatureSet & features,
-                               const Sentence & sent,
-                               int l, int r,
-                               int beam_size = 0,
-                               bool save_trg = true);
+    void AddTerminals(int l, int r, const FeatureSet & features,
+			ReordererModel & model, const Sentence & sent,
+			HypothesisQueue * q, bool save_trg);
+    // For both cube pruning/growing
+    void IncrementLeft(const Hypothesis *old_hyp, TargetSpan *new_left,
+			HypothesisQueue & q, int & pop_count);
+	void IncrementRight(const Hypothesis *old_hyp, TargetSpan *new_right,
+			HypothesisQueue & q, int & pop_count);
 
-
+	virtual void SaveEdgeFeatures(int l, int r, ReordererModel & model,
+			const FeatureSet & features, const Sentence & sent) {
+		for(int c = l+1; c <= r; c++) {
+			GetEdgeFeatures(model, features, sent,
+					HyperEdge(l, c, r, HyperEdge::EDGE_STR));
+			GetEdgeFeatures(model, features, sent,
+					HyperEdge(l, c, r, HyperEdge::EDGE_INV));
+		}
+	}
+	// For cube pruning/growing with threads > 1, we need to set same-sized stacks
+	// in advance to ProcessOneSpan
+	virtual void SetStacks(int l, int r, bool init = false) {
+		// if -save_features, stack may exist
+		if (init || !GetStack(l, r))
+			SetStack(l, r, new SpanStack(l, r));
+	}
+	// For cube growing
+	virtual void Trigger(int l, int r);
+	virtual void LazyNext(HypothesisQueue & q, const Hypothesis * hyp,
+			int & pop_count);
+    virtual TargetSpan * LazyKthBest(SpanStack * stack, int k, int & pop_count);
+    virtual void ProcessOneSpan(ReordererModel & model,
+    		const FeatureSet & features,
+			const Sentence & sent, int l, int r,
+			int beam_size = 0, bool save_trg = true);
+			
     const FeatureVectorInt * GetEdgeFeatures(
                                 ReordererModel & model,
                                 const FeatureSet & feature_gen,
                                 const Sentence & sent,
                                 const HyperEdge & edge);
-
-    void SetEdgeFeatures(const HyperEdge & edge, FeatureVectorInt * feat) {
-        if(!features_) features_ = new EdgeFeatureMap;
-        features_->insert(MakePair(edge, feat));
-    }
 
     double GetEdgeScore(ReordererModel & model,
                         const FeatureSet & feature_gen,
@@ -145,10 +225,6 @@ protected:
     }
 
 private:
-
-    // A map containing feature vectors for each of the edges
-    EdgeFeatureMap * features_;
-
     // Stacks containing the hypotheses for each span
     // The indexing for the outer vector is:
     //  0-0 -> 0, 0-1 -> 1, 1-1 -> 2, 0-2 -> 3 ...
@@ -156,8 +232,14 @@ private:
     // The inner vector contains target spans in descending rank of score
     std::vector<SpanStack*> stacks_;
 
+    int pop_limit_;
+    // the beam size used for cube pruning/growing
+    int beam_size_;
+    bool save_features_;
+    int threads_;
     // The length of the sentence
     int n_;
+    bool cube_growing_, cloned_;
 
 };
 

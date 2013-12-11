@@ -9,6 +9,8 @@ namespace lader {
 // tree
 class LossBracket : public LossBase {
 public:
+	virtual double AddLossToProduction(Hypothesis * hyp,
+	    		const Ranks * ranks, const FeatureDataParse * parse);
 
     virtual double AddLossToProduction(
         int src_left, int src_mid, int src_right,

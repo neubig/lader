@@ -9,18 +9,17 @@ using namespace boost;
 
 // Generates the features that can be factored over a node
 FeatureVectorInt * FeatureSet::MakeEdgeFeatures(
-        const vector<FeatureDataBase*> & sent,
+		const Sentence & sent,
         const HyperEdge & edge,
         SymbolSet<int> & feature_ids,
         bool add) const {
-    // Otherwise generate the features
     FeatureVectorInt * feats = new FeatureVectorInt;
     for(int i = 0; i < (int)sent.size(); i++)
         feature_gens_[i]->GenerateEdgeFeatures(*sent[i], edge, feature_ids, add, *feats);
     return feats;
 }
 
-vector<FeatureDataBase*> FeatureSet::ParseInput(const string & line) const {
+Sentence FeatureSet::ParseInput(const string & line) const {
     vector<string> columns;
     algorithm::split(columns, line, is_any_of("\t"));
     if(feature_gens_.size() != columns.size()) {
@@ -28,7 +27,7 @@ vector<FeatureDataBase*> FeatureSet::ParseInput(const string & line) const {
                     ") didn't equal feature profile ("<<feature_gens_.size()<<
                     ") at"<<endl<<line<<endl);
     }
-    vector<FeatureDataBase*> ret(columns.size());
+    Sentence ret(columns.size());
     for(int i = 0; i < (int)columns.size(); i++) {
         ret[i] = feature_gens_[i]->ParseData(columns[i]);
     }
@@ -37,6 +36,8 @@ vector<FeatureDataBase*> FeatureSet::ParseInput(const string & line) const {
 
 void FeatureSet::ParseConfiguration(const string & str) {
     config_str_ = str;
+    if (str.length() == 0)
+    	return;
     // Split configurations into sizes
     vector<string> configs;
     algorithm::split(configs, str, is_any_of("|"));
@@ -57,8 +58,6 @@ void FeatureSet::ParseConfiguration(const string & str) {
 void FeatureSet::ToStream(ostream & out) {
     out << "feature_set" << endl;
     out << "config_str " << config_str_ << endl;
-    out << "max_term " << max_term_ << endl;
-    out << "use_reverse " << use_reverse_ << endl;
     out << endl;
 }
 FeatureSet * FeatureSet::FromStream(istream & in) {
@@ -68,10 +67,6 @@ FeatureSet * FeatureSet::FromStream(istream & in) {
     GetConfigLine(in, "config_str", config);
     FeatureSet * ret = new FeatureSet;
     ret->ParseConfiguration(config);
-    GetConfigLine(in, "max_term", config);
-    ret->SetMaxTerm(atoi(config.c_str()));
-    GetConfigLine(in, "use_reverse", config);
-    ret->SetUseReverse(config == "true" || config == "1");
     GetlineEquals(in, "");
     return ret;
 }
