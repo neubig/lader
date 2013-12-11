@@ -16,7 +16,7 @@
 #include <lader/span-stack.h>
 #include <lader/util.h>
 #include <tr1/unordered_map>
-
+#include <lader/thread-pool.h>
 namespace lader {
 
 template <class T>
@@ -28,6 +28,26 @@ class HyperGraph {
 public:
     
     friend class TestHyperGraph;
+
+    class TargetSpanTask : public Task {
+    public:
+    	TargetSpanTask(HyperGraph * graph, ReordererModel & model,
+    			const FeatureSet & features,
+    			const Sentence & sent, int l, int r, int beam_size, bool save_trg) :
+    				graph_(graph), model_(model), features_(features),
+    				source_(sent), l_(l), r_(r), beam_size_(beam_size), save_trg_(save_trg) { }
+    	void Run(){
+    		graph_->ProcessOneSpan(model_, features_,
+    		    						source_, l_, r_, beam_size_, save_trg_);
+    	}
+    private:
+    	HyperGraph * graph_;
+    	ReordererModel & model_;
+    	const FeatureSet & features_;
+    	const Sentence & source_;
+    	int l_, r_, beam_size_;
+    	bool save_trg_;
+    };
 
     HyperGraph(bool cube_growing = false) : 
         save_features_(false), n_(-1), threads_(1), cube_growing_(cube_growing) { }

@@ -7,10 +7,10 @@ TARGET_IN=data/test.ja
 ALIGN_IN=data/test.en-ja.align
 MODEL_IN=output/train.mod
 OUTPUT=output/test.en.reordered
-THREADS=1
+THREADS=2
 BEAM=1
 VERBOSE=1
-CUBE_GROWING=false
+CUBE_GROWING=true
 
 # This bash file provides an example of how to run lader and evaluate its
 # accuracy. Before using this file, you must run train-model.sh to create

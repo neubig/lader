@@ -9,7 +9,7 @@ using namespace std;
 using namespace boost;
 
 // Return the edge feature vector
-// if -save_features, edge features are stored in a stack.
+// each feature vector is stored in a designate slot in a stack.
 // thus, this is thread safe without lock.
 const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
                                 ReordererModel & model,
@@ -17,33 +17,29 @@ const FeatureVectorInt * HyperGraph::GetEdgeFeatures(
                                 const Sentence & sent,
                                 const HyperEdge & edge) {
 	FeatureVectorInt * ret = NULL;
-//    if (save_features_) {
-    	SpanStack * stack = GetStack(edge.GetLeft(), edge.GetRight());
-    	switch (edge.GetType()){
-    	case HyperEdge::EDGE_FOR:
-    	case HyperEdge::EDGE_STR:
-    		ret = stack->GetStraightFeautures(edge.GetCenter() - edge.GetLeft());
-    		if (ret == NULL){
-    			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
-    			stack->SaveStraightFeautures(edge.GetCenter() - edge.GetLeft(), ret);
-    		}
-    		break;
-    	case HyperEdge::EDGE_BAC:
-    	case HyperEdge::EDGE_INV:
-    		ret = stack->GetInvertedFeautures(edge.GetCenter() - edge.GetLeft());
-    		if (ret == NULL){
-    			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
-    			stack->SaveInvertedFeautures(edge.GetCenter() - edge.GetLeft(), ret);
-    		}
-    		break;
-    	case HyperEdge::EDGE_ROOT:
-    	default:
-    		THROW_ERROR("Invalid hyper edge for GetEdgeFeatures: " << edge);
-    		break;
-    	}
-//    } else {
-//    	ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
-//    }
+	SpanStack * stack = GetStack(edge.GetLeft(), edge.GetRight());
+	switch (edge.GetType()){
+	case HyperEdge::EDGE_FOR:
+	case HyperEdge::EDGE_STR:
+		ret = stack->GetStraightFeautures(edge.GetCenter() - edge.GetLeft());
+		if (ret == NULL){
+			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
+			stack->SaveStraightFeautures(edge.GetCenter() - edge.GetLeft(), ret);
+		}
+		break;
+	case HyperEdge::EDGE_BAC:
+	case HyperEdge::EDGE_INV:
+		ret = stack->GetInvertedFeautures(edge.GetCenter() - edge.GetLeft());
+		if (ret == NULL){
+			ret = feature_gen.MakeEdgeFeatures(sent, edge, model.GetFeatureIds(), model.GetAdd());
+			stack->SaveInvertedFeautures(edge.GetCenter() - edge.GetLeft(), ret);
+		}
+		break;
+	case HyperEdge::EDGE_ROOT:
+	default:
+		THROW_ERROR("Invalid hyper edge for GetEdgeFeatures: " << edge);
+		break;
+	}
     return ret;
 }
 
@@ -249,8 +245,6 @@ void HyperGraph::LazyNext(HypothesisQueue & q, const Hypothesis * hyp,
 
 	// Skip terminals
 	if(hyp->GetCenter() == -1) return;
-	RUN(cerr << "LazyNext from " << *hyp << endl);
-	RUN(cerr << "Before increment: " << q.size() << " candidates" << endl);
 	SpanStack *left_stack = GetStack(hyp->GetLeft(), hyp->GetCenter()-1);
 	new_left = LazyKthBest(left_stack, hyp->GetLeftRank() + 1, pop_count);
 	if (new_left)
@@ -260,7 +254,6 @@ void HyperGraph::LazyNext(HypothesisQueue & q, const Hypothesis * hyp,
 	new_right = LazyKthBest(right_span, hyp->GetRightRank() + 1, pop_count);
 	if (new_right)
 		IncrementRight(hyp, new_right, q, pop_count);
-	RUN(cerr << "After increment: " << q.size() << " candidates" << endl);
 }
 
 // For cube growing
@@ -273,8 +266,6 @@ TargetSpan * HyperGraph::LazyKthBest(SpanStack * stack, int k, int & pop_count) 
 		Hypothesis * hyp = q->top(); q->pop();
 		trg_span = stack->GetTargetSpan(hyp);
 		// Insert the hypothesis
-//		RUN(cerr << "Insert " << k << "th hypothesis " << *hyp);
-//		RUN(hyp->PrintChildren(cerr));
 		trg_span->AddHypothesis(hyp);
 		LazyNext(*q, hyp, pop_count);
         // If the next hypothesis on the stack is equal to the current
@@ -358,8 +349,6 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
         trg_span = ret->GetTargetSpan(hyp);
 
         // Insert the hypothesis
-//		RUN(cerr << "Insert " << ret->HypSize() << "th hypothesis " << *hyp);
-//		RUN(hyp->PrintChildren(cerr));
         trg_span->AddHypothesis(hyp);
         num_processed++;
         // If the next hypothesis on the stack is equal to the current
@@ -393,7 +382,6 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
 // for cube growing, trigger the best hypothesis
 void HyperGraph::Trigger(int l, int r) {
 	int pop_count = 0;
-	RUN(cerr << "Trigger the best hypothesis " << *HyperGraph::GetStack(l, r) << endl);
 	TargetSpan * best = LazyKthBest(GetStack(l, r), 0, pop_count);
 	if (!best)
 		THROW_ERROR("Fail to produce hypotheses " << *GetStack(l, r) << endl);
@@ -410,11 +398,15 @@ void HyperGraph::BuildHyperGraph(ReordererModel & model,
     // Iterate through the left side of the span
     for(int L = 1; L <= n_; L++) {
         // Move the span from l to r, building hypotheses from small to large
+       	// parallelize at cell-level
+    	ThreadPool pool(threads_, 1000);
     	for(int l = 0; l <= n_-L; l++){
     		int r = l+L-1;
-    		ProcessOneSpan(model, features,
-    		    						source, l, r, beam_size_, save_trg);
+	   		Task * task = new TargetSpanTask(this, model, features,
+					source, l, r, beam_size_, save_trg);
+    		pool.Submit(task);
     	}
+    	pool.Stop(true);
     	// for cube growing, trigger the best hypothesis
     	if (cube_growing_)
     		for(int l = 0; l <= n_-L; l++)
