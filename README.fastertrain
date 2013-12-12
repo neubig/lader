@@ -1,7 +1,29 @@
 This is an implementation of "A Discriminative Reordering Parser for IWSLT2013"
 
+Hwidong Na (leona@postech.ac.kr)
+
 Three methods are implemented.
 
 * Apply Cube Growing with cell-level CYK parallelization
 * Generate features in parallel
 * Save the generated features on disk
+
+Quick document (see also the example/train-model.sh)
+
+1. Cube Growing
+
+src/bin/train-lader -cube_growing true ...
+
+Use cube growing instead of cube pruning for producing k-best trees
+
+2. Parallel feature generation/CYK parsing at cell-level
+
+src/bin/train-lader -threads 24 ...
+
+Use parallelism in both the feature generation and CYK parsing
+
+3. On disk 
+
+src/bin/train-lader -save_features true -features_dir /path/to/dir ...
+
+Save the generated features on disk for large data

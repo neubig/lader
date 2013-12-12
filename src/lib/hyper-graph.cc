@@ -355,13 +355,10 @@ void HyperGraph::Trigger(int l, int r) {
 }
 
 // Build a hypergraph using beam search and cube pruning/growing
+// Preliminary: SetAllStacks
 void HyperGraph::BuildHyperGraph(ReordererModel & model,
         const FeatureSet & features,
         const Sentence & source, bool save_trg) {
-    SetNumWords(source[0]->GetNumWords());
-    // if -save_features=true, reuse the stacks storing edge features
-    if (!save_features_)
-    	SetAllStacks();
     // Iterate through the left side of the span
     for(int L = 1; L <= n_; L++) {
         // Move the span from l to r, building hypotheses from small to large

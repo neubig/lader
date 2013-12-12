@@ -49,8 +49,25 @@ public:
     	bool save_trg_;
     };
 
+    class SpanStackTask : public Task {
+        public:
+        	SpanStackTask(HyperGraph * graph, ReordererModel & model,
+    			const FeatureSet & features, const Sentence & source, int l, int r) :
+        				graph_(graph), model_(model), features_(features),
+        				source_(source), l_(l), r_(r) { }
+        	void Run(){
+    			graph_->SaveEdgeFeatures(l_, r_, model_, features_, source_);
+        	}
+        private:
+        	HyperGraph * graph_;
+        	ReordererModel & model_;
+        	const FeatureSet & features_;
+        	const Sentence & source_;
+        	int l_, r_;
+    };
+    
     HyperGraph(bool cube_growing = false) : 
-        save_features_(false), n_(-1), threads_(1), cube_growing_(cube_growing) { }
+        n_(-1), threads_(1), cube_growing_(cube_growing) { }
 
     virtual void Clear() {
 		BOOST_FOREACH(SpanStack * stack, stacks_)
@@ -131,9 +148,6 @@ public:
     // Add up the loss over an entire subtree defined by span
     double AccumulateLoss(const TargetSpan* span);
 
-    void SetSaveFeatures(bool save_features) {
-    	save_features_ = save_features;
-    }
 	virtual void AccumulateFeatures(std::tr1::unordered_map<int, double> & feat_map,
 			ReordererModel & model, const FeatureSet & features,
 			const Sentence & sent,
@@ -156,7 +170,8 @@ public:
 			stack->FeaturesFromStream(in);
 	}
 
-	void SetAllStacks(){
+	void SetAllStacks(int N){
+		n_ = N;
 		stacks_.resize(n_ * (n_+1) / 2 + 1, NULL); // resize stacks in advance
 		for(int L = 1; L <= n_; L++)
 			for(int l = 0; l <= n_-L; l++)
@@ -166,13 +181,20 @@ public:
 		stacks_[n_ * (n_+1) / 2] = root_stack;
 	}
 
-	void SaveAllEdgeFeatures(ReordererModel & model, const FeatureSet & features,
-			const Sentence & source) {
-		for(int L = 1; L <= n_; L++)
-			for(int l = 0; l <= n_-L; l++)
-				SaveEdgeFeatures(l, l+L-1, model, features, source);
-	}
-	
+    // edge-level parallelization of feature generation
+    void SaveAllEdgeFeatures(ReordererModel & model,
+    		const FeatureSet & features, const Sentence & source)
+    {
+        ThreadPool pool(threads_, 1000);
+        for(int L = 1; L <= n_ ; L++)
+            for(int l = 0 ; l <= n_-L ; l++){
+                Task *task = new SpanStackTask(this, model, features, source, l, l + L - 1);
+                pool.Submit(task);
+            }
+
+        pool.Stop(true);
+    }
+
 protected:
     void AddTerminals(int l, int r, const FeatureSet & features,
 			ReordererModel & model, const Sentence & sent,
