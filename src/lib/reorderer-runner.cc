@@ -16,6 +16,7 @@ void ReordererTask::Run() {
     // Save the original string
     vector<string> words = ((FeatureDataSequence*)datas[0])->GetSequence();
     // Build the hypergraph
+    graph_->SetAllStacks(datas[0]->GetNumWords());
     graph_->BuildHyperGraph(*model_, *features_, datas);
     // Reorder
     std::vector<int> reordering;

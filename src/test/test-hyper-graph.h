@@ -98,8 +98,6 @@ public:
         stack01->SaveStraightFeautures(-1, fv01f);
         stack01->SaveStraightFeautures(1, fv01s);
         stack01->SaveInvertedFeautures(1, fv01b);
-        // features are saved in stack
-        my_hg.SetSaveFeatures(true);
         // Add the loss
         ts00->GetHypothesis(0)->SetLoss(1);
         ts11->GetHypothesis(0)->SetLoss(2);
@@ -139,8 +137,6 @@ public:
         edge02exp.push_back(MakePair(string("SP||PRP||VBD NN"), 1));
         // Make the hypergraph and get the features
         HyperGraph hyper_graph;
-        // -save_features
-        hyper_graph.SetSaveFeatures(true);
         // for Save{Striaght,Inverted}Features
         SpanStack * stack02 = new SpanStack(0, 2);
         hyper_graph.SetStack(0, 2, stack02);
@@ -284,6 +280,7 @@ public:
         ReordererModel model;
         model.SetMaxTerm(0);
         model.SetUseReverse(false);
+        graph.SetAllStacks(datas[0]->GetNumWords());
         graph.BuildHyperGraph(model, set, datas);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;
@@ -309,6 +306,7 @@ public:
         ReordererModel model;
         model.SetMaxTerm(0);
         model.SetUseReverse(false);
+        graph.SetAllStacks(datas[0]->GetNumWords());
         graph.BuildHyperGraph(model, set, datas, false);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;
@@ -334,6 +332,7 @@ public:
         ReordererModel model;
         model.SetMaxTerm(0);
         model.SetUseReverse(false);
+        graph.SetAllStacks(datas[0]->GetNumWords());
         graph.BuildHyperGraph(model, set, datas);
         const std::vector<SpanStack*> & stacks = graph.GetStacks();
         int ret = 1;

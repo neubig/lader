@@ -9,12 +9,12 @@ seq=dict=output/train.en-ja.pt,LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,O%SL%SR%ET,I%
 |seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET\
 |seq=LL%SL%ET,RR%SR%ET,LR%LR%ET,RL%RL%ET,B%SB%ET,A%SA%ET,O%SL%SR%ET,I%LR%RL%ET\
 |cfg=LP%LP%ET,RP%RP%ET,SP%SP%ET,TP%SP%LP%RP%ET"
-THREADS=2
-SAVE_FEATURES=true
-FEATURES_DIR=/tmp
+THREADS=4
+SAVE_FEATURES=false #true
+FEATURES_DIR= #/tmp
 SHUFFLE=true
-CUBE_GROWING=true
-ITERATION=100
+CUBE_GROWING=false #true
+ITERATION=500
 VERBOSE=1
 
 # This bash file provides an example of how to train a model for lader.
@@ -109,7 +109,10 @@ paste data/train.en output/train.en.class data/train.en.pos data/train.en.parse 
 #              the default 1e-3 works pretty well in general)
 #
 # -save_features ... (default is true which uses more memory but runs slower.
-#                     if you are using large data, this should be set to false)
+#                     if you are using large data, this should be used with -features_dir)
+# -features_dir ...	(store features on disk instead of in memory.)
+# -threads ...	(the number of threads used for parallel feature generation, parallel cube pruning/growing at cell-level
+# -cube_growing ...	(default is false which uses a lazy search)
 
 echo "../src/bin/train-lader -cost 1e-3 -attach_null right -feature_profile '$FEATURE_PROFILE' -iterations $ITERATION -threads $THREADS -cube_growing $CUBE_GROWING -shuffle $SHUFFLE -verbose $VERBOSE -model_in $MODEL_IN'' -model_out output/train.mod -source_in $SOURCE_IN -align_in $ALIGN_IN -save_features $SAVE_FEATURES -features_dir $FEATURES_DIR"
 ../src/bin/train-lader -cost 1e-3 -attach_null right -feature_profile $FEATURE_PROFILE -iterations $ITERATION -threads $THREADS -cube_growing $CUBE_GROWING -shuffle $SHUFFLE -verbose $VERBOSE -model_in $MODEL_IN'' -model_out output/train.mod -source_in $SOURCE_IN -align_in $ALIGN_IN -save_features $SAVE_FEATURES -features_dir $FEATURES_DIR
