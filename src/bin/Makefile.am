@@ -1,5 +1,7 @@
 
-AM_CPPFLAGS = -I$(srcdir)/../include
+AM_CPPFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
+AM_LDFLAGS = $(BOOST_LDFLAGS)
+
 
 bin_PROGRAMS = train-lader lader evaluate-lader label-ranking
 

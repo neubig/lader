@@ -7,7 +7,9 @@ LADERCPP = lader.cc hyper-graph.cc combined-alignment.cc alignment.cc \
            loss-bracket.cc feature-align.cc thread-pool.cc hypothesis.cc
 
 
-AM_CPPFLAGS = -I$(srcdir)/../include
+AM_CPPFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
+AM_LDFLAGS = $(BOOST_LDFLAGS)
+
 
 lib_LTLIBRARIES = liblader.la
 
