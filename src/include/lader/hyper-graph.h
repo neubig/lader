@@ -67,7 +67,7 @@ public:
     };
     
     HyperGraph(bool cube_growing = false) : 
-        n_(-1), threads_(1), cube_growing_(cube_growing) { }
+    	beam_size_(0), pop_limit_(0), n_(-1), threads_(1), cloned_(false), cube_growing_(cube_growing) { }
 
     virtual void Clear() {
 		BOOST_FOREACH(SpanStack * stack, stacks_)
@@ -198,7 +198,7 @@ public:
 protected:
     void AddTerminals(int l, int r, const FeatureSet & features,
 			ReordererModel & model, const Sentence & sent,
-			HypothesisQueue * q, bool save_trg);
+			HypothesisQueue & q, bool save_trg);
     // For both cube pruning/growing
     void IncrementLeft(const Hypothesis *old_hyp, TargetSpan *new_left,
 			HypothesisQueue & q, int & pop_count);
@@ -269,13 +269,10 @@ private:
     // The inner vector contains target spans in descending rank of score
     std::vector<SpanStack*> stacks_;
 
-    int pop_limit_;
-    // the beam size used for cube pruning/growing
-    int beam_size_;
-    bool save_features_;
-    int threads_;
-    // The length of the sentence
-    int n_;
+    int pop_limit_;	// the pop limit used for cube growing (default=0, unlimited)
+    int beam_size_;	// the beam size used for cube pruning/growing (default=0, unlimited)
+    int threads_; 	// the number of threads for parallel feature generation (default=1)
+    int n_;			// the length of the sentence
     bool cube_growing_, cloned_;
 
 };

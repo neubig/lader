@@ -127,7 +127,7 @@ double HyperGraph::GetEdgeScore(ReordererModel & model,
 
 // If the length is OK, add a terminal
 void HyperGraph::AddTerminals(int l, int r, const FeatureSet & features,
-		ReordererModel & model, const Sentence & sent, HypothesisQueue * q,
+		ReordererModel & model, const Sentence & sent, HypothesisQueue & q,
 		bool save_trg)
 {
     // If the length is OK, add a terminal
@@ -138,11 +138,11 @@ void HyperGraph::AddTerminals(int l, int r, const FeatureSet & features,
         // Create a hypothesis with the forward terminal
         HyperEdge *edge = new HyperEdge(l, -1, r, HyperEdge::EDGE_FOR);
         score = GetEdgeScore(model, features, sent, *edge);
-        q->push(new Hypothesis(score, score, edge, tl, tr));
+        q.push(new Hypothesis(score, score, edge, tl, tr));
         if(model.GetUseReverse()){
             edge = new HyperEdge(l, -1, r, HyperEdge::EDGE_BAC);
             score = GetEdgeScore(model, features, sent, *edge);
-            q->push(new Hypothesis(score, score, edge, tr, tl));
+            q.push(new Hypothesis(score, score, edge, tr, tl));
         }
     }
 }
@@ -229,18 +229,18 @@ TargetSpan * HyperGraph::LazyKthBest(SpanStack * stack, int k, int & pop_count) 
 	while (((!beam_size_ && stack->size() < k + 1)
 			|| stack->size() < std::min(k + 1, beam_size_))
 			&& stack->CandSize() > 0) {
-		HypothesisQueue * q = &stack->GetCands();
-		Hypothesis * hyp = q->top(); q->pop();
+		HypothesisQueue & q = stack->GetCands();
+		Hypothesis * hyp = q.top(); q.pop();
 		trg_span = stack->GetTargetSpan(hyp);
 		// Insert the hypothesis
 		trg_span->AddHypothesis(hyp);
-		LazyNext(*q, hyp, pop_count);
+		LazyNext(q, hyp, pop_count);
         // If the next hypothesis on the stack is equal to the current
         // hypothesis, remove it, as this just means that we added the same
         // hypothesis
-        while(q->size() && q->top() == hyp) {
-        	delete q->top();
-        	q->pop();
+        while(q.size() && q.top() == hyp) {
+        	delete q.top();
+        	q.pop();
         }
 		if (pop_limit_ && ++pop_count > pop_limit_)
 			break;
@@ -259,12 +259,9 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
     if (!ret)
     	THROW_ERROR("SetStack is required: [" << l << ", " << r << "]")
 	ret->Clear();
-    HypothesisQueue * q;
-	if (cube_growing_)
-		q = &ret->GetCands();
-    else
-        // Create the temporary data members for this span
-    	q = new HypothesisQueue;
+    // Create the temporary data members for this span
+    HypothesisQueue temp;
+    HypothesisQueue & q = cube_growing_ ? ret->GetCands() : temp;
 
     double score, viterbi_score;
     // If the length is OK, add a terminal
@@ -287,7 +284,7 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
         HyperEdge * edge = new HyperEdge(l, c, r, HyperEdge::EDGE_STR);
         score = GetEdgeScore(model, features, source, *edge);
     	viterbi_score = score + left->GetScore() + right->GetScore();
-    	q->push(new Hypothesis(viterbi_score, score, edge,
+    	q.push(new Hypothesis(viterbi_score, score, edge,
                          left->GetTrgLeft(),
                          right->GetTrgRight(),
                          0, 0, left_trg, right_trg));
@@ -295,7 +292,7 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
         edge = new HyperEdge(l, c, r, HyperEdge::EDGE_INV);
         score = GetEdgeScore(model, features, source, *edge);
     	viterbi_score = score + left->GetScore() + right->GetScore();
-    	q->push(new Hypothesis(viterbi_score, score, edge,
+    	q.push(new Hypothesis(viterbi_score, score, edge,
 						 right->GetTrgLeft(),
 						 left->GetTrgRight(),
                          0, 0, left_trg, right_trg));
@@ -310,9 +307,9 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
     int num_processed = 0;
     int pop_count = 0;
     TargetSpan *new_left_trg, *new_right_trg;
-    while((!beam_size || num_processed < beam_size) && q->size()) {
+    while((!beam_size || num_processed < beam_size) && q.size()) {
         // Pop a hypothesis from the stack and get its target span
-        Hypothesis * hyp = q->top(); q->pop();
+        Hypothesis * hyp = q.top(); q.pop();
         trg_span = ret->GetTargetSpan(hyp);
 
         // Insert the hypothesis
@@ -321,9 +318,9 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
         // If the next hypothesis on the stack is equal to the current
         // hypothesis, remove it, as this just means that we added the same
         // hypothesis
-        while(q->size() && q->top() == hyp) {
-        	delete q->top();
-        	q->pop();
+        while(q.size() && q.top() == hyp) {
+        	delete q.top();
+        	q.pop();
         }
         // Skip terminals
         if(hyp->GetCenter() == -1) continue;
@@ -333,17 +330,16 @@ void HyperGraph::ProcessOneSpan(ReordererModel & model,
         // Increment the left side if there is still a hypothesis left
         new_left_trg = GetTrgSpan(l, hyp->GetCenter()-1, hyp->GetLeftRank()+1);
         if (new_left_trg)
-        	IncrementLeft(hyp, new_left_trg, *q, pop_count);
+        	IncrementLeft(hyp, new_left_trg, q, pop_count);
         // Increment the right side if there is still a hypothesis right
         new_right_trg = GetTrgSpan(hyp->GetCenter(),r,hyp->GetRightRank()+1);
         if(new_right_trg)
-        	IncrementRight(hyp, new_right_trg, *q, pop_count);
+        	IncrementRight(hyp, new_right_trg, q, pop_count);
     }
-    while(!q->empty()){
-        delete q->top();
-        q->pop();
+    while(!q.empty()){
+        delete q.top();
+        q.pop();
     }
-    delete q;
 }
 
 // for cube growing, trigger the best hypothesis
