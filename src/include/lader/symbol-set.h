@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <lader/util.h>
+#include <boost/thread/mutex.hpp>
 
 namespace lader {
 
@@ -17,7 +18,7 @@ public:
     typedef std::vector< T > Ids;
 
 protected:
-    
+    boost::mutex mutex_;
     Map map_;
     Vocab vocab_;
     Ids reuse_;
@@ -43,21 +44,26 @@ public:
         return *SafeAccess(vocab_, id);
     }
     T GetId(const std::string & sym, bool add = false) {
-        typename Map::const_iterator it = map_.find(sym);
-        if(it != map_.end())
-            return it->second;
-        else if(add) {
-            T id;
-            if(reuse_.size() != 0) {
-                id = reuse_.back(); reuse_.pop_back();
-                vocab_[id] = new std::string(sym);
-            } else {
-                id = vocab_.size();
-                vocab_.push_back(new std::string(sym));
-            }
-            map_.insert(MakePair(sym,id));
-            return id;
-        }
+	    {
+	    	boost::mutex::scoped_lock lock(mutex_);
+	        typename Map::const_iterator it = map_.find(sym);
+    	    if(it != map_.end())
+        	    return it->second;
+       	}
+        if (add) {
+    		boost::mutex::scoped_lock lock(mutex_);
+			T id;
+			if (reuse_.size() != 0) {
+				id = reuse_.back();
+				reuse_.pop_back();
+				vocab_[id] = new std::string(sym);
+			} else {
+				id = vocab_.size();
+				vocab_.push_back(new std::string(sym));
+			}
+			map_.insert(MakePair(sym, id));
+			return id;
+		}
         return -1;
     }
     T GetId(const std::string & sym) const {

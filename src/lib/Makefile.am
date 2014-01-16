@@ -4,10 +4,12 @@ LADERCPP = lader.cc hyper-graph.cc combined-alignment.cc alignment.cc \
            reorderer-trainer.cc loss-base.cc reorderer-runner.cc \
            ranks.cc reorderer-evaluator.cc loss-tau.cc dictionary.cc \
            feature-data-parse.cc target-span.cc feature-parse.cc \
-           loss-bracket.cc feature-align.cc thread-pool.cc
+           loss-bracket.cc feature-align.cc thread-pool.cc hypothesis.cc
 
 
-AM_CPPFLAGS = -I$(srcdir)/../include
+AM_CPPFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
+AM_LDFLAGS = $(BOOST_LDFLAGS)
+
 
 lib_LTLIBRARIES = liblader.la
 

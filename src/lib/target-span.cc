@@ -21,7 +21,7 @@ inline string GetTokenWord(const string & str) {
 }
 
 void TargetSpan::PrintParse(const vector<string> & strs, ostream & out) const {
-    HyperEdge::Type type = hyps_[0]->GetType();
+    HyperEdge::Type type = hyps_[0]->GetEdgeType();
     if(type == HyperEdge::EDGE_FOR || type == HyperEdge::EDGE_BAC) {
         out << "(" << (char)type;
         for(int i = left_; i <= right_; i++)

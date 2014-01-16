@@ -1,6 +1,12 @@
 /* src/include/lader/config.h.  Generated from config.h.in by configure.  */
 /* src/include/lader/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* define if the Boost library is available */
+#define HAVE_BOOST /**/
+
+/* define if the Boost::System library is available */
+#define HAVE_BOOST_SYSTEM /**/
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
@@ -87,7 +93,7 @@
 #define VERSION "0.1.5"
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#define _FILE_OFFSET_BITS 64
+/* #undef _FILE_OFFSET_BITS */
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */

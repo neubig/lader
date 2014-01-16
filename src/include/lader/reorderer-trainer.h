@@ -3,9 +3,7 @@
 
 #include <fstream>
 #include <lader/config-trainer.h>
-#include <lader/reorderer-model.h>
-#include <lader/feature-set.h>
-#include <lader/loss-base.h>
+#include <lader/hyper-graph.h>
 
 namespace lader {
 
@@ -23,11 +21,9 @@ public:
                 delete ptr;
         BOOST_FOREACH(LossBase * loss, losses_)
             delete loss;
-        BOOST_FOREACH(EdgeFeatureMap * feat, saved_feats_) {
-            BOOST_FOREACH(EdgeFeaturePair feat_pair, *feat)
-                delete feat_pair.second;
-            delete feat;
-        }
+        BOOST_FOREACH(HyperGraph * graph, saved_graphs_)
+        	if (graph)
+        		delete graph;
         if(model_) delete model_;
         if(features_) delete features_;
     }
@@ -68,12 +64,12 @@ private:
 
     std::vector<Ranks> ranks_; // The alignments to use in training
     std::vector<FeatureDataParse> parses_; // The parses to use in training
-    std::vector<std::vector<FeatureDataBase*> > data_; // The data
+    std::vector<Sentence> data_; // The data
     ReordererModel* model_; // The model
     FeatureSet* features_;  // The mapping on feature ids and which to use
     std::vector<LossBase*> losses_; // The loss functions
     double learning_rate_; // The learning rate
-    std::vector<EdgeFeatureMap*> saved_feats_; // Features for each hypergraph
+    std::vector<HyperGraph*> saved_graphs_; // Features for each hypergraph
     CombinedAlign::NullHandler attach_; // Where to attach nulls
     CombinedAlign::BlockHandler combine_; // Whether to combine blocks
     CombinedAlign::BracketHandler bracket_; // Whether to handle brackets

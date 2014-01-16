@@ -3,6 +3,11 @@
 using namespace lader;
 using namespace std;
 
+double LossTau::AddLossToProduction(Hypothesis * hyp,
+		const Ranks * ranks, const FeatureDataParse * parse) {
+	return AddLossToProduction(hyp->GetLeft(), hyp->GetCenter(), hyp->GetRight(),
+			-1, -1, -1, -1, hyp->GetEdgeType(), ranks, parse);
+}
 double LossTau::AddLossToProduction(
         int src_left, int src_mid, int src_right,
         int trg_left, int trg_midleft, int trg_midright, int trg_right,

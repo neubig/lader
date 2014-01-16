@@ -18,6 +18,10 @@ typedef std::vector<FeaturePairInt> FeatureVectorInt;
 FeatureVectorInt VectorSubtract(const FeatureVectorInt & a, 
                                 const FeatureVectorInt & b);
 
+
+void ClearAndSet(FeatureVectorInt & fvi,
+		const std::tr1::unordered_map<int, double> & feat_map);
+
 }
 
 #endif

@@ -3,21 +3,27 @@
 
 #include <lader/ranks.h>
 #include <lader/feature-data-parse.h>
-#include <lader/hyper-graph.h>
-#include <lader/hyper-edge.h>
+#include <lader/hypothesis.h>
 
 namespace lader {
 
 // A base class that adds losses to all of the cells and edges in a hypergraph
 // To create new loss functions, it is necessary to re-implement 
-//   AddLossToEdge (and also optionally Initialize)
+//   AddLossToProduction (and also optionally Initialize)
 class LossBase {
 public:
 
     // Constructor and destructor
     LossBase() : weight_(1.0) { }
     virtual ~LossBase() { }
-    
+
+    // Add a loss value to a production
+        //  hyp: The hypothesis for the production
+        //  ranks: The correct ranks of the words
+        //  parse: The correct parse
+    virtual double AddLossToProduction(Hypothesis * hyp,
+    		const Ranks * ranks, const FeatureDataParse * parse) = 0;
+
     // Add a loss value to a production
     //  src_left: The starting position of the left span
     //  src_mid: The starting position of the right span (or nonterm -1)
@@ -47,10 +53,6 @@ public:
 
     // Get the name of the subclass
     virtual std::string GetName() const = 0;
-
-    void AddLossToHyperGraph(const Ranks * ranks,
-                             const FeatureDataParse * parse,
-                             HyperGraph & hyper_graph);
 
     // Create a new sub-class of a particular type
     //  type=chunk --> LossChunk
