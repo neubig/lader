@@ -86,7 +86,7 @@ private:
 //  a) l's beginning or end is less than r's beginning or end respectively
 //  b) r's beginning and end are not lesser than l's beginning and end
 struct AlignmentIsLesser {
-    bool operator()(std::pair<double,double> l, std::pair<double,double> r) {
+    bool operator()(std::pair<double,double> l, std::pair<double,double> r) const {
         return (l.first < r.first && l.second <= r.second) ||
                (l.second < r.second && l.first <= r.first);
     }

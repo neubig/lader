@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <stdexcept>
+#include <time.h>
+#include <sys/time.h>
 #include <lader/util.h>
 #include <boost/thread/mutex.hpp>
 

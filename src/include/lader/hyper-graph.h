@@ -15,7 +15,6 @@
 #include <lader/reorderer-model.h>
 #include <lader/span-stack.h>
 #include <lader/util.h>
-#include <tr1/unordered_map>
 #include <lader/thread-pool.h>
 namespace lader {
 
@@ -148,7 +147,7 @@ public:
     // Add up the loss over an entire subtree defined by span
     double AccumulateLoss(const TargetSpan* span);
 
-	virtual void AccumulateFeatures(std::tr1::unordered_map<int, double> & feat_map,
+	virtual void AccumulateFeatures(IntMap<double> & feat_map,
 			ReordererModel & model, const FeatureSet & features,
 			const Sentence & sent,
 			const TargetSpan * span);

@@ -74,7 +74,7 @@ public:
     TargetSpan* GetTargetSpan(const Hypothesis * hyp){
     	TargetSpan* trg_span;
     	int trg_idx = hyp->GetTrgLeft()*(right_+1) + hyp->GetTrgRight();
-		tr1::unordered_map<int, TargetSpan*>::iterator it = span_map.find(trg_idx);
+		IntMap<TargetSpan*>::iterator it = span_map.find(trg_idx);
 		if(it != span_map.end())
 			trg_span = it->second;
 		else {
@@ -119,20 +119,22 @@ public:
         int n = left_ == right_ ? 1 : right_ - left_ + 2;
         for (int c = 0 ; c < n ; c++){
 			int i = 0;
-			if (straight[c])
+			if (straight[c]) {
 				BOOST_FOREACH(FeaturePairInt & feat, *(straight[c])){
 					if (i++ != 0) out << " ";
 					out << feat.first << ":" << feat.second;
 				}
+            }
 			out << endl;
 		}
         for (int c = 0 ; c < n ; c++){
 			int i = 0;
-			if (inverted[c])
+			if (inverted[c]) {
 				BOOST_FOREACH(FeaturePairInt & feat, *(inverted[c])){
 					if (i++ != 0) out << " ";
 					out << feat.first << ":" << feat.second;
 				}
+            }
 			out << endl;
 		}
     }
@@ -206,7 +208,7 @@ public:
 private:
     int left_, right_;
     std::vector<TargetSpan*> spans_;
-	tr1::unordered_map<int, TargetSpan*> span_map;
+	IntMap<TargetSpan*> span_map;
 
     // Store edge features
     // There are two possible orientations

@@ -44,7 +44,7 @@ void ReordererTrainer::TrainIncremental(const ConfigTrainer & config) {
     // Temporary values
     double model_score = 0, model_loss = 0, oracle_score = 0, oracle_loss = 0;
     FeatureVectorInt model_features, oracle_features;
-    std::tr1::unordered_map<int,double> feat_map;
+    IntMap<double> feat_map;
     vector<int> sent_order(data_.size());
     for(int i = 0 ; i < (int)sent_order.size(); i++)
         sent_order[i] = i;

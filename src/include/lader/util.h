@@ -17,24 +17,18 @@
     throw std::runtime_error(oss.str()); }       \
   while (0);
 
-#ifdef HAVE_TR1_UNORDERED_MAP
+#ifdef HAVE_UNORDERED_MAP
+#   include <unordered_map>
+    template <class T>
+    class StringMap : public std::unordered_map<std::string,T> { };
+    template <class T>
+    class IntMap : public std::unordered_map<int,T> { };
+#elif HAVE_TR1_UNORDERED_MAP
 #   include <tr1/unordered_map>
     template <class T>
     class StringMap : public std::tr1::unordered_map<std::string,T> { };
-#elif HAVE_EXT_HASH_MAP
-#   include <ext/hash_map>
-    namespace __gnu_cxx {
-    template <>
-    struct hash<std::string> {
-    size_t operator() (const std::string& x) const { return hash<const char*>()(x.c_str()); }
-    };
-    }
     template <class T>
-    class StringMap : public __gnu_cxx::hash_map<std::string,T> { };
-// #else
-// #   include <map>
-//     template <class T>
-//     class StringMap : public std::map<std::string,T> { };
+    class IntMap : public std::tr1::unordered_map<int,T> { };
 #endif
 
 namespace std {
@@ -206,7 +200,23 @@ inline const T & SafeReference(const T * ptr) {
     return *ptr;
 }
 
-
 }  // end namespace
+
+#ifdef __MACH__
+#define CLOCK_MONOTONIC 0
+#include <mach/clock.h>
+#include <mach/mach.h>
+#include <time.h>
+#include <sys/time.h>
+//clock_gettime is not implemented on OSX
+inline int clock_gettime(int /*clk_id*/, struct timespec* t) {
+    struct timeval now;
+    int rv = gettimeofday(&now, NULL);
+    if (rv) return rv;
+    t->tv_sec  = now.tv_sec;
+    t->tv_nsec = now.tv_usec * 1000;
+    return 0;
+}
+#endif
 
 #endif

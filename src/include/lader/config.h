@@ -10,9 +10,6 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
 
-/* Define to 1 if you have the <ext/hash_map> header file. */
-#define HAVE_EXT_HASH_MAP 1
-
 /* Define to 1 if you have the `gettimeofday' function. */
 #define HAVE_GETTIMEOFDAY 1
 
@@ -52,17 +49,19 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the <tr1/unordered_map> header file. */
-#define HAVE_TR1_UNORDERED_MAP 1
+/* Define to 1 if you have tr1/unordered_map */
+/* #undef HAVE_TR1_UNORDERED_MAP */
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
+/* Define to 1 if you have unordered_map */
+#define HAVE_UNORDERED_MAP 1
+
 /* Define to 1 if the system has the type `_Bool'. */
 /* #undef HAVE__BOOL */
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
@@ -91,6 +90,11 @@
 
 /* Version number of package */
 #define VERSION "0.1.5"
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 /* #undef _FILE_OFFSET_BITS */

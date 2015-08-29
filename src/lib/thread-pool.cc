@@ -16,7 +16,7 @@ void ThreadPool::Run() {
     while(!stopped_) {
         Task* task = NULL;
         {
-            mutex::scoped_lock lock(mutex_);
+            boost::mutex::scoped_lock lock(mutex_);
             if(tasks_.empty() && !stopped_)
                 thread_needed_.wait(lock);
             if(!stopped_ && !tasks_.empty()) {
@@ -33,7 +33,7 @@ void ThreadPool::Run() {
 }
 
 void ThreadPool::Submit(Task* task) {
-    mutex::scoped_lock lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     if(stopping_)
         THROW_ERROR("Cannot accept new jobs while ThreadPool is stopping");
     while(queue_limit_ && (int)tasks_.size() >= queue_limit_)
@@ -44,7 +44,7 @@ void ThreadPool::Submit(Task* task) {
 
 void ThreadPool::Stop(bool process_remaining) {
     {
-        mutex::scoped_lock lock(mutex_);
+        boost::mutex::scoped_lock lock(mutex_);
         if(stopped_) return;
         stopping_ = true;
     }

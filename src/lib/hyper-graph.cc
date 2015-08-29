@@ -1,6 +1,5 @@
 #include <lader/hyper-graph.h>
 #include <lader/util.h>
-#include <tr1/unordered_map>
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 
@@ -79,6 +78,8 @@ double HyperGraph::Score(const ReordererModel & model,
         	case HyperEdge::EDGE_INV:
         		fvi = stack->GetInvertedFeautures(hyp->GetCenter() - hyp->GetLeft());
         		break;
+        	case HyperEdge::EDGE_ROOT:
+                assert(false);
         	}
             if(!fvi)
                 THROW_ERROR("No features found in Score for " << *hyp << endl);
@@ -434,7 +435,7 @@ void HyperGraph::AddLoss(LossBase* loss,
 
 
 // Accumulate edge features under a hyper-edge
-void HyperGraph::AccumulateFeatures(std::tr1::unordered_map<int,double> & feat_map,
+void HyperGraph::AccumulateFeatures(IntMap<double> & feat_map,
 										ReordererModel & model,
 		                                const FeatureSet & features,
 		                                const Sentence & sent,

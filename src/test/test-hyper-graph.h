@@ -369,7 +369,7 @@ public:
     int TestAccumulateFeatures() {
         // The value of the loss should be 1:1, 2:1, 5:1, 10:3
         FeatureVectorInt act;
-        std::tr1::unordered_map<int, double> feat_map;
+        IntMap<double> feat_map;
         my_hg.AccumulateFeatures(feat_map, model, set, datas, tsr);
         ClearAndSet(act, feat_map);
         FeatureVectorInt exp;

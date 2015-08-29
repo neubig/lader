@@ -7,6 +7,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
+compile
 config.guess
 config.log
 config.status
@@ -23,5 +24,6 @@ src/bin/label-ranking
 src/bin/lader
 src/bin/train-lader
 config.h.in
+config.h.in~
 stamp-h1
 test-lader

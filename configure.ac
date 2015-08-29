@@ -29,26 +29,11 @@ LDFLAGS="$LDFLAGS -lpthread"
 
 AC_SYS_LARGEFILE
 
-# # Boost libraries...
-# orig_CPPFLAGS="$CPPFLAGS"
-# orig_LDFLAGS="$LDFLAGS"
-# CPPFLAGS="$orig_CPPFLAGS $ICU_CPPFLAGS"
-# LDFLAGS="$orig_LDFLAGS $ICU_LDFLAGS"
-# 
 AX_BOOST_BASE([1.38],,[AC_MSG_ERROR([requireBoost])])
 AX_BOOST_SYSTEM
-# BOOST_REQUIRE([1.38])
-# BOOST_PROGRAM_OPTIONS
-# BOOST_FILESYSTEM
-# BOOST_IOSTREAMS
-# BOOST_SYSTEM
-# 
-# CPPFLAGS="$orig_CPPFLAGS"
-# LDFLAGS="$orig_LDFLAGS"
-# 
-# ## save pthred-flag, computed by-product of boost-threads
-# PTHREAD_FLAGS=$boost_cv_pthread_flag
-# AC_SUBST(PTHREAD_FLAGS)
+AX_BOOST_FILESYSTEM
+AX_BOOST_THREAD
+AX_BOOST_REGEX
 
 # Checks for header files.
 AC_CHECK_HEADERS([sys/time.h unistd.h])
@@ -60,8 +45,11 @@ AC_TYPE_SIZE_T
 
 # Check to make sure that we have unordered_map
 AC_LANG([C++])
-AC_CHECK_HEADERS([tr1/unordered_map])
-AC_CHECK_HEADERS([ext/hash_map])
+AC_CHECK_HEADER(unordered_map,AC_DEFINE(HAVE_UNORDERED_MAP,1,
+			      [Define to 1 if you have unordered_map]),
+        [AC_CHECK_HEADER(tr1/unordered_map,AC_DEFINE(HAVE_TR1_UNORDERED_MAP,1,
+			      [Define to 1 if you have tr1/unordered_map]),
+	[AC_CHECK_HEADER(ext/hash_map,,OPTIONS=$OPTIONS"-DNOHASH ")])])
 
 # Checks for library functions.
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
