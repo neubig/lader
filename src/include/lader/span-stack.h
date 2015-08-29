@@ -1,7 +1,7 @@
 #ifndef SPAN_STACK_H__ 
 #define SPAN_STACK_H__
 
-#include <target-span.h>
+#include <lader/target-span.h>
 #include <lader/feature-vector.h>
 
 namespace lader {

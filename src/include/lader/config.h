@@ -4,8 +4,17 @@
 /* define if the Boost library is available */
 #define HAVE_BOOST /**/
 
+/* define if the Boost::Filesystem library is available */
+#define HAVE_BOOST_FILESYSTEM /**/
+
+/* define if the Boost::Regex library is available */
+#define HAVE_BOOST_REGEX /**/
+
 /* define if the Boost::System library is available */
 #define HAVE_BOOST_SYSTEM /**/
+
+/* define if the Boost::Thread library is available */
+#define HAVE_BOOST_THREAD /**/
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -74,7 +83,7 @@
 #define PACKAGE_NAME "lader"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "lader 0.1.5"
+#define PACKAGE_STRING "lader 0.1.6"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "lader"
@@ -83,13 +92,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.1.5"
+#define PACKAGE_VERSION "0.1.6"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.1.5"
+#define VERSION "0.1.6"
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

@@ -6,8 +6,8 @@
  */
 
 
-#include <hypothesis.h>
-#include <target-span.h>
+#include <lader/hypothesis.h>
+#include <lader/target-span.h>
 #include <sstream>
 
 using namespace std;

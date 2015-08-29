@@ -8,4 +8,5 @@ lader/hyper-edge.h lader/hyper-graph.h lader/hypothesis.h lader/hypothesis-queue
 lader/loss-base.h lader/loss-bracket.h lader/loss-chunk.h lader/loss-tau.h lader/ranks.h \
 lader/reorderer-evaluator.h lader/reorderer-model.h lader/reorderer-runner.h \
 lader/reorderer-trainer.h lader/symbol-set.h lader/target-span.h \
-lader/util.h lader/config.h lader/thread-pool.h lader/output-collector.h 
+lader/util.h lader/config.h lader/thread-pool.h lader/output-collector.h \
+lader/span-stack.h
