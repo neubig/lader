@@ -15,6 +15,7 @@ AC_CONFIG_FILES([
 ])
 
 AM_INIT_AUTOMAKE([-Wall])
+AM_PROG_AR
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
